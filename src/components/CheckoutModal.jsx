@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function CheckoutModal({ items, slots, onClose, onSuccess, currency }) {
   const [name, setName] = useState('')
@@ -7,15 +7,26 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
   const [selectedSlot, setSelectedSlot] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [bookedSlots, setBookedSlots] = useState([])
+
+  useEffect(() => {
+    fetch('/api/slots')
+      .then(r => r.json())
+      .then(data => setBookedSlots(data))
+      .catch(() => {})
+  }, [])
 
   const total = items.reduce((sum, i) => sum + i.pizza.price * i.quantity, 0)
-
   const availableDates = [...new Set(slots.map(s => s.date))]
   const slotsForDate = slots.filter(s => s.date === selectedDate)
 
   const orderText = items
     .map(i => `${i.quantity}x ${i.pizza.name} (${currency}${(i.pizza.price * i.quantity).toFixed(2)})`)
     .join(', ')
+
+  function isBooked(date, time) {
+    return bookedSlots.includes(`${date}_${time}`)
+  }
 
   function encode(data) {
     return Object.keys(data)
@@ -33,7 +44,24 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
     setLoading(true)
 
     try {
-      const res = await fetch('/', {
+      // Reserve the slot first
+      const slotRes = await fetch('/api/slots', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: selectedDate, timeslot: selectedSlot }),
+      })
+
+      if (slotRes.status === 409) {
+        setError('Dit tijdslot is net geboekt door iemand anders. Kies een ander slot.')
+        setBookedSlots(prev => [...prev, `${selectedDate}_${selectedSlot}`])
+        setSelectedSlot('')
+        setLoading(false)
+        return
+      }
+      if (!slotRes.ok) throw new Error('Slot booking failed')
+
+      // Then submit the order form
+      const formRes = await fetch('/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: encode({
@@ -47,10 +75,11 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
           total: `${currency}${total.toFixed(2)}`,
         }),
       })
-      if (!res.ok) throw new Error(`Status ${res.status}`)
+      if (!formRes.ok) throw new Error(`Form status ${formRes.status}`)
+
       onSuccess({ name, email, date: selectedDate, timeslot: selectedSlot, total })
     } catch (err) {
-      console.error('Form submit error:', err)
+      console.error('Submit error:', err)
       setError('Er ging iets mis. Probeer opnieuw.')
     } finally {
       setLoading(false)
@@ -114,20 +143,26 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
                 <p className="text-sm text-red-500">Geen tijdsloten beschikbaar voor deze datum.</p>
               ) : (
                 <div className="grid grid-cols-4 gap-2">
-                  {slotsForDate.map(slot => (
-                    <button
-                      type="button"
-                      key={slot.time}
-                      onClick={() => setSelectedSlot(slot.time)}
-                      className={`py-2 rounded-lg text-sm font-medium border transition-colors ${
-                        selectedSlot === slot.time
-                          ? 'bg-pizza-red text-white border-pizza-red'
-                          : 'bg-white text-pizza-brown border-gray-200 hover:border-pizza-red'
-                      }`}
-                    >
-                      {slot.time}
-                    </button>
-                  ))}
+                  {slotsForDate.map(slot => {
+                    const booked = isBooked(selectedDate, slot.time)
+                    return (
+                      <button
+                        type="button"
+                        key={slot.time}
+                        disabled={booked}
+                        onClick={() => !booked && setSelectedSlot(slot.time)}
+                        className={`py-2 rounded-lg text-sm font-medium border transition-colors ${
+                          booked
+                            ? 'bg-gray-100 text-gray-400 border-gray-100 cursor-not-allowed line-through'
+                            : selectedSlot === slot.time
+                            ? 'bg-pizza-red text-white border-pizza-red'
+                            : 'bg-white text-pizza-brown border-gray-200 hover:border-pizza-red'
+                        }`}
+                      >
+                        {slot.time}
+                      </button>
+                    )
+                  })}
                 </div>
               )}
             </div>
