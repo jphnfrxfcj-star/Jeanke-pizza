@@ -33,7 +33,7 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
     setLoading(true)
 
     try {
-      await fetch('/', {
+      const res = await fetch('/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: encode({
@@ -47,8 +47,10 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
           total: `${currency}${total.toFixed(2)}`,
         }),
       })
+      if (!res.ok) throw new Error(`Status ${res.status}`)
       onSuccess({ name, email, date: selectedDate, timeslot: selectedSlot, total })
-    } catch {
+    } catch (err) {
+      console.error('Form submit error:', err)
       setError('Er ging iets mis. Probeer opnieuw.')
     } finally {
       setLoading(false)
