@@ -4,6 +4,7 @@ import Cart from './components/Cart'
 import CheckoutModal from './components/CheckoutModal'
 import Admin from './components/Admin'
 import config from './data/config.json'
+import staticPizzas from './data/pizzas.json'
 
 function generateSlots(config) {
   const slots = []
@@ -55,8 +56,8 @@ export default function App() {
   useEffect(() => {
     fetch('/api/pizzas')
       .then(r => r.json())
-      .then(setPizzas)
-      .catch(() => {})
+      .then(data => setPizzas(data.length ? data : staticPizzas))
+      .catch(() => setPizzas(staticPizzas))
   }, [])
 
   function addToCart(pizza) {

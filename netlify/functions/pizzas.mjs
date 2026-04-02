@@ -1,5 +1,4 @@
 import { getStore } from "@netlify/blobs"
-import defaultPizzas from "../../src/data/pizzas.json" assert { type: "json" }
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
 
@@ -12,7 +11,8 @@ export default async (req) => {
 
   if (req.method === "GET") {
     const data = await store.get("list", { type: "json" }).catch(() => null)
-    return Response.json(data || defaultPizzas)
+    // Return empty array if nothing stored yet — app falls back to static JSON
+    return Response.json(data || [])
   }
 
   if (!checkAuth(req)) {
