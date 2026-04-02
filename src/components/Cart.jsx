@@ -1,4 +1,4 @@
-export default function Cart({ items, onAdd, onRemove, onCheckout, currency }) {
+export default function Cart({ items, onAdd, onRemove, onCheckout, currency, hasSlots = true }) {
   const total = items.reduce((sum, item) => sum + item.pizza.price * item.quantity, 0)
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
 
@@ -57,9 +57,16 @@ export default function Cart({ items, onAdd, onRemove, onCheckout, currency }) {
       </div>
 
       <div className="p-5 pt-0">
-        <button onClick={onCheckout} className="btn-primary w-full text-center">
-          Bestelling plaatsen →
-        </button>
+        {hasSlots ? (
+          <button onClick={onCheckout} className="btn-primary w-full text-center">
+            Bestelling plaatsen →
+          </button>
+        ) : (
+          <div className="text-center py-2">
+            <p className="font-sans text-xs text-wine italic">Geen tijdsloten beschikbaar.</p>
+            <p className="font-sans text-xs text-warm-gray mt-1">Controleer later voor nieuwe data.</p>
+          </div>
+        )}
       </div>
     </div>
   )

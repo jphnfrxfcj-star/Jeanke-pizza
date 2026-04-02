@@ -148,7 +148,7 @@ function Shop() {
           </p>
 
           {/* Mobile cart button */}
-          {cartCount > 0 && !noOpeningDays && (
+          {cartCount > 0 && !noOpeningDays && slots.length > 0 && (
             <button
               onClick={() => setShowCheckout(true)}
               className="lg:hidden absolute right-6 top-1/2 -translate-y-1/2 bg-wine text-cream px-4 py-2 font-sans text-xs tracking-widest uppercase flex items-center gap-2"
@@ -340,6 +340,7 @@ function Shop() {
                   onRemove={removeFromCart}
                   onCheckout={() => setShowCheckout(true)}
                   currency={config.currency}
+                  hasSlots={slots.length > 0}
                 />
               </div>
             </div>
