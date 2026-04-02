@@ -186,11 +186,12 @@ function PizzasTab({ password }) {
   }, [])
 
   async function save(list) {
-    await fetch('/api/pizzas', {
+    const res = await fetch('/api/pizzas', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
       body: JSON.stringify(list),
     })
+    if (!res.ok) { alert('Opslaan mislukt. Probeer opnieuw.'); return }
     setPizzas(list)
   }
 
