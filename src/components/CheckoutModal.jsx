@@ -20,10 +20,6 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
 
   function isBooked(date, time) { return bookedSlots.includes(`${date}_${time}`) }
 
-  function encode(data) {
-    return Object.keys(data).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k])).join('&')
-  }
-
   async function handleSubmit(e) {
     e.preventDefault()
     if (!selectedSlot) { setError('Kies een tijdslot.'); return }
@@ -38,12 +34,23 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
         setError('Dit tijdslot is net geboekt. Kies een ander.'); setBookedSlots(prev => [...prev, `${selectedDate}_${selectedSlot}`]); setSelectedSlot(''); setLoading(false); return
       }
       if (!slotRes.ok) throw new Error('Slot booking failed')
-      const formRes = await fetch('/', {
+      const slotData = await slotRes.json()
+
+      // Send confirmation email (fire-and-forget, don't block on failure)
+      fetch('/api/send-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: encode({ 'form-name': 'pizza-order', 'bot-field': '', name, email, date: selectedDate, timeslot: selectedSlot, order: orderText, total: `${currency}${total.toFixed(2)}` }),
-      })
-      if (!formRes.ok) throw new Error(`Form status ${formRes.status}`)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'confirmation',
+          name, email,
+          order: orderText,
+          date: selectedDate,
+          timeslot: selectedSlot,
+          total: `${currency}${total.toFixed(2)}`,
+          cancelToken: slotData.cancelToken,
+        }),
+      }).catch(() => {})
+
       onSuccess({ name, email, date: selectedDate, timeslot: selectedSlot, total })
     } catch (err) {
       console.error('Submit error:', err)

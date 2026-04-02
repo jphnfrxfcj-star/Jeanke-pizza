@@ -21,9 +21,10 @@ export default async (req) => {
         return Response.json({ error: "Slot already booked" }, { status: 409 })
       }
 
-      const entry = { key, date, time: timeslot, name, email, order, total, bookedAt: new Date().toISOString() }
+      const cancelToken = crypto.randomUUID()
+      const entry = { key, date, time: timeslot, name, email, order, total, cancelToken, bookedAt: new Date().toISOString() }
       await store.set("slots", JSON.stringify([...existing, entry]))
-      return Response.json({ success: true })
+      return Response.json({ success: true, cancelToken })
     }
 
     return Response.json({ error: "Method not allowed" }, { status: 405 })

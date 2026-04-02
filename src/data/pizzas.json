@@ -4,7 +4,8 @@
     "name": "Margherita",
     "description": "Tomatensaus, mozzarella, verse basilicum",
     "price": 10.00,
-    "emoji": "🍕"
+    "emoji": "🍕",
+    "imageUrl": ""
   },
   {
     "id": 2,

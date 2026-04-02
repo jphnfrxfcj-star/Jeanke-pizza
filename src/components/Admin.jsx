@@ -2,87 +2,67 @@ import { useState, useEffect } from 'react'
 import config from '../data/config.json'
 import staticPizzas from '../data/pizzas.json'
 
+const INPUT = "w-full border border-parchment bg-cream px-4 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors"
+
 export default function Admin() {
-  const [authed, setAuthed] = useState(
-    () => sessionStorage.getItem('adminPw') === config.adminPassword
-  )
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem('adminPw') === config.adminPassword)
   const [password, setPassword] = useState('')
   const [tab, setTab] = useState('orders')
 
   function handleLogin(e) {
     e.preventDefault()
-    if (password === config.adminPassword) {
-      sessionStorage.setItem('adminPw', password)
-      setAuthed(true)
-    } else {
-      alert('Verkeerd wachtwoord')
-    }
+    if (password === config.adminPassword) { sessionStorage.setItem('adminPw', password); setAuthed(true) }
+    else alert('Verkeerd wachtwoord')
   }
 
-  if (!authed) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm">
-          <div className="text-center mb-6">
-            <div className="text-5xl mb-3">🍕</div>
-            <h1 className="text-xl font-bold text-pizza-brown">Beheer</h1>
-          </div>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Wachtwoord"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-pizza-red"
-              autoFocus
-            />
-            <button type="submit" className="btn-primary w-full py-3 text-base">
-              Inloggen
-            </button>
-          </form>
+  if (!authed) return (
+    <div className="min-h-screen bg-cream flex items-center justify-center px-4">
+      <div className="bg-white border border-parchment p-8 w-full max-w-sm">
+        <div className="text-center mb-6">
+          <p className="font-sans text-xs tracking-[0.3em] uppercase text-gold/70 mb-2">Jeanke's Pizza</p>
+          <h1 className="font-serif text-2xl italic text-ink">Beheer</h1>
         </div>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+            placeholder="Wachtwoord" className={INPUT} autoFocus />
+          <button type="submit" className="btn-primary w-full">Inloggen</button>
+        </form>
       </div>
-    )
-  }
+    </div>
+  )
 
   const pw = config.adminPassword
 
   return (
-    <div className="min-h-screen pb-24">
-      <header className="bg-pizza-red text-white shadow-lg sticky top-0 z-10">
+    <div className="min-h-screen bg-cream pb-24">
+      <header className="bg-olive text-cream sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
-            <h1 className="font-bold text-lg leading-tight">{config.storeName}</h1>
-            <p className="text-red-200 text-xs">Beheer</p>
+            <h1 className="font-serif text-lg italic">{config.storeName}</h1>
+            <p className="font-sans text-xs text-cream/50 tracking-widest uppercase">Beheer</p>
           </div>
-          <a href="/" className="text-sm bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors">
-            ← Shop
-          </a>
+          <a href="/" className="font-sans text-xs text-cream/60 hover:text-cream tracking-widest uppercase transition-colors">← Shop</a>
         </div>
       </header>
 
       <div className="max-w-2xl mx-auto px-4 py-5">
-        {tab === 'orders' && <OrdersTab password={pw} />}
-        {tab === 'pizzas' && <PizzasTab password={pw} />}
-        {tab === 'winst'  && <WinstTab  password={pw} />}
+        {tab === 'orders'  && <OrdersTab password={pw} />}
+        {tab === 'pizzas'  && <PizzasTab password={pw} />}
+        {tab === 'opening' && <OpeningTab password={pw} />}
+        {tab === 'winst'   && <WinstTab  password={pw} />}
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-10">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-parchment z-10">
         <div className="max-w-2xl mx-auto flex">
           {[
-            { key: 'orders', label: 'Bestellingen', icon: '📋' },
-            { key: 'pizzas', label: "Pizza's",      icon: '🍕' },
-            { key: 'winst',  label: 'Winst',        icon: '💰' },
+            { key: 'orders',  label: 'Bestellingen', icon: '📋' },
+            { key: 'pizzas',  label: "Pizza's",      icon: '🍕' },
+            { key: 'opening', label: 'Planning',     icon: '📅' },
+            { key: 'winst',   label: 'Winst',        icon: '💰' },
           ].map(t => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`flex-1 py-3 flex flex-col items-center gap-0.5 text-xs font-medium transition-colors ${
-                tab === t.key ? 'text-pizza-red' : 'text-gray-400'
-              }`}
-            >
-              <span className="text-xl">{t.icon}</span>
-              {t.label}
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className={`flex-1 py-3 flex flex-col items-center gap-0.5 text-xs font-sans font-medium transition-colors ${tab === t.key ? 'text-wine' : 'text-warm-gray'}`}>
+              <span className="text-xl">{t.icon}</span>{t.label}
             </button>
           ))}
         </div>
@@ -100,71 +80,56 @@ function OrdersTab({ password }) {
   function load() {
     setLoading(true)
     fetch('/api/orders', { headers: { 'x-admin-password': password } })
-      .then(r => r.json())
-      .then(data => { setOrders(Array.isArray(data) ? data : []); setLoading(false) })
+      .then(r => r.json()).then(d => { setOrders(Array.isArray(d) ? d : []); setLoading(false) })
       .catch(() => setLoading(false))
   }
-
   useEffect(() => { load() }, [])
 
   async function cancelOrder(key) {
     if (!confirm('Bestelling annuleren?')) return
-    await fetch('/api/orders', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-      body: JSON.stringify({ key }),
-    })
+    await fetch('/api/orders', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ key }) })
     load()
   }
 
-  const today = new Date().toISOString().split('T')[0]
-  const upcoming = [...orders].filter(o => o.date >= today).sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
-  const past     = [...orders].filter(o => o.date <  today).sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time))
+  const today    = new Date().toISOString().split('T')[0]
+  const upcoming = [...orders].filter(o => o.date >= today).sort((a,b) => a.date.localeCompare(b.date)||a.time.localeCompare(b.time))
+  const past     = [...orders].filter(o => o.date <  today).sort((a,b) => b.date.localeCompare(a.date)||b.time.localeCompare(a.time))
 
   if (loading) return <LoadingCards />
-  if (orders.length === 0) return (
-    <div className="text-center py-16">
-      <div className="text-5xl mb-3">📭</div>
-      <p className="text-gray-400 font-medium">Nog geen bestellingen</p>
-    </div>
-  )
+  if (!orders.length) return <Empty icon="📭" text="Nog geen bestellingen" />
 
   return (
     <div className="space-y-6">
-      {upcoming.length > 0 && (
-        <section>
-          <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Aankomend ({upcoming.length})</h2>
-          <div className="space-y-3">{upcoming.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} />)}</div>
-        </section>
-      )}
-      {past.length > 0 && (
-        <section>
-          <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Voorbij</h2>
-          <div className="space-y-3 opacity-60">{past.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} />)}</div>
-        </section>
-      )}
+      {upcoming.length > 0 && <section>
+        <SectionLabel>Aankomend ({upcoming.length})</SectionLabel>
+        <div className="space-y-3">{upcoming.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} />)}</div>
+      </section>}
+      {past.length > 0 && <section>
+        <SectionLabel>Voorbij</SectionLabel>
+        <div className="space-y-3 opacity-60">{past.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} />)}</div>
+      </section>}
     </div>
   )
 }
 
 function OrderCard({ order, onCancel }) {
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm">
+    <div className="bg-white border border-parchment p-4">
       <div className="flex items-start gap-3">
-        <div className="bg-pizza-red text-white rounded-xl px-3 py-2 text-center shrink-0 min-w-[64px]">
-          <div className="font-bold text-lg leading-none">{order.time}</div>
-          <div className="text-xs text-red-200 mt-0.5">{formatShortDate(order.date)}</div>
+        <div className="bg-olive text-cream px-3 py-2 text-center shrink-0 min-w-[64px]">
+          <div className="font-serif text-lg leading-none">{order.time}</div>
+          <div className="font-sans text-xs text-cream/60 mt-0.5">{formatShortDate(order.date)}</div>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <p className="font-bold text-pizza-brown text-base">{order.name}</p>
-              <p className="text-sm text-gray-400">{order.email}</p>
+              <p className="font-serif text-base text-ink">{order.name}</p>
+              <p className="font-sans text-xs text-warm-gray">{order.email}</p>
             </div>
-            <button onClick={() => onCancel(order.key)} className="text-gray-200 hover:text-red-400 transition-colors p-1 shrink-0">✕</button>
+            <button onClick={() => onCancel(order.key)} className="text-warm-gray-light hover:text-wine transition-colors p-1 shrink-0">✕</button>
           </div>
-          <p className="text-sm text-gray-600 mt-2 leading-relaxed">{order.order}</p>
-          <p className="text-base font-bold text-pizza-red mt-1">{order.total}</p>
+          <p className="font-sans text-sm text-warm-gray mt-2 leading-relaxed">{order.order}</p>
+          <p className="font-serif text-base text-wine mt-1">{order.total}</p>
         </div>
       </div>
     </div>
@@ -177,113 +142,179 @@ function PizzasTab({ password }) {
   const [pizzas, setPizzas] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
-  const [form, setForm] = useState({ name: '', description: '', price: '', emoji: '🍕', toppingCost: '' })
+  const [form, setForm] = useState({ name: '', description: '', price: '', emoji: '🍕', imageUrl: '', toppingCost: '' })
 
   useEffect(() => {
     fetch('/api/pizzas').then(r => r.json())
-      .then(data => { setPizzas(data.length ? data : staticPizzas); setLoading(false) })
+      .then(d => { setPizzas(d.length ? d : staticPizzas); setLoading(false) })
       .catch(() => { setPizzas(staticPizzas); setLoading(false) })
   }, [])
 
   async function save(list) {
-    const res = await fetch('/api/pizzas', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-      body: JSON.stringify(list),
-    })
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}))
-      alert(`Opslaan mislukt (${res.status}): ${body.error || 'onbekende fout'}`)
-      return
-    }
+    const res = await fetch('/api/pizzas', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify(list) })
+    if (!res.ok) { const b = await res.json().catch(()=>({})); alert(`Opslaan mislukt (${res.status}): ${b.error||'onbekende fout'}`); return }
     setPizzas(list)
   }
 
-  function startEdit(pizza) {
-    setEditing(pizza.id)
-    setForm({ name: pizza.name, description: pizza.description, price: String(pizza.price), emoji: pizza.emoji, toppingCost: String(pizza.toppingCost ?? '') })
-  }
-
-  function startNew() {
-    setEditing('new')
-    setForm({ name: '', description: '', price: '', emoji: '🍕', toppingCost: '' })
-  }
+  function startEdit(p) { setEditing(p.id); setForm({ name: p.name, description: p.description, price: String(p.price), emoji: p.emoji, imageUrl: p.imageUrl||'', toppingCost: String(p.toppingCost??'') }) }
+  function startNew()   { setEditing('new'); setForm({ name:'', description:'', price:'', emoji:'🍕', imageUrl:'', toppingCost:'' }) }
 
   async function saveEdit(e) {
     e.preventDefault()
     const updated = { ...form, price: parseFloat(form.price), toppingCost: form.toppingCost ? parseFloat(form.toppingCost) : 0 }
     let newList
-    if (editing === 'new') {
-      const maxId = pizzas.reduce((m, p) => Math.max(m, p.id), 0)
-      newList = [...pizzas, { id: maxId + 1, ...updated }]
-    } else {
-      newList = pizzas.map(p => p.id === editing ? { ...p, ...updated } : p)
-    }
-    await save(newList)
-    setEditing(null)
+    if (editing === 'new') { const maxId = pizzas.reduce((m,p) => Math.max(m,p.id), 0); newList = [...pizzas, { id: maxId+1, ...updated }] }
+    else newList = pizzas.map(p => p.id===editing ? {...p,...updated} : p)
+    await save(newList); setEditing(null)
   }
 
-  async function deletePizza(id) {
-    if (!confirm('Pizza verwijderen?')) return
-    await save(pizzas.filter(p => p.id !== id))
-  }
+  async function deletePizza(id) { if (!confirm('Pizza verwijderen?')) return; await save(pizzas.filter(p => p.id!==id)) }
 
   if (loading) return <LoadingCards />
 
   return (
     <div className="space-y-3">
       {pizzas.map(pizza => (
-        <div key={pizza.id} className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3">
-          <span className="text-4xl shrink-0">{pizza.emoji}</span>
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-pizza-brown">{pizza.name}</p>
-            <p className="text-sm text-gray-400 truncate">{pizza.description}</p>
-            <p className="text-sm font-bold text-pizza-red">€{pizza.price.toFixed(2)}</p>
+        <div key={pizza.id} className="bg-white border border-parchment flex items-center gap-3 overflow-hidden">
+          {pizza.imageUrl
+            ? <img src={pizza.imageUrl} alt={pizza.name} className="w-16 h-16 object-cover shrink-0" />
+            : <div className="w-16 h-16 bg-parchment flex items-center justify-center text-3xl shrink-0">{pizza.emoji}</div>
+          }
+          <div className="flex-1 min-w-0 py-3 pr-0">
+            <p className="font-serif text-ink">{pizza.name}</p>
+            <p className="font-sans text-xs text-warm-gray truncate">{pizza.description}</p>
+            <p className="font-sans text-xs text-wine mt-0.5">€{pizza.price.toFixed(2)}</p>
           </div>
-          <div className="flex flex-col gap-2 shrink-0">
-            <button onClick={() => startEdit(pizza)} className="bg-gray-100 hover:bg-gray-200 text-pizza-brown rounded-lg px-3 py-1.5 text-sm font-medium transition-colors">Bewerk</button>
-            <button onClick={() => deletePizza(pizza.id)} className="bg-red-50 hover:bg-red-100 text-red-400 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors">Verwijder</button>
+          <div className="flex flex-col gap-1 p-3 shrink-0">
+            <button onClick={() => startEdit(pizza)} className="font-sans text-xs text-ink bg-parchment px-3 py-1.5 hover:bg-gold/20 transition-colors">Bewerk</button>
+            <button onClick={() => deletePizza(pizza.id)} className="font-sans text-xs text-wine bg-wine/5 px-3 py-1.5 hover:bg-wine/10 transition-colors">Verwijder</button>
           </div>
         </div>
       ))}
 
-      <button onClick={startNew} className="btn-primary w-full py-3 text-base">+ Pizza toevoegen</button>
+      <button onClick={startNew} className="btn-primary w-full">+ Pizza toevoegen</button>
 
       {editing !== null && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-sm p-6">
-            <h3 className="font-bold text-pizza-brown text-lg mb-5">
-              {editing === 'new' ? '+ Nieuwe pizza' : 'Pizza bewerken'}
-            </h3>
-            <form onSubmit={saveEdit} className="space-y-3">
+        <div className="fixed inset-0 bg-ink/60 flex items-end sm:items-center justify-center z-50">
+          <div className="bg-cream w-full sm:max-w-sm">
+            <div className="bg-olive px-5 py-4 flex justify-between items-center">
+              <h3 className="font-serif italic text-cream text-lg">{editing==='new' ? 'Nieuwe pizza' : 'Bewerken'}</h3>
+              <button onClick={()=>setEditing(null)} className="text-cream/50 hover:text-cream text-2xl">×</button>
+            </div>
+            <form onSubmit={saveEdit} className="p-5 space-y-3">
               <div className="flex gap-2">
-                <input value={form.emoji} onChange={e => setForm(f => ({ ...f, emoji: e.target.value }))} placeholder="🍕"
-                  className="w-16 border border-gray-200 rounded-xl px-2 py-3 text-center text-2xl focus:outline-none focus:ring-2 focus:ring-pizza-red" />
-                <input required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Naam"
-                  className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-pizza-red" />
+                <input value={form.emoji} onChange={e=>setForm(f=>({...f,emoji:e.target.value}))} placeholder="🍕"
+                  className="w-14 border border-parchment bg-white px-2 py-3 text-center text-2xl focus:outline-none focus:border-olive" />
+                <input required value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="Naam" className={INPUT+" flex-1"} />
               </div>
-              <input required value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Ingrediënten"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-pizza-red" />
+              <input required value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder="Ingrediënten" className={INPUT} />
+              <input value={form.imageUrl} onChange={e=>setForm(f=>({...f,imageUrl:e.target.value}))} placeholder="Foto URL (optioneel)" className={INPUT} />
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="text-xs text-gray-400 ml-1 mb-1 block">Verkoopprijs (€)</label>
-                  <input required type="number" step="0.50" min="0" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} placeholder="0.00"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-pizza-red" />
+                  <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Verkoopprijs</label>
+                  <input required type="number" step="0.50" min="0" value={form.price} onChange={e=>setForm(f=>({...f,price:e.target.value}))} placeholder="€" className={INPUT} />
                 </div>
                 <div className="flex-1">
-                  <label className="text-xs text-gray-400 ml-1 mb-1 block">Belegkosten (€)</label>
-                  <input type="number" step="0.10" min="0" value={form.toppingCost} onChange={e => setForm(f => ({ ...f, toppingCost: e.target.value }))} placeholder="0.00"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-pizza-red" />
+                  <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Belegkosten</label>
+                  <input type="number" step="0.10" min="0" value={form.toppingCost} onChange={e=>setForm(f=>({...f,toppingCost:e.target.value}))} placeholder="€" className={INPUT} />
                 </div>
               </div>
-              <div className="flex gap-2 pt-2">
-                <button type="submit" className="btn-primary flex-1 py-3 text-base">Opslaan</button>
-                <button type="button" onClick={() => setEditing(null)} className="btn-secondary flex-1 py-3 text-base">Annuleren</button>
+              <div className="flex gap-2 pt-1">
+                <button type="submit" className="btn-primary flex-1">Opslaan</button>
+                <button type="button" onClick={()=>setEditing(null)} className="btn-secondary flex-1">Annuleren</button>
               </div>
             </form>
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ─── Opening Days ──────────────────────────────────────────────────────────
+
+function OpeningTab({ password }) {
+  const [days, setDays]   = useState([])
+  const [regs, setRegs]   = useState({ count: 0, threshold: 20 })
+  const [regList, setRegList] = useState([])
+  const [newDate, setNewDate] = useState('')
+  const [newLabel, setNewLabel] = useState('')
+  const [loading, setLoading]   = useState(true)
+
+  function load() {
+    Promise.all([
+      fetch('/api/opening-days').then(r=>r.json()),
+      fetch('/api/register').then(r=>r.json()),
+      fetch('/api/orders', { headers: {'x-admin-password': password} }).then(r=>r.json()).catch(()=>[]),
+    ]).then(([d, r]) => { setDays(d); setRegs(r); setLoading(false) })
+  }
+  useEffect(() => {
+    load()
+    fetch('/api/register').then(r=>r.json()).then(setRegs)
+  }, [])
+
+  async function addDay(e) {
+    e.preventDefault()
+    if (!newDate) return
+    const res = await fetch('/api/opening-days', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ date: newDate, label: newLabel }) })
+    if (res.ok) { setNewDate(''); setNewLabel(''); load() }
+  }
+
+  async function removeDay(date) {
+    if (!confirm('Openingsdag verwijderen?')) return
+    await fetch('/api/opening-days', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ date }) })
+    load()
+  }
+
+  if (loading) return <LoadingCards />
+
+  return (
+    <div className="space-y-5">
+      {/* Registraties */}
+      <div className="bg-white border border-parchment">
+        <div className="px-5 py-4 border-b border-parchment flex items-center justify-between">
+          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Inschrijvingen</p>
+          <span className={`font-serif text-lg ${regs.count >= regs.threshold ? 'text-olive' : 'text-wine'}`}>
+            {regs.count} / {regs.threshold}
+          </span>
+        </div>
+        <div className="px-5 py-4">
+          <div className="w-full bg-parchment h-2 mb-3">
+            <div className="bg-olive h-2 transition-all" style={{ width: `${Math.min(100, (regs.count/regs.threshold)*100)}%` }} />
+          </div>
+          {regs.count >= regs.threshold
+            ? <p className="font-sans text-xs text-olive">✓ Drempel bereikt — plan een openingsdag!</p>
+            : <p className="font-sans text-xs text-warm-gray">{regs.threshold - regs.count} inschrijvingen nog nodig</p>
+          }
+        </div>
+      </div>
+
+      {/* Openingsdagen */}
+      <div className="bg-white border border-parchment">
+        <div className="px-5 py-4 border-b border-parchment">
+          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Openingsdagen</p>
+        </div>
+        {days.length === 0
+          ? <p className="px-5 py-4 font-sans text-sm text-warm-gray italic">Nog geen openingsdagen gepland.</p>
+          : <ul className="divide-y divide-parchment">
+              {days.map(d => (
+                <li key={d.date} className="px-5 py-3 flex items-center justify-between">
+                  <div>
+                    <p className="font-serif text-ink">{formatLongDate(d.date)}</p>
+                    {d.label && <p className="font-sans text-xs text-warm-gray">{d.label}</p>}
+                  </div>
+                  <button onClick={() => removeDay(d.date)} className="text-warm-gray-light hover:text-wine transition-colors text-lg px-2">✕</button>
+                </li>
+              ))}
+            </ul>
+        }
+        <form onSubmit={addDay} className="px-5 py-4 border-t border-parchment space-y-2">
+          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Dag toevoegen</p>
+          <input type="date" required value={newDate} onChange={e=>setNewDate(e.target.value)} className={INPUT} />
+          <input type="text" value={newLabel} onChange={e=>setNewLabel(e.target.value)} placeholder="Optionele notitie (bv. 'Zomer editie')" className={INPUT} />
+          <button type="submit" className="btn-primary w-full">Dag toevoegen</button>
+        </form>
+      </div>
     </div>
   )
 }
@@ -298,119 +329,75 @@ const COST_LABELS = {
 }
 
 function WinstTab({ password }) {
-  const [pizzas, setPizzas]   = useState([])
-  const [costs, setCosts]     = useState({ hout: 0.50, bloem: 0.30, saus: 0.40, kaas: 1.20 })
+  const [pizzas, setPizzas] = useState([])
+  const [costs, setCosts]   = useState({ hout:0.50, bloem:0.30, saus:0.40, kaas:1.20 })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
   const [saved, setSaved]     = useState(false)
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/pizzas').then(r => r.json()),
-      fetch('/api/costs').then(r => r.json()),
-    ]).then(([p, c]) => {
-      setPizzas(p.length ? p : staticPizzas)
-      setCosts(c)
-      setLoading(false)
-    }).catch(() => {
-      setPizzas(staticPizzas)
-      setLoading(false)
-    })
+    Promise.all([fetch('/api/pizzas').then(r=>r.json()), fetch('/api/costs').then(r=>r.json())])
+      .then(([p,c]) => { setPizzas(p.length?p:staticPizzas); setCosts(c); setLoading(false) })
+      .catch(() => { setPizzas(staticPizzas); setLoading(false) })
   }, [])
 
   async function saveCosts(e) {
-    e.preventDefault()
-    setSaving(true)
-    await fetch('/api/costs', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-      body: JSON.stringify(costs),
-    })
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    e.preventDefault(); setSaving(true)
+    await fetch('/api/costs', { method:'PUT', headers:{'Content-Type':'application/json','x-admin-password':password}, body:JSON.stringify(costs) })
+    setSaving(false); setSaved(true); setTimeout(()=>setSaved(false), 2000)
   }
 
-  const baseCost = Object.values(costs).reduce((s, v) => s + (parseFloat(v) || 0), 0)
-
+  const baseCost = Object.values(costs).reduce((s,v) => s+(parseFloat(v)||0), 0)
   if (loading) return <LoadingCards />
 
   return (
     <div className="space-y-5">
-
-      {/* Base costs form */}
-      <div className="bg-white rounded-2xl p-5 shadow-sm">
-        <h2 className="font-bold text-pizza-brown mb-4">Basiskosten per pizza</h2>
+      <div className="bg-white border border-parchment p-5">
+        <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-4">Basiskosten per pizza</p>
         <form onSubmit={saveCosts} className="space-y-3">
-          {Object.entries(COST_LABELS).map(([key, { label, icon }]) => (
+          {Object.entries(COST_LABELS).map(([key,{label,icon}]) => (
             <div key={key} className="flex items-center gap-3">
-              <span className="text-2xl w-8 text-center">{icon}</span>
-              <span className="flex-1 text-sm text-gray-600">{label}</span>
-              <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden w-28">
-                <span className="px-3 py-2 bg-gray-50 text-gray-400 text-sm">€</span>
-                <input
-                  type="number" step="0.05" min="0"
-                  value={costs[key]}
-                  onChange={e => setCosts(c => ({ ...c, [key]: e.target.value }))}
-                  className="w-full py-2 px-2 text-sm text-right focus:outline-none"
-                />
+              <span className="text-xl w-7">{icon}</span>
+              <span className="flex-1 font-sans text-sm text-warm-gray">{label}</span>
+              <div className="flex items-center border border-parchment w-24">
+                <span className="px-2 py-2 bg-parchment/50 text-warm-gray text-xs">€</span>
+                <input type="number" step="0.05" min="0" value={costs[key]} onChange={e=>setCosts(c=>({...c,[key]:e.target.value}))}
+                  className="w-full py-2 px-2 text-sm text-right focus:outline-none bg-white" />
               </div>
             </div>
           ))}
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-            <span className="text-sm font-semibold text-gray-500">Totaal basis</span>
-            <span className="font-bold text-pizza-brown">€{baseCost.toFixed(2)}</span>
+          <div className="flex justify-between pt-2 border-t border-parchment">
+            <span className="font-sans text-xs text-warm-gray uppercase tracking-wide">Totaal basis</span>
+            <span className="font-serif text-ink">€{baseCost.toFixed(2)}</span>
           </div>
-          <button type="submit" disabled={saving} className="btn-primary w-full py-3">
-            {saved ? '✓ Opgeslagen' : saving ? 'Bezig...' : 'Basiskosten opslaan'}
-          </button>
+          <button type="submit" disabled={saving} className="btn-primary w-full">{saved?'✓ Opgeslagen':saving?'Bezig...':'Opslaan'}</button>
         </form>
       </div>
 
-      {/* Per pizza profit */}
-      <div className="bg-white rounded-2xl p-5 shadow-sm">
-        <h2 className="font-bold text-pizza-brown mb-4">Winst per pizza</h2>
+      <div className="bg-white border border-parchment p-5">
+        <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-4">Winst per pizza</p>
         <div className="space-y-3">
           {pizzas.map(pizza => {
-            const toppingCost = parseFloat(pizza.toppingCost) || 0
-            const totalCost   = baseCost + toppingCost
-            const profit      = pizza.price - totalCost
-            const margin      = pizza.price > 0 ? (profit / pizza.price) * 100 : 0
-            const isGood      = margin >= 50
-
+            const tc = parseFloat(pizza.toppingCost)||0
+            const cost = baseCost+tc
+            const profit = pizza.price-cost
+            const margin = pizza.price>0?(profit/pizza.price)*100:0
             return (
-              <div key={pizza.id} className="border border-gray-100 rounded-xl p-3">
+              <div key={pizza.id} className="border border-parchment p-3">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">{pizza.emoji}</span>
-                  <span className="font-semibold text-pizza-brown flex-1">{pizza.name}</span>
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isGood ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                    {margin.toFixed(0)}%
-                  </span>
+                  <span className="text-xl">{pizza.emoji}</span>
+                  <span className="font-serif flex-1 text-ink">{pizza.name}</span>
+                  <span className={`font-sans text-xs px-2 py-0.5 ${margin>=50?'bg-olive/10 text-olive':'bg-wine/10 text-wine'}`}>{margin.toFixed(0)}%</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                  <div className="bg-gray-50 rounded-lg p-2">
-                    <div className="text-gray-400">Verkoopprijs</div>
-                    <div className="font-bold text-pizza-brown">€{pizza.price.toFixed(2)}</div>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-2">
-                    <div className="text-gray-400">Kosten</div>
-                    <div className="font-bold text-gray-600">€{totalCost.toFixed(2)}</div>
-                    {toppingCost > 0 && <div className="text-gray-300 text-xs">incl. €{toppingCost.toFixed(2)} beleg</div>}
-                  </div>
-                  <div className={`rounded-lg p-2 ${profit >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
-                    <div className="text-gray-400">Winst</div>
-                    <div className={`font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                      €{profit.toFixed(2)}
-                    </div>
-                  </div>
+                  <div className="bg-parchment/50 p-2"><div className="text-warm-gray">Prijs</div><div className="font-serif text-ink">€{pizza.price.toFixed(2)}</div></div>
+                  <div className="bg-parchment/50 p-2"><div className="text-warm-gray">Kosten</div><div className="font-serif text-ink">€{cost.toFixed(2)}</div></div>
+                  <div className={`p-2 ${profit>=0?'bg-olive/10':'bg-wine/10'}`}><div className="text-warm-gray">Winst</div><div className={`font-serif ${profit>=0?'text-olive':'text-wine'}`}>€{profit.toFixed(2)}</div></div>
                 </div>
               </div>
             )
           })}
         </div>
-        <p className="text-xs text-gray-300 mt-3 text-center">
-          Belegkosten instellen via Pizza's → Bewerk
-        </p>
       </div>
     </div>
   )
@@ -419,13 +406,13 @@ function WinstTab({ password }) {
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 function LoadingCards() {
-  return (
-    <div className="space-y-3">
-      {[1, 2, 3].map(i => <div key={i} className="bg-white rounded-2xl h-24 animate-pulse" />)}
-    </div>
-  )
+  return <div className="space-y-3">{[1,2,3].map(i=><div key={i} className="bg-white border border-parchment h-20 animate-pulse"/>)}</div>
 }
-
-function formatShortDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString('nl-BE', { day: 'numeric', month: 'short' })
+function Empty({ icon, text }) {
+  return <div className="text-center py-16"><div className="text-5xl mb-3 opacity-40">{icon}</div><p className="font-sans text-sm text-warm-gray">{text}</p></div>
 }
+function SectionLabel({ children }) {
+  return <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-3">{children}</p>
+}
+function formatShortDate(d) { return new Date(d).toLocaleDateString('nl-BE',{day:'numeric',month:'short'}) }
+function formatLongDate(d)  { return new Date(d).toLocaleDateString('nl-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) }

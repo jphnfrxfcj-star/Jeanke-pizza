@@ -3,24 +3,24 @@ import PizzaCard from './components/PizzaCard'
 import Cart from './components/Cart'
 import CheckoutModal from './components/CheckoutModal'
 import Admin from './components/Admin'
+import Cancel from './components/Cancel'
 import config from './data/config.json'
 import staticPizzas from './data/pizzas.json'
 
-function generateSlots(config) {
+function generateSlotsForDates(openingDates, config) {
   const slots = []
   const now = new Date()
-  for (let dayOffset = 0; dayOffset <= config.daysAhead; dayOffset++) {
-    const date = new Date(now)
-    date.setDate(date.getDate() + dayOffset)
-    const dateStr = date.toISOString().split('T')[0]
-    const start = new Date(date); start.setHours(config.openingHour, 0, 0, 0)
-    const end   = new Date(date); end.setHours(config.closingHour, 0, 0, 0)
+  for (const { date } of openingDates) {
+    const d = new Date(date + 'T00:00:00')
+    // Skip past dates
+    const endOfDay = new Date(date + 'T23:59:59')
+    if (endOfDay < now) continue
+    const dateStr = date
+    const start = new Date(d); start.setHours(config.openingHour, 0, 0, 0)
+    const end   = new Date(d); end.setHours(config.closingHour, 0, 0, 0)
     const cursor = new Date(start)
     while (cursor < end) {
-      if (dayOffset === 0) {
-        if (cursor > new Date(now.getTime() + 15 * 60 * 1000))
-          slots.push({ date: dateStr, time: cursor.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }) })
-      } else {
+      if (cursor > new Date(now.getTime() + 15 * 60 * 1000)) {
         slots.push({ date: dateStr, time: cursor.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }) })
       }
       cursor.setMinutes(cursor.getMinutes() + config.slotIntervalMinutes)
@@ -30,7 +30,9 @@ function generateSlots(config) {
 }
 
 export default function App() {
-  if (window.location.pathname === '/beheer') return <Admin />
+  const path = window.location.pathname
+  if (path === '/beheer') return <Admin />
+  if (path === '/annuleer') return <Cancel />
   return <Shop />
 }
 
@@ -39,7 +41,11 @@ function Shop() {
   const [showCheckout, setShowCheckout] = useState(false)
   const [successOrder, setSuccessOrder] = useState(null)
   const [pizzas, setPizzas] = useState([])
-  const slots = useMemo(() => generateSlots(config), [])
+  const [openingDays, setOpeningDays] = useState(null) // null = loading
+  const [registration, setRegistration] = useState(null)
+  const [regName, setRegName] = useState('')
+  const [regEmail, setRegEmail] = useState('')
+  const [regStatus, setRegStatus] = useState('') // '' | 'loading' | 'success' | 'duplicate' | 'error'
 
   useEffect(() => {
     fetch('/api/pizzas')
@@ -47,6 +53,31 @@ function Shop() {
       .then(data => setPizzas(data.length ? data : staticPizzas))
       .catch(() => setPizzas(staticPizzas))
   }, [])
+
+  useEffect(() => {
+    fetch('/api/opening-days')
+      .then(r => r.json())
+      .then(days => {
+        const now = new Date()
+        const future = days.filter(d => new Date(d.date + 'T23:59:59') >= now)
+        setOpeningDays(future)
+      })
+      .catch(() => setOpeningDays([]))
+  }, [])
+
+  useEffect(() => {
+    if (openingDays !== null && openingDays.length === 0) {
+      fetch('/api/register')
+        .then(r => r.json())
+        .then(setRegistration)
+        .catch(() => {})
+    }
+  }, [openingDays])
+
+  const slots = useMemo(() => {
+    if (!openingDays || openingDays.length === 0) return []
+    return generateSlotsForDates(openingDays, config)
+  }, [openingDays])
 
   function addToCart(pizza) {
     setCart(prev => {
@@ -67,6 +98,33 @@ function Shop() {
   function handleSuccess(order) { setSuccessOrder(order); setShowCheckout(false); setCart([]) }
 
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0)
+
+  async function handleRegister(e) {
+    e.preventDefault()
+    setRegStatus('loading')
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: regName, email: regEmail }),
+      })
+      const data = await res.json()
+      if (res.status === 409) { setRegStatus('duplicate'); return }
+      if (!res.ok) { setRegStatus('error'); return }
+      setRegistration({ count: data.count, threshold: data.threshold })
+      setRegStatus('success')
+      // Notify owner if threshold reached
+      if (data.reached) {
+        fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'threshold', count: data.count, threshold: data.threshold }),
+        }).catch(() => {})
+      }
+    } catch { setRegStatus('error') }
+  }
+
+  const noOpeningDays = openingDays !== null && openingDays.length === 0
 
   return (
     <div className="min-h-screen bg-cream">
@@ -90,7 +148,7 @@ function Shop() {
           </p>
 
           {/* Mobile cart button */}
-          {cartCount > 0 && (
+          {cartCount > 0 && !noOpeningDays && (
             <button
               onClick={() => setShowCheckout(true)}
               className="lg:hidden absolute right-6 top-1/2 -translate-y-1/2 bg-wine text-cream px-4 py-2 font-sans text-xs tracking-widest uppercase flex items-center gap-2"
@@ -101,20 +159,119 @@ function Shop() {
         </div>
 
         {/* Nav strip */}
-        <div className="border-t border-cream/10">
-          <div className="max-w-5xl mx-auto px-6 py-2 flex items-center justify-between">
-            <span className="font-sans text-xs text-cream/40 tracking-wide">
-              Ophaaluren {config.openingHour}:00 – {config.closingHour}:00
-            </span>
-            <span className="font-sans text-xs text-cream/40 tracking-wide">
-              Elke {config.slotIntervalMinutes} min een slot
-            </span>
+        {!noOpeningDays && openingDays && openingDays.length > 0 && (
+          <div className="border-t border-cream/10">
+            <div className="max-w-5xl mx-auto px-6 py-2 flex items-center justify-between">
+              <span className="font-sans text-xs text-cream/40 tracking-wide">
+                Ophaaluren {config.openingHour}:00 – {config.closingHour}:00
+              </span>
+              <span className="font-sans text-xs text-cream/40 tracking-wide">
+                Elke {config.slotIntervalMinutes} min een slot
+              </span>
+            </div>
           </div>
-        </div>
+        )}
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
-        {successOrder ? (
+
+        {/* Registration page — no opening days yet */}
+        {openingDays === null ? (
+          <div className="flex justify-center py-16">
+            <div className="w-8 h-8 border-2 border-olive/30 border-t-olive rounded-full animate-spin" />
+          </div>
+        ) : noOpeningDays ? (
+          <div className="max-w-lg mx-auto">
+            <div className="divider mb-8">Interesse lijst</div>
+
+            <div className="bg-white border border-parchment mb-8">
+              <div className="px-6 py-5 border-b border-parchment text-center">
+                <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-1">Voortgang</p>
+                {registration ? (
+                  <>
+                    <p className="font-serif text-4xl text-ink mb-1">
+                      {registration.count}<span className="text-warm-gray text-2xl">/{registration.threshold}</span>
+                    </p>
+                    <p className="font-sans text-xs text-warm-gray italic">
+                      inschrijvingen
+                    </p>
+                    <div className="mt-4 h-2 bg-parchment rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-olive transition-all duration-500"
+                        style={{ width: `${Math.min(100, (registration.count / registration.threshold) * 100)}%` }}
+                      />
+                    </div>
+                    <p className="font-sans text-xs text-warm-gray mt-2">
+                      Nog {Math.max(0, registration.threshold - registration.count)} nodig om te openen
+                    </p>
+                  </>
+                ) : (
+                  <div className="w-6 h-6 border-2 border-olive/30 border-t-olive rounded-full animate-spin mx-auto my-2" />
+                )}
+              </div>
+
+              <div className="px-6 py-5">
+                <p className="font-serif italic text-warm-gray text-sm text-center mb-6">
+                  Schrijf u in en ontvang een bericht zodra we openen.
+                </p>
+
+                {regStatus === 'success' ? (
+                  <div className="text-center py-4">
+                    <p className="text-2xl mb-2">✓</p>
+                    <p className="font-serif italic text-ink">Inschrijving ontvangen!</p>
+                    <p className="font-sans text-xs text-warm-gray mt-1">We sturen u een bericht zodra het zover is.</p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleRegister} className="space-y-4">
+                    <div>
+                      <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Naam</label>
+                      <input
+                        type="text" required value={regName} onChange={e => setRegName(e.target.value)}
+                        placeholder="Uw naam"
+                        className="w-full border border-parchment bg-cream px-4 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">E-mail</label>
+                      <input
+                        type="email" required value={regEmail} onChange={e => setRegEmail(e.target.value)}
+                        placeholder="uw@email.be"
+                        className="w-full border border-parchment bg-cream px-4 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors"
+                      />
+                    </div>
+                    {regStatus === 'duplicate' && (
+                      <p className="font-sans text-xs text-wine italic">Dit e-mailadres is al ingeschreven.</p>
+                    )}
+                    {regStatus === 'error' && (
+                      <p className="font-sans text-xs text-wine italic">Er ging iets mis. Probeer opnieuw.</p>
+                    )}
+                    <button type="submit" disabled={regStatus === 'loading'} className="btn-primary w-full">
+                      {regStatus === 'loading' ? 'Even geduld...' : 'Inschrijven'}
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
+
+            {/* Still show the menu below */}
+            <div className="divider mb-7">Il Menù</div>
+            <p className="font-sans text-xs text-warm-gray text-center mb-6 tracking-wide">
+              Een voorproefje van ons aanbod
+            </p>
+            {pizzas.length === 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[1,2,3,4].map(i => <div key={i} className="h-64 bg-parchment animate-pulse" />)}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {pizzas.map(pizza => (
+                  <PizzaCard key={pizza.id} pizza={pizza} quantity={0} onAdd={() => {}} onRemove={() => {}} currency={config.currency} />
+                ))}
+              </div>
+            )}
+          </div>
+
+        ) : successOrder ? (
           /* Success */
           <div className="max-w-md mx-auto text-center py-16">
             <div className="text-5xl mb-5">🎉</div>
@@ -138,6 +295,20 @@ function Shop() {
 
             {/* Menu */}
             <div className="lg:col-span-2">
+              {openingDays.length > 0 && (
+                <div className="mb-6 bg-white border border-parchment px-5 py-4">
+                  <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Openingsdagen</p>
+                  <div className="flex flex-wrap gap-2">
+                    {openingDays.map(d => (
+                      <span key={d.date} className="bg-olive/10 border border-olive/20 text-olive text-xs font-sans px-3 py-1.5">
+                        {new Date(d.date + 'T12:00:00').toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long' })}
+                        {d.label && <span className="ml-1 text-warm-gray">— {d.label}</span>}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="divider mb-7">Il Menù</div>
               {pizzas.length === 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
