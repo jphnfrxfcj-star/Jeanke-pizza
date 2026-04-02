@@ -1,40 +1,43 @@
 export default function PizzaCard({ pizza, quantity, onAdd, onRemove, currency }) {
   return (
-    <div className="card flex flex-col">
-      <div className="bg-gradient-to-br from-orange-100 to-red-100 p-6 flex items-center justify-center text-6xl">
-        {pizza.emoji}
+    <div className="bg-white border border-parchment hover:border-gold/40 transition-colors duration-300 flex flex-col">
+      {/* Visual area */}
+      <div className="bg-parchment/60 py-8 flex items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 opacity-5"
+          style={{ backgroundImage: 'radial-gradient(circle, #BFA06A 1px, transparent 1px)', backgroundSize: '20px 20px' }}
+        />
+        <span className="text-6xl relative z-10">{pizza.emoji}</span>
       </div>
-      <div className="p-4 flex flex-col flex-1">
-        <div className="flex justify-between items-start mb-1">
-          <h3 className="font-bold text-lg text-pizza-brown">{pizza.name}</h3>
-          <span className="font-bold text-pizza-red text-lg ml-2 shrink-0">
-            {currency}{pizza.price.toFixed(2)}
-          </span>
-        </div>
-        <p className="text-sm text-gray-500 mb-4 flex-1">{pizza.description}</p>
 
-        <div className="flex items-center justify-between mt-auto">
+      {/* Content */}
+      <div className="p-5 flex flex-col flex-1">
+        <h3 className="font-serif text-xl font-semibold text-ink mb-1">{pizza.name}</h3>
+        <p className="font-sans text-xs text-warm-gray italic leading-relaxed mb-4 flex-1">
+          {pizza.description}
+        </p>
+
+        <div className="flex items-center justify-between pt-3 border-t border-parchment">
+          <span className="font-serif text-lg text-wine">{currency}{pizza.price.toFixed(2)}</span>
+
           {quantity === 0 ? (
             <button
               onClick={() => onAdd(pizza)}
-              className="btn-primary w-full"
+              className="btn-primary"
             >
-              + Toevoegen
+              Toevoegen
             </button>
           ) : (
-            <div className="flex items-center gap-3 w-full">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => onRemove(pizza)}
-                className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-pizza-brown font-bold text-lg flex items-center justify-center transition-colors"
+                className="w-8 h-8 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-lg transition-colors"
               >
                 −
               </button>
-              <span className="font-bold text-pizza-brown text-lg flex-1 text-center">
-                {quantity}
-              </span>
+              <span className="font-serif text-lg w-4 text-center">{quantity}</span>
               <button
                 onClick={() => onAdd(pizza)}
-                className="w-9 h-9 rounded-full bg-pizza-red hover:bg-pizza-red-dark text-white font-bold text-lg flex items-center justify-center transition-colors"
+                className="w-8 h-8 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-lg transition-colors"
               >
                 +
               </button>

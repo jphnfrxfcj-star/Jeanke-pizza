@@ -10,131 +10,89 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
   const [bookedSlots, setBookedSlots] = useState([])
 
   useEffect(() => {
-    fetch('/api/slots')
-      .then(r => r.json())
-      .then(data => setBookedSlots(data))
-      .catch(() => {})
+    fetch('/api/slots').then(r => r.json()).then(setBookedSlots).catch(() => {})
   }, [])
 
   const total = items.reduce((sum, i) => sum + i.pizza.price * i.quantity, 0)
   const availableDates = [...new Set(slots.map(s => s.date))]
   const slotsForDate = slots.filter(s => s.date === selectedDate)
+  const orderText = items.map(i => `${i.quantity}x ${i.pizza.name} (${currency}${(i.pizza.price * i.quantity).toFixed(2)})`).join(', ')
 
-  const orderText = items
-    .map(i => `${i.quantity}x ${i.pizza.name} (${currency}${(i.pizza.price * i.quantity).toFixed(2)})`)
-    .join(', ')
-
-  function isBooked(date, time) {
-    return bookedSlots.includes(`${date}_${time}`)
-  }
+  function isBooked(date, time) { return bookedSlots.includes(`${date}_${time}`) }
 
   function encode(data) {
-    return Object.keys(data)
-      .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(data[key]))
-      .join('&')
+    return Object.keys(data).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k])).join('&')
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!selectedSlot) {
-      setError('Kies een tijdslot.')
-      return
-    }
-    setError('')
-    setLoading(true)
-
+    if (!selectedSlot) { setError('Kies een tijdslot.'); return }
+    setError(''); setLoading(true)
     try {
-      // Reserve the slot first
       const slotRes = await fetch('/api/slots', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          date: selectedDate,
-          timeslot: selectedSlot,
-          name,
-          email,
-          order: orderText,
-          total: `${currency}${total.toFixed(2)}`,
-        }),
+        body: JSON.stringify({ date: selectedDate, timeslot: selectedSlot, name, email, order: orderText, total: `${currency}${total.toFixed(2)}` }),
       })
-
       if (slotRes.status === 409) {
-        setError('Dit tijdslot is net geboekt door iemand anders. Kies een ander slot.')
-        setBookedSlots(prev => [...prev, `${selectedDate}_${selectedSlot}`])
-        setSelectedSlot('')
-        setLoading(false)
-        return
+        setError('Dit tijdslot is net geboekt. Kies een ander.'); setBookedSlots(prev => [...prev, `${selectedDate}_${selectedSlot}`]); setSelectedSlot(''); setLoading(false); return
       }
       if (!slotRes.ok) throw new Error('Slot booking failed')
-
-      // Then submit the order form
       const formRes = await fetch('/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: encode({
-          'form-name': 'pizza-order',
-          'bot-field': '',
-          name,
-          email,
-          date: selectedDate,
-          timeslot: selectedSlot,
-          order: orderText,
-          total: `${currency}${total.toFixed(2)}`,
-        }),
+        body: encode({ 'form-name': 'pizza-order', 'bot-field': '', name, email, date: selectedDate, timeslot: selectedSlot, order: orderText, total: `${currency}${total.toFixed(2)}` }),
       })
       if (!formRes.ok) throw new Error(`Form status ${formRes.status}`)
-
       onSuccess({ name, email, date: selectedDate, timeslot: selectedSlot, total })
     } catch (err) {
       console.error('Submit error:', err)
       setError('Er ging iets mis. Probeer opnieuw.')
-    } finally {
-      setLoading(false)
-    }
+    } finally { setLoading(false) }
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-5">
-            <h2 className="text-xl font-bold text-pizza-brown">Bestelling bevestigen</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+    <div className="fixed inset-0 bg-ink/60 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-cream w-full sm:max-w-lg max-h-[95vh] overflow-y-auto">
+        {/* Header */}
+        <div className="bg-olive px-6 py-5 flex items-start justify-between">
+          <div>
+            <p className="font-sans text-xs tracking-widest uppercase text-gold/70 mb-1">Bevestig</p>
+            <h2 className="font-serif text-2xl text-cream italic">Uw bestelling</h2>
           </div>
+          <button onClick={onClose} className="text-cream/50 hover:text-cream text-2xl leading-none mt-1">×</button>
+        </div>
 
+        <div className="p-6 space-y-6">
           {/* Order summary */}
-          <div className="bg-pizza-cream rounded-xl p-4 mb-5">
-            <p className="text-sm font-semibold text-pizza-brown mb-2">Jouw bestelling:</p>
-            <ul className="space-y-1">
+          <div className="border border-parchment bg-white">
+            <div className="px-4 py-3 border-b border-parchment">
+              <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Overzicht</p>
+            </div>
+            <ul className="divide-y divide-parchment">
               {items.map(({ pizza, quantity }) => (
-                <li key={pizza.id} className="flex justify-between text-sm text-gray-600">
-                  <span>{quantity}× {pizza.name}</span>
-                  <span className="font-medium">{currency}{(pizza.price * quantity).toFixed(2)}</span>
+                <li key={pizza.id} className="px-4 py-2 flex justify-between text-sm">
+                  <span className="text-ink">{quantity}× {pizza.name}</span>
+                  <span className="text-wine">{currency}{(pizza.price * quantity).toFixed(2)}</span>
                 </li>
               ))}
             </ul>
-            <div className="border-t border-orange-200 mt-2 pt-2 flex justify-between font-bold text-pizza-red">
-              <span>Totaal</span>
-              <span>{currency}{total.toFixed(2)}</span>
+            <div className="px-4 py-3 border-t border-parchment flex justify-between">
+              <span className="font-sans text-xs tracking-widest uppercase text-warm-gray">Totaal</span>
+              <span className="font-serif text-lg text-wine">{currency}{total.toFixed(2)}</span>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Date picker */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Date */}
             {availableDates.length > 1 && (
               <div>
-                <label className="block text-sm font-semibold text-pizza-brown mb-1">Datum</label>
+                <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Datum</label>
                 <div className="flex gap-2 flex-wrap">
                   {availableDates.map(date => (
-                    <button
-                      type="button"
-                      key={date}
+                    <button type="button" key={date}
                       onClick={() => { setSelectedDate(date); setSelectedSlot('') }}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                        selectedDate === date
-                          ? 'bg-pizza-red text-white border-pizza-red'
-                          : 'bg-white text-pizza-brown border-gray-200 hover:border-pizza-red'
-                      }`}
+                      className={`px-4 py-2 text-xs font-sans tracking-wide border transition-colors ${selectedDate === date ? 'bg-olive text-cream border-olive' : 'bg-white text-ink border-parchment hover:border-olive'}`}
                     >
                       {formatDate(date)}
                     </button>
@@ -143,31 +101,24 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
               </div>
             )}
 
-            {/* Time slot */}
+            {/* Time slots */}
             <div>
-              <label className="block text-sm font-semibold text-pizza-brown mb-1">Tijdslot</label>
+              <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Tijdslot</label>
               {slotsForDate.length === 0 ? (
-                <p className="text-sm text-red-500">Geen tijdsloten beschikbaar voor deze datum.</p>
+                <p className="text-sm text-wine italic">Geen tijdsloten beschikbaar.</p>
               ) : (
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-4 gap-1.5">
                   {slotsForDate.map(slot => {
                     const booked = isBooked(selectedDate, slot.time)
                     return (
-                      <button
-                        type="button"
-                        key={slot.time}
-                        disabled={booked}
+                      <button type="button" key={slot.time} disabled={booked}
                         onClick={() => !booked && setSelectedSlot(slot.time)}
-                        className={`py-2 rounded-lg text-sm font-medium border transition-colors ${
-                          booked
-                            ? 'bg-gray-100 text-gray-400 border-gray-100 cursor-not-allowed line-through'
-                            : selectedSlot === slot.time
-                            ? 'bg-pizza-red text-white border-pizza-red'
-                            : 'bg-white text-pizza-brown border-gray-200 hover:border-pizza-red'
+                        className={`py-2.5 text-xs font-sans border transition-colors ${
+                          booked ? 'bg-parchment/50 text-warm-gray-light border-parchment cursor-not-allowed line-through'
+                          : selectedSlot === slot.time ? 'bg-olive text-cream border-olive'
+                          : 'bg-white text-ink border-parchment hover:border-olive'
                         }`}
-                      >
-                        {slot.time}
-                      </button>
+                      >{slot.time}</button>
                     )
                   })}
                 </div>
@@ -176,34 +127,22 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
 
             {/* Name */}
             <div>
-              <label className="block text-sm font-semibold text-pizza-brown mb-1">Naam</label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="Jouw naam"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pizza-red"
-              />
+              <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Naam</label>
+              <input type="text" required value={name} onChange={e => setName(e.target.value)} placeholder="Uw naam"
+                className="w-full border border-parchment bg-white px-4 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors" />
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-semibold text-pizza-brown mb-1">E-mail</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="jouw@email.be"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pizza-red"
-              />
+              <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">E-mail</label>
+              <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="uw@email.be"
+                className="w-full border border-parchment bg-white px-4 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors" />
             </div>
 
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p className="text-xs text-wine italic">{error}</p>}
 
-            <button type="submit" disabled={loading} className="btn-primary w-full mt-2">
-              {loading ? 'Bezig...' : 'Bevestig bestelling'}
+            <button type="submit" disabled={loading} className="btn-primary w-full">
+              {loading ? 'Een moment...' : 'Bestelling bevestigen'}
             </button>
           </form>
         </div>
@@ -213,6 +152,5 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
 }
 
 function formatDate(dateStr) {
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('nl-BE', { weekday: 'short', day: 'numeric', month: 'short' })
+  return new Date(dateStr).toLocaleDateString('nl-BE', { weekday: 'short', day: 'numeric', month: 'short' })
 }
