@@ -43,9 +43,11 @@ function generateSlots(config) {
 }
 
 export default function App() {
-  const isAdmin = window.location.pathname === '/beheer'
-  if (isAdmin) return <Admin />
+  if (window.location.pathname === '/beheer') return <Admin />
+  return <Shop />
+}
 
+function Shop() {
   const [cart, setCart] = useState([])
   const [showCheckout, setShowCheckout] = useState(false)
   const [successOrder, setSuccessOrder] = useState(null)
@@ -174,3 +176,4 @@ export default function App() {
     </div>
   )
 }
+
