@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/pizza-icon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jeanke's Pizza</title>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!-- Hidden form for Netlify Forms detection at build time -->
+    <form name="pizza-order" netlify netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="pizza-order" />
+      <input name="bot-field" />
+      <input type="text" name="name" />
+      <input type="email" name="email" />
+      <input type="text" name="timeslot" />
+      <input type="text" name="date" />
+      <textarea name="order"></textarea>
+      <input type="text" name="total" />
+    </form>
+
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

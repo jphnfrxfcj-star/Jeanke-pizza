@@ -1,0 +1,8 @@
+{
+  "storeName": "Jeanke's Pizza",
+  "slotIntervalMinutes": 15,
+  "openingHour": 17,
+  "closingHour": 22,
+  "currency": "€",
+  "daysAhead": 1
+}

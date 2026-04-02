@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "name": "Margherita",
+    "description": "Tomatensaus, mozzarella, verse basilicum",
+    "price": 10.00,
+    "emoji": "🍕"
+  },
+  {
+    "id": 2,
+    "name": "Pepperoni",
+    "description": "Tomatensaus, mozzarella, pittige pepperoni",
+    "price": 12.50,
+    "emoji": "🍕"
+  },
+  {
+    "id": 3,
+    "name": "Quattro Stagioni",
+    "description": "Tomatensaus, mozzarella, champignons, artisjok, olijven, ham",
+    "price": 13.50,
+    "emoji": "🍕"
+  },
+  {
+    "id": 4,
+    "name": "Hawaiana",
+    "description": "Tomatensaus, mozzarella, ham, ananas",
+    "price": 12.00,
+    "emoji": "🍕"
+  },
+  {
+    "id": 5,
+    "name": "Vegetariana",
+    "description": "Tomatensaus, mozzarella, paprika, courgette, champignons, rode ui",
+    "price": 11.50,
+    "emoji": "🌿"
+  },
+  {
+    "id": 6,
+    "name": "Diavola",
+    "description": "Tomatensaus, mozzarella, pikante salami, jalapeños, rode peper",
+    "price": 13.00,
+    "emoji": "🌶️"
+  }
+]
