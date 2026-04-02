@@ -5,20 +5,24 @@ export default async (req) => {
 
   if (req.method === "GET") {
     const data = await store.get("slots", { type: "json" }).catch(() => null)
-    return Response.json(data || [])
+    // Public endpoint only returns slot keys
+    const keys = (data || []).map(s => s.key)
+    return Response.json(keys)
   }
 
   if (req.method === "POST") {
-    const { date, timeslot } = await req.json()
+    const body = await req.json()
+    const { date, timeslot, name, email, order, total } = body
     const key = `${date}_${timeslot}`
 
     const existing = await store.get("slots", { type: "json" }).catch(() => []) || []
 
-    if (existing.includes(key)) {
+    if (existing.some(s => s.key === key)) {
       return Response.json({ error: "Slot already booked" }, { status: 409 })
     }
 
-    await store.set("slots", JSON.stringify([...existing, key]))
+    const entry = { key, date, time: timeslot, name, email, order, total, bookedAt: new Date().toISOString() }
+    await store.set("slots", JSON.stringify([...existing, entry]))
     return Response.json({ success: true })
   }
 

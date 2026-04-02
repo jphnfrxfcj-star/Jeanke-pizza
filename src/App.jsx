@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import PizzaCard from './components/PizzaCard'
 import Cart from './components/Cart'
 import CheckoutModal from './components/CheckoutModal'
-import pizzas from './data/pizzas.json'
+import Admin from './components/Admin'
 import config from './data/config.json'
 
 function generateSlots(config) {
@@ -21,7 +21,6 @@ function generateSlots(config) {
 
     const cursor = new Date(start)
     while (cursor < end) {
-      // For today, only show slots at least 15 minutes in the future
       if (dayOffset === 0) {
         const cutoff = new Date(now.getTime() + 15 * 60 * 1000)
         if (cursor > cutoff) {
@@ -43,18 +42,27 @@ function generateSlots(config) {
 }
 
 export default function App() {
-  const [cart, setCart] = useState([]) // [{pizza, quantity}]
+  const isAdmin = window.location.pathname === '/beheer'
+  if (isAdmin) return <Admin />
+
+  const [cart, setCart] = useState([])
   const [showCheckout, setShowCheckout] = useState(false)
   const [successOrder, setSuccessOrder] = useState(null)
+  const [pizzas, setPizzas] = useState([])
 
   const slots = useMemo(() => generateSlots(config), [])
+
+  useEffect(() => {
+    fetch('/api/pizzas')
+      .then(r => r.json())
+      .then(setPizzas)
+      .catch(() => {})
+  }, [])
 
   function addToCart(pizza) {
     setCart(prev => {
       const existing = prev.find(i => i.pizza.id === pizza.id)
-      if (existing) {
-        return prev.map(i => i.pizza.id === pizza.id ? { ...i, quantity: i.quantity + 1 } : i)
-      }
+      if (existing) return prev.map(i => i.pizza.id === pizza.id ? { ...i, quantity: i.quantity + 1 } : i)
       return [...prev, { pizza, quantity: 1 }]
     })
   }
@@ -80,7 +88,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
       <header className="bg-pizza-red text-white shadow-lg">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -106,42 +113,36 @@ export default function App() {
           <div className="max-w-lg mx-auto text-center py-16">
             <div className="text-6xl mb-4">🎉</div>
             <h2 className="text-2xl font-bold text-pizza-brown mb-2">Bestelling geplaatst!</h2>
-            <p className="text-gray-600 mb-1">
-              Bedankt, <strong>{successOrder.name}</strong>!
-            </p>
-            <p className="text-gray-600 mb-1">
-              Jouw pizza's zijn klaar om <strong>{successOrder.timeslot}</strong>.
-            </p>
-            <p className="text-gray-500 text-sm mb-6">
-              Een bevestiging is verstuurd naar <strong>{successOrder.email}</strong>.
-            </p>
-            <button
-              onClick={() => setSuccessOrder(null)}
-              className="btn-primary"
-            >
-              Nieuwe bestelling
-            </button>
+            <p className="text-gray-600 mb-1">Bedankt, <strong>{successOrder.name}</strong>!</p>
+            <p className="text-gray-600 mb-1">Jouw pizza's zijn klaar om <strong>{successOrder.timeslot}</strong>.</p>
+            <p className="text-gray-500 text-sm mb-6">Een bevestiging is verstuurd naar <strong>{successOrder.email}</strong>.</p>
+            <button onClick={() => setSuccessOrder(null)} className="btn-primary">Nieuwe bestelling</button>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Pizza menu */}
             <div className="lg:col-span-2">
               <h2 className="text-xl font-bold text-pizza-brown mb-4">Onze pizza's</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {pizzas.map(pizza => (
-                  <PizzaCard
-                    key={pizza.id}
-                    pizza={pizza}
-                    quantity={getQuantity(pizza.id)}
-                    onAdd={addToCart}
-                    onRemove={removeFromCart}
-                    currency={config.currency}
-                  />
-                ))}
-              </div>
+              {pizzas.length === 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[1,2,3,4].map(i => (
+                    <div key={i} className="card h-64 animate-pulse bg-gray-100" />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {pizzas.map(pizza => (
+                    <PizzaCard
+                      key={pizza.id}
+                      pizza={pizza}
+                      quantity={getQuantity(pizza.id)}
+                      onAdd={addToCart}
+                      onRemove={removeFromCart}
+                      currency={config.currency}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-
-            {/* Cart sidebar */}
             <div className="lg:col-span-1">
               <div className="sticky top-6">
                 <Cart

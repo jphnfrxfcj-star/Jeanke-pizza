@@ -4,5 +4,6 @@
   "openingHour": 17,
   "closingHour": 22,
   "currency": "€",
-  "daysAhead": 1
+  "daysAhead": 1,
+  "adminPassword": "jeanke2024"
 }

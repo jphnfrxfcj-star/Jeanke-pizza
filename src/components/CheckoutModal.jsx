@@ -48,7 +48,14 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
       const slotRes = await fetch('/api/slots', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: selectedDate, timeslot: selectedSlot }),
+        body: JSON.stringify({
+          date: selectedDate,
+          timeslot: selectedSlot,
+          name,
+          email,
+          order: orderText,
+          total: `${currency}${total.toFixed(2)}`,
+        }),
       })
 
       if (slotRes.status === 409) {
