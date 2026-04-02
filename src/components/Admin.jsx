@@ -191,7 +191,11 @@ function PizzasTab({ password }) {
       headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
       body: JSON.stringify(list),
     })
-    if (!res.ok) { alert('Opslaan mislukt. Probeer opnieuw.'); return }
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      alert(`Opslaan mislukt (${res.status}): ${body.error || 'onbekende fout'}`)
+      return
+    }
     setPizzas(list)
   }
 
