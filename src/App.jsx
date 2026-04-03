@@ -183,7 +183,15 @@ function Shop() {
           </div>
         ) : noOpeningDays ? (
           <div className="max-w-lg mx-auto">
-            <div className="divider mb-8">Interesse lijst</div>
+            <div className="divider mb-4">Interesse lijst</div>
+            {registration?.registrationDate && (
+              <p className="font-serif italic text-center text-warm-gray mb-8">
+                Registreer voor{' '}
+                <strong className="text-ink not-italic">
+                  {new Date(registration.registrationDate + 'T12:00:00').toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                </strong>
+              </p>
+            )}
 
             <div className="bg-white border border-parchment mb-8">
               <div className="px-6 py-5 border-b border-parchment text-center">
@@ -287,7 +295,7 @@ function Shop() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {pizzas.map(pizza => (
-                  <PizzaCard key={pizza.id} pizza={pizza} quantity={0} onAdd={() => {}} onRemove={() => {}} currency={config.currency} />
+                  <PizzaCard key={pizza.id} pizza={pizza} quantity={0} onAdd={() => {}} onRemove={() => {}} currency={config.currency} showOrder={false} />
                 ))}
               </div>
             )}

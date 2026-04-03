@@ -24,7 +24,7 @@ export default async (req) => {
         return Response.json(list)
       }
 
-      return Response.json({ count: totalPizzas, max, openFrom, registrations: list.length })
+      return Response.json({ count: totalPizzas, max, openFrom, registrations: list.length, registrationDate: cfg?.registrationDate || null })
     }
 
     if (req.method === "POST") {
@@ -40,6 +40,15 @@ export default async (req) => {
       const openFrom = cfg?.openFrom ?? DEFAULT_OPEN_FROM
       const totalPizzas = updated.reduce((sum, r) => sum + (r.pizzas || 1), 0)
       return Response.json({ success: true, count: totalPizzas, max, openFrom, reached: totalPizzas >= openFrom })
+    }
+
+    if (req.method === "PUT") {
+      const pw = req.headers.get("x-admin-password")
+      if (pw !== ADMIN_PASSWORD) return Response.json({ error: "Unauthorized" }, { status: 401 })
+      const { registrationDate, max, openFrom } = await req.json()
+      const existing = await store.get("config", { type: "json" }).catch(() => null) || {}
+      await store.set("config", JSON.stringify({ ...existing, registrationDate, max, openFrom }))
+      return Response.json({ success: true })
     }
 
     return Response.json({ error: "Method not allowed" }, { status: 405 })

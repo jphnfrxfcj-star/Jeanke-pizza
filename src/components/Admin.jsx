@@ -61,8 +61,8 @@ export default function Admin() {
             { key: 'winst',   label: 'Winst',        icon: '💰' },
           ].map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
-              className={`flex-1 py-3 flex flex-col items-center gap-0.5 text-xs font-sans font-medium transition-colors ${tab === t.key ? 'text-wine' : 'text-warm-gray'}`}>
-              <span className="text-xl">{t.icon}</span>{t.label}
+              className={`flex-1 py-2 flex flex-col items-center gap-0.5 font-sans font-medium transition-colors text-[10px] sm:text-xs ${tab === t.key ? 'text-wine' : 'text-warm-gray'}`}>
+              <span className="text-lg sm:text-xl">{t.icon}</span>{t.label}
             </button>
           ))}
         </div>
@@ -196,7 +196,7 @@ function PizzasTab({ password }) {
 
       {editing !== null && (
         <div className="fixed inset-0 bg-ink/60 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-cream w-full sm:max-w-sm">
+          <div className="bg-cream w-full sm:max-w-sm max-h-[92vh] overflow-y-auto">
             <div className="bg-olive px-5 py-4 flex justify-between items-center">
               <h3 className="font-serif italic text-cream text-lg">{editing==='new' ? 'Nieuwe pizza' : 'Bewerken'}</h3>
               <button onClick={()=>setEditing(null)} className="text-cream/50 hover:text-cream text-2xl">×</button>
@@ -234,21 +234,35 @@ function PizzasTab({ password }) {
 // ─── Opening Days ──────────────────────────────────────────────────────────
 
 function OpeningTab({ password }) {
-  const [days, setDays]   = useState([])
-  const [regs, setRegs]   = useState({ count: 0, max: 20, openFrom: 16 })
+  const [days, setDays]       = useState([])
+  const [regs, setRegs]       = useState({ count: 0, max: 20, openFrom: 16, registrationDate: '' })
   const [regList, setRegList] = useState([])
   const [newDate, setNewDate] = useState('')
   const [newLabel, setNewLabel] = useState('')
-  const [loading, setLoading]   = useState(true)
+  const [regDate, setRegDate] = useState('')
+  const [savingCfg, setSavingCfg] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   function load() {
     Promise.all([
       fetch('/api/opening-days').then(r=>r.json()),
       fetch('/api/register').then(r=>r.json()),
       fetch('/api/register/list', { headers: {'x-admin-password': password} }).then(r=>r.json()).catch(()=>[]),
-    ]).then(([d, r, rl]) => { setDays(d); setRegs(r); setRegList(Array.isArray(rl) ? rl : []); setLoading(false) })
+    ]).then(([d, r, rl]) => {
+      setDays(d)
+      setRegs(r)
+      setRegDate(r.registrationDate || '')
+      setRegList(Array.isArray(rl) ? rl : [])
+      setLoading(false)
+    })
   }
   useEffect(() => { load() }, [])
+
+  async function saveRegConfig(e) {
+    e.preventDefault(); setSavingCfg(true)
+    await fetch('/api/register', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ registrationDate: regDate, max: regs.max, openFrom: regs.openFrom }) })
+    setSavingCfg(false); load()
+  }
 
   async function addDay(e) {
     e.preventDefault()
@@ -267,7 +281,22 @@ function OpeningTab({ password }) {
 
   return (
     <div className="space-y-5">
-      {/* Registraties */}
+
+      {/* Registratie configuratie */}
+      <div className="bg-white border border-parchment">
+        <div className="px-5 py-4 border-b border-parchment">
+          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Registratie-instellingen</p>
+        </div>
+        <form onSubmit={saveRegConfig} className="px-5 py-4 space-y-3">
+          <div>
+            <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-1">Datum waarvoor inschrijving geldt</label>
+            <input type="date" value={regDate} onChange={e=>setRegDate(e.target.value)} className={INPUT} />
+          </div>
+          <button type="submit" disabled={savingCfg} className="btn-primary w-full">{savingCfg ? 'Bezig...' : 'Opslaan'}</button>
+        </form>
+      </div>
+
+      {/* Registraties teller */}
       <div className="bg-white border border-parchment">
         <div className="px-5 py-4 border-b border-parchment flex items-center justify-between">
           <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Gereserveerde pizza's</p>
@@ -282,15 +311,11 @@ function OpeningTab({ password }) {
             <div className="bg-olive h-2 transition-all" style={{ width: `${Math.min(100, (regs.count/regs.max)*100)}%` }} />
           </div>
           <p className="font-sans text-xs text-warm-gray">
-            {regs.count >= regs.max
-              ? 'Volzet'
-              : regs.count >= regs.openFrom
-              ? `Open — nog ${regs.max - regs.count} plaatsen vrij`
+            {regs.count >= regs.max ? 'Volzet'
+              : regs.count >= regs.openFrom ? `Open — nog ${regs.max - regs.count} plaatsen vrij`
               : `Nog ${regs.openFrom - regs.count} pizza's nodig om te openen`}
           </p>
-          <p className="font-sans text-xs text-warm-gray-light mt-1">
-            Opent vanaf {regs.openFrom} · max {regs.max} pizza's
-          </p>
+          <p className="font-sans text-xs text-warm-gray-light mt-1">Opent vanaf {regs.openFrom} · max {regs.max} pizza's</p>
         </div>
       </div>
 
@@ -298,16 +323,17 @@ function OpeningTab({ password }) {
       {regList.length > 0 && (
         <div className="bg-white border border-parchment">
           <div className="px-5 py-4 border-b border-parchment">
-            <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Wie heeft zich ingeschreven</p>
+            <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Ingeschreven ({regList.length})</p>
           </div>
           <ul className="divide-y divide-parchment">
             {regList.map((r, i) => (
-              <li key={i} className="px-5 py-3 flex items-center justify-between">
-                <div>
+              <li key={i} className="px-5 py-3 flex items-start justify-between gap-3">
+                <div className="min-w-0">
                   <p className="font-sans text-sm text-ink">{r.name}</p>
-                  <p className="font-sans text-xs text-warm-gray">{r.email}{r.date ? ` · voorkeur ${formatLongDate(r.date)}` : ''}</p>
+                  <p className="font-sans text-xs text-warm-gray truncate">{r.email}</p>
+                  {r.date && <p className="font-sans text-xs text-warm-gray-light">voorkeur {formatShortDate(r.date)}</p>}
                 </div>
-                <span className="font-serif text-wine text-lg">{r.pizzas || 1}×</span>
+                <span className="font-serif text-wine text-lg shrink-0">{r.pizzas || 1}×</span>
               </li>
             ))}
           </ul>
@@ -323,12 +349,12 @@ function OpeningTab({ password }) {
           ? <p className="px-5 py-4 font-sans text-sm text-warm-gray italic">Nog geen openingsdagen gepland.</p>
           : <ul className="divide-y divide-parchment">
               {days.map(d => (
-                <li key={d.date} className="px-5 py-3 flex items-center justify-between">
-                  <div>
-                    <p className="font-serif text-ink">{formatLongDate(d.date)}</p>
+                <li key={d.date} className="px-5 py-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-serif text-sm text-ink">{formatLongDate(d.date)}</p>
                     {d.label && <p className="font-sans text-xs text-warm-gray">{d.label}</p>}
                   </div>
-                  <button onClick={() => removeDay(d.date)} className="text-warm-gray-light hover:text-wine transition-colors text-lg px-2">✕</button>
+                  <button onClick={() => removeDay(d.date)} className="text-warm-gray-light hover:text-wine transition-colors shrink-0 p-1">✕</button>
                 </li>
               ))}
             </ul>
