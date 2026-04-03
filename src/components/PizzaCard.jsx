@@ -17,12 +17,12 @@ export default function PizzaCard({ pizza, quantity, onAdd, onRemove, currency, 
           <span className="font-serif text-lg text-wine">{currency}{pizza.price.toFixed(2)}</span>
           {showOrder && (
             quantity === 0 ? (
-              <button onClick={() => onAdd(pizza)} className="btn-primary">Toevoegen</button>
+              <button onClick={() => onAdd(pizza)} className="btn-primary py-2 px-4">Toevoegen</button>
             ) : (
-              <div className="flex items-center gap-3">
-                <button onClick={() => onRemove(pizza)} className="w-8 h-8 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-lg transition-colors">−</button>
-                <span className="font-serif text-lg w-4 text-center">{quantity}</span>
-                <button onClick={() => onAdd(pizza)} className="w-8 h-8 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-lg transition-colors">+</button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => onRemove(pizza)} className="w-7 h-7 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center transition-colors">−</button>
+                <span className="font-serif text-base w-4 text-center">{quantity}</span>
+                <button onClick={() => onAdd(pizza)} className="w-7 h-7 bg-wine hover:bg-wine-light text-cream flex items-center justify-center transition-colors">+</button>
               </div>
             )
           )}
