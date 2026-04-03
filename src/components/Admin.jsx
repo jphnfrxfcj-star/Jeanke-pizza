@@ -352,6 +352,8 @@ function OpeningTab({ password }) {
   const [newLabel, setNewLabel] = useState('')
   const [regDate, setRegDate] = useState('')
   const [savingCfg, setSavingCfg] = useState(false)
+  const [siteSettings, setSiteSettings] = useState({ openingHour: 17, closingHour: 22, pizzasPerSlot: 3 })
+  const [savingSettings, setSavingSettings] = useState(false)
   const [loading, setLoading] = useState(true)
 
   function load() {
@@ -359,15 +361,23 @@ function OpeningTab({ password }) {
       fetch('/api/opening-days').then(r=>r.json()),
       fetch('/api/register').then(r=>r.json()),
       fetch('/api/register/list', { headers: {'x-admin-password': password} }).then(r=>r.json()).catch(()=>[]),
-    ]).then(([d, r, rl]) => {
+      fetch('/api/settings').then(r=>r.json()),
+    ]).then(([d, r, rl, s]) => {
       setDays(d)
       setRegs(r)
       setRegDate(r.registrationDate || '')
       setRegList(Array.isArray(rl) ? rl : [])
+      setSiteSettings(s)
       setLoading(false)
     })
   }
   useEffect(() => { load() }, [])
+
+  async function saveSettings(e) {
+    e.preventDefault(); setSavingSettings(true)
+    await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify(siteSettings) })
+    setSavingSettings(false)
+  }
 
   async function saveRegConfig(e) {
     e.preventDefault(); setSavingCfg(true)
@@ -419,6 +429,50 @@ function OpeningTab({ password }) {
           className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${regs.registrationOpen ? 'bg-olive' : 'bg-wine'}`}>
           <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${regs.registrationOpen ? 'left-7' : 'left-1'}`} />
         </button>
+      </div>
+
+      {/* Openingsuren en capaciteit */}
+      <div className="bg-white border border-parchment">
+        <div className="px-5 py-4 border-b border-parchment">
+          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Openingsuren & capaciteit</p>
+        </div>
+        <form onSubmit={saveSettings} className="px-5 py-4 space-y-4">
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-1">Van</label>
+              <div className="flex items-center border border-parchment bg-cream">
+                <input type="number" min="0" max="23" value={siteSettings.openingHour}
+                  onChange={e=>setSiteSettings(s=>({...s, openingHour: Number(e.target.value)}))}
+                  className="w-full px-3 py-3 text-sm text-ink bg-transparent focus:outline-none" />
+                <span className="pr-3 text-warm-gray text-sm">u</span>
+              </div>
+            </div>
+            <div className="flex-1">
+              <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-1">Tot</label>
+              <div className="flex items-center border border-parchment bg-cream">
+                <input type="number" min="0" max="23" value={siteSettings.closingHour}
+                  onChange={e=>setSiteSettings(s=>({...s, closingHour: Number(e.target.value)}))}
+                  className="w-full px-3 py-3 text-sm text-ink bg-transparent focus:outline-none" />
+                <span className="pr-3 text-warm-gray text-sm">u</span>
+              </div>
+            </div>
+            <div className="flex-1">
+              <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-1">Max/slot</label>
+              <div className="flex items-center border border-parchment bg-cream">
+                <input type="number" min="1" max="10" value={siteSettings.pizzasPerSlot}
+                  onChange={e=>setSiteSettings(s=>({...s, pizzasPerSlot: Number(e.target.value)}))}
+                  className="w-full px-3 py-3 text-sm text-ink bg-transparent focus:outline-none" />
+                <span className="pr-3 text-warm-gray text-sm">🍕</span>
+              </div>
+            </div>
+          </div>
+          <p className="font-sans text-xs text-warm-gray italic">
+            Vanaf {siteSettings.pizzasPerSlot + 1} pizza's worden automatisch {2} tijdslots gereserveerd.
+          </p>
+          <button type="submit" disabled={savingSettings} className="btn-primary w-full">
+            {savingSettings ? 'Bezig...' : 'Opslaan'}
+          </button>
+        </form>
       </div>
 
       {/* Registratie configuratie */}

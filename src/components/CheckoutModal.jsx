@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-export default function CheckoutModal({ items, slots, onClose, onSuccess, currency }) {
+export default function CheckoutModal({ items, slots, onClose, onSuccess, currency, settings }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [selectedDate, setSelectedDate] = useState(slots[0]?.date ?? '')
@@ -13,6 +13,9 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
     fetch('/api/slots').then(r => r.json()).then(setBookedSlots).catch(() => {})
   }, [])
 
+  const pizzasPerSlot = settings?.pizzasPerSlot ?? 3
+  const totalPizzas = items.reduce((sum, i) => sum + i.quantity, 0)
+  const slotsNeeded = Math.ceil(totalPizzas / pizzasPerSlot)
   const total = items.reduce((sum, i) => sum + i.pizza.price * i.quantity, 0)
   const availableDates = [...new Set(slots.map(s => s.date))]
   const slotsForDate = slots.filter(s => s.date === selectedDate)
@@ -20,23 +23,46 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
 
   function isBooked(date, time) { return bookedSlots.includes(`${date}_${time}`) }
 
+  function isGroupAvailable(slotIdx) {
+    for (let i = 0; i < slotsNeeded; i++) {
+      const s = slotsForDate[slotIdx + i]
+      if (!s || isBooked(selectedDate, s.time)) return false
+    }
+    return true
+  }
+
+  function isInSelectedRange(time) {
+    if (!selectedSlot) return false
+    const idx = slotsForDate.findIndex(s => s.time === selectedSlot)
+    return slotsForDate.slice(idx, idx + slotsNeeded).some(s => s.time === time)
+  }
+
+  function getSelectedTimeslots() {
+    const idx = slotsForDate.findIndex(s => s.time === selectedSlot)
+    return slotsForDate.slice(idx, idx + slotsNeeded).map(s => s.time)
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     if (!selectedSlot) { setError('Kies een tijdslot.'); return }
     setError(''); setLoading(true)
     try {
+      const timeslots = getSelectedTimeslots()
       const slotRes = await fetch('/api/slots', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: selectedDate, timeslot: selectedSlot, name, email, order: orderText, total: `${currency}${total.toFixed(2)}` }),
+        body: JSON.stringify({ date: selectedDate, timeslots, name, email, order: orderText, total: `${currency}${total.toFixed(2)}` }),
       })
       if (slotRes.status === 409) {
-        setError('Dit tijdslot is net geboekt. Kies een ander.'); setBookedSlots(prev => [...prev, `${selectedDate}_${selectedSlot}`]); setSelectedSlot(''); setLoading(false); return
+        setError('Dit tijdslot is net geboekt. Kies een ander.')
+        setBookedSlots(prev => [...prev, `${selectedDate}_${selectedSlot}`])
+        setSelectedSlot('')
+        setLoading(false)
+        return
       }
       if (!slotRes.ok) throw new Error('Slot booking failed')
       const slotData = await slotRes.json()
 
-      // Send confirmation email (fire-and-forget, don't block on failure)
       fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -61,7 +87,6 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
   return (
     <div className="fixed inset-0 bg-ink/60 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
       <div className="bg-cream w-full sm:max-w-xl md:max-w-2xl max-h-[95vh] overflow-y-auto">
-        {/* Header */}
         <div className="bg-olive px-6 py-5 flex items-start justify-between">
           <div>
             <p className="font-sans text-xs tracking-widest uppercase text-gold/70 mb-1">Bevestig</p>
@@ -99,8 +124,7 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
                   {availableDates.map(date => (
                     <button type="button" key={date}
                       onClick={() => { setSelectedDate(date); setSelectedSlot('') }}
-                      className={`px-4 py-2 text-xs font-sans tracking-wide border transition-colors ${selectedDate === date ? 'bg-olive text-cream border-olive' : 'bg-white text-ink border-parchment hover:border-olive'}`}
-                    >
+                      className={`px-4 py-2 text-xs font-sans tracking-wide border transition-colors ${selectedDate === date ? 'bg-olive text-cream border-olive' : 'bg-white text-ink border-parchment hover:border-olive'}`}>
                       {formatDate(date)}
                     </button>
                   ))}
@@ -110,19 +134,29 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
 
             {/* Time slots */}
             <div>
-              <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Tijdslot</label>
+              <div className="flex items-baseline justify-between mb-2">
+                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray">Tijdslot</label>
+                {slotsNeeded > 1 && (
+                  <span className="font-sans text-xs text-warm-gray italic">
+                    {totalPizzas} pizza's · {slotsNeeded} slots ({slotsNeeded * 15} min)
+                  </span>
+                )}
+              </div>
               {slotsForDate.length === 0 ? (
                 <p className="text-sm text-wine italic">Geen tijdsloten beschikbaar.</p>
               ) : (
                 <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
-                  {slotsForDate.map(slot => {
+                  {slotsForDate.map((slot, idx) => {
                     const booked = isBooked(selectedDate, slot.time)
+                    const groupOk = !booked && isGroupAvailable(idx)
+                    const inRange = isInSelectedRange(slot.time)
                     return (
-                      <button type="button" key={slot.time} disabled={booked}
-                        onClick={() => !booked && setSelectedSlot(slot.time)}
+                      <button type="button" key={slot.time}
+                        disabled={!groupOk && !inRange}
+                        onClick={() => groupOk && setSelectedSlot(slot.time)}
                         className={`py-2.5 text-xs font-sans border transition-colors ${
-                          booked ? 'bg-parchment/50 text-warm-gray-light border-parchment cursor-not-allowed line-through'
-                          : selectedSlot === slot.time ? 'bg-olive text-cream border-olive'
+                          inRange ? 'bg-olive text-cream border-olive'
+                          : !groupOk ? 'bg-parchment/50 text-warm-gray-light border-parchment cursor-not-allowed line-through'
                           : 'bg-white text-ink border-parchment hover:border-olive'
                         }`}
                       >{slot.time}</button>

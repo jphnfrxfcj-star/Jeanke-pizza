@@ -12,18 +12,33 @@ export default async (req) => {
 
     if (req.method === "POST") {
       const body = await req.json()
-      const { date, timeslot, name, email, order, total } = body
-      const key = `${date}_${timeslot}`
+      const { date, name, email, order, total } = body
+      // Support both single timeslot (legacy) and array
+      const timeslots = Array.isArray(body.timeslots)
+        ? body.timeslots
+        : [body.timeslot]
 
       const existing = await store.get("slots", { type: "json" }).catch(() => []) || []
 
-      if (existing.some(s => s.key === key)) {
-        return Response.json({ error: "Slot already booked" }, { status: 409 })
+      // Check all required slots are free
+      for (const ts of timeslots) {
+        const key = `${date}_${ts}`
+        if (existing.some(s => s.key === key)) {
+          return Response.json({ error: "Slot already booked" }, { status: 409 })
+        }
       }
 
       const cancelToken = crypto.randomUUID()
-      const entry = { key, date, time: timeslot, name, email, order, total, cancelToken, bookedAt: new Date().toISOString() }
-      await store.set("slots", JSON.stringify([...existing, entry]))
+      const newEntries = timeslots.map((ts, i) => ({
+        key: `${date}_${ts}`,
+        date,
+        time: ts,
+        primary: i === 0,
+        name, email, order, total, cancelToken,
+        bookedAt: new Date().toISOString(),
+      }))
+
+      await store.set("slots", JSON.stringify([...existing, ...newEntries]))
       return Response.json({ success: true, cancelToken })
     }
 

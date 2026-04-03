@@ -10,15 +10,26 @@ export default async (req) => {
       return Response.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const all = await store.get("slots", { type: "json" }).catch(() => null) || []
+
     if (req.method === "GET") {
-      const data = await store.get("slots", { type: "json" }).catch(() => null)
-      return Response.json(data || [])
+      // Return one entry per order (primary slot only, or first if no primary flag)
+      const seen = new Set()
+      const orders = all.filter(s => {
+        if (seen.has(s.cancelToken)) return false
+        seen.add(s.cancelToken)
+        return s.primary !== false // show primary slots (or legacy entries without flag)
+      })
+      return Response.json(orders)
     }
 
     if (req.method === "DELETE") {
       const { key } = await req.json()
-      const existing = await store.get("slots", { type: "json" }).catch(() => []) || []
-      await store.set("slots", JSON.stringify(existing.filter(s => s.key !== key)))
+      // Find the cancelToken for this key, then remove all slots with that token
+      const entry = all.find(s => s.key === key)
+      if (!entry) return Response.json({ success: true })
+      const token = entry.cancelToken
+      await store.set("slots", JSON.stringify(all.filter(s => s.cancelToken !== token)))
       return Response.json({ success: true })
     }
 

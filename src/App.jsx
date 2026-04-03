@@ -7,17 +7,17 @@ import Cancel from './components/Cancel'
 import config from './data/config.json'
 import staticPizzas from './data/pizzas.json'
 
-function generateSlotsForDates(openingDates, config) {
+function generateSlotsForDates(openingDates, config, settings) {
   const slots = []
   const now = new Date()
+  const openingHour = settings?.openingHour ?? config.openingHour
+  const closingHour = settings?.closingHour ?? config.closingHour
   for (const { date } of openingDates) {
     const d = new Date(date + 'T00:00:00')
-    // Skip past dates
-    const endOfDay = new Date(date + 'T23:59:59')
-    if (endOfDay < now) continue
+    if (new Date(date + 'T23:59:59') < now) continue
     const dateStr = date
-    const start = new Date(d); start.setHours(config.openingHour, 0, 0, 0)
-    const end   = new Date(d); end.setHours(config.closingHour, 0, 0, 0)
+    const start = new Date(d); start.setHours(openingHour, 0, 0, 0)
+    const end   = new Date(d); end.setHours(closingHour, 0, 0, 0)
     const cursor = new Date(start)
     while (cursor < end) {
       if (cursor > new Date(now.getTime() + 15 * 60 * 1000)) {
@@ -43,6 +43,7 @@ function Shop() {
   const [pizzas, setPizzas] = useState([])
   const [openingDays, setOpeningDays] = useState(null) // null = loading
   const [registration, setRegistration] = useState(null)
+  const [settings, setSettings] = useState(null)
   const [regName, setRegName] = useState('')
   const [regEmail, setRegEmail] = useState('')
   const [regPizzas, setRegPizzas] = useState(1)
@@ -68,12 +69,16 @@ function Shop() {
       .then(r => r.json())
       .then(setRegistration)
       .catch(() => {})
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(setSettings)
+      .catch(() => setSettings({}))
   }, [])
 
   const slots = useMemo(() => {
     if (!openingDays || openingDays.length === 0) return []
-    return generateSlotsForDates(openingDays, config)
-  }, [openingDays])
+    return generateSlotsForDates(openingDays, config, settings)
+  }, [openingDays, settings])
 
   function addToCart(pizza) {
     setCart(prev => {
@@ -381,6 +386,7 @@ function Shop() {
           onClose={() => setShowCheckout(false)}
           onSuccess={handleSuccess}
           currency={config.currency}
+          settings={settings}
         />
       )}
     </div>
