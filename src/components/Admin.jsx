@@ -346,7 +346,7 @@ function PizzasTab({ password }) {
 
 function OpeningTab({ password }) {
   const [days, setDays]       = useState([])
-  const [regs, setRegs]       = useState({ count: 0, max: 20, openFrom: 16, registrationDate: '' })
+  const [regs, setRegs]       = useState({ count: 0, max: 20, openFrom: 16, registrationDate: '', registrationOpen: false })
   const [regList, setRegList] = useState([])
   const [newDate, setNewDate] = useState('')
   const [newLabel, setNewLabel] = useState('')
@@ -371,8 +371,20 @@ function OpeningTab({ password }) {
 
   async function saveRegConfig(e) {
     e.preventDefault(); setSavingCfg(true)
-    await fetch('/api/register', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ registrationDate: regDate, max: regs.max, openFrom: regs.openFrom }) })
+    await fetch('/api/register', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ registrationDate: regDate, max: regs.max, openFrom: regs.openFrom, registrationOpen: regs.registrationOpen }) })
     setSavingCfg(false); load()
+  }
+
+  async function toggleRegistrationOpen() {
+    const newVal = !regs.registrationOpen
+    await fetch('/api/register', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ registrationOpen: newVal }) })
+    setRegs(r => ({ ...r, registrationOpen: newVal }))
+  }
+
+  async function deleteRegistration(email) {
+    if (!confirm(`Inschrijving van ${email} verwijderen?`)) return
+    await fetch('/api/register', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ email }) })
+    load()
   }
 
   async function addDay(e) {
@@ -392,6 +404,22 @@ function OpeningTab({ password }) {
 
   return (
     <div className="space-y-5">
+
+      {/* Modus schakelaar */}
+      <div className="bg-white border border-parchment px-5 py-4 flex items-center justify-between gap-4">
+        <div>
+          <p className="font-sans text-sm font-medium text-ink">
+            {regs.registrationOpen ? 'Registratiemodus actief' : 'Bestelmodus actief'}
+          </p>
+          <p className="font-sans text-xs text-warm-gray mt-0.5">
+            {regs.registrationOpen ? 'Bezoekers zien de inschrijvingspagina' : 'Bezoekers zien het menu en kunnen bestellen'}
+          </p>
+        </div>
+        <button onClick={toggleRegistrationOpen}
+          className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${regs.registrationOpen ? 'bg-olive' : 'bg-wine'}`}>
+          <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${regs.registrationOpen ? 'left-7' : 'left-1'}`} />
+        </button>
+      </div>
 
       {/* Registratie configuratie */}
       <div className="bg-white border border-parchment">
@@ -452,13 +480,13 @@ function OpeningTab({ password }) {
           </div>
           <ul className="divide-y divide-parchment">
             {regList.map((r, i) => (
-              <li key={i} className="px-5 py-3 flex items-start justify-between gap-3">
-                <div className="min-w-0">
+              <li key={i} className="px-5 py-3 flex items-center gap-3">
+                <div className="min-w-0 flex-1">
                   <p className="font-sans text-sm text-ink">{r.name}</p>
                   <p className="font-sans text-xs text-warm-gray truncate">{r.email}</p>
-                  {r.date && <p className="font-sans text-xs text-warm-gray-light">voorkeur {formatShortDate(r.date)}</p>}
                 </div>
-                <span className="font-serif text-wine text-lg shrink-0">{r.pizzas || 1}×</span>
+                <span className="font-serif text-wine shrink-0">{r.pizzas || 1}×</span>
+                <button onClick={() => deleteRegistration(r.email)} className="text-warm-gray-light hover:text-wine transition-colors shrink-0 p-1">✕</button>
               </li>
             ))}
           </ul>

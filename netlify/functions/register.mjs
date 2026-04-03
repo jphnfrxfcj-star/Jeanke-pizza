@@ -7,9 +7,9 @@ const DEFAULT_OPEN_FROM = 16
 export default async (req) => {
   try {
     const store = getStore({ name: "registrations", consistency: "strong" })
+    const url = new URL(req.url)
 
     if (req.method === "GET") {
-      const url = new URL(req.url)
       const data = await store.get("list", { type: "json" }).catch(() => null)
       const cfg  = await store.get("config", { type: "json" }).catch(() => null)
       const list = data || []
@@ -24,16 +24,23 @@ export default async (req) => {
         return Response.json(list)
       }
 
-      return Response.json({ count: totalPizzas, max, openFrom, registrations: list.length, registrationDate: cfg?.registrationDate || null })
+      return Response.json({
+        count: totalPizzas,
+        max,
+        openFrom,
+        registrations: list.length,
+        registrationDate: cfg?.registrationDate || null,
+        registrationOpen: cfg?.registrationOpen ?? false,
+      })
     }
 
     if (req.method === "POST") {
-      const { name, email, pizzas = 1, date } = await req.json()
+      const { name, email, pizzas = 1 } = await req.json()
       const existing = await store.get("list", { type: "json" }).catch(() => []) || []
       if (existing.some(r => r.email.toLowerCase() === email.toLowerCase())) {
         return Response.json({ error: "already_registered" }, { status: 409 })
       }
-      const updated = [...existing, { name, email, pizzas: Number(pizzas), date: date || null, registeredAt: new Date().toISOString() }]
+      const updated = [...existing, { name, email, pizzas: Number(pizzas), registeredAt: new Date().toISOString() }]
       await store.set("list", JSON.stringify(updated))
       const cfg = await store.get("config", { type: "json" }).catch(() => null)
       const max = cfg?.max ?? DEFAULT_MAX
@@ -45,9 +52,19 @@ export default async (req) => {
     if (req.method === "PUT") {
       const pw = req.headers.get("x-admin-password")
       if (pw !== ADMIN_PASSWORD) return Response.json({ error: "Unauthorized" }, { status: 401 })
-      const { registrationDate, max, openFrom } = await req.json()
+      const body = await req.json()
       const existing = await store.get("config", { type: "json" }).catch(() => null) || {}
-      await store.set("config", JSON.stringify({ ...existing, registrationDate, max, openFrom }))
+      await store.set("config", JSON.stringify({ ...existing, ...body }))
+      return Response.json({ success: true })
+    }
+
+    if (req.method === "DELETE") {
+      const pw = req.headers.get("x-admin-password")
+      if (pw !== ADMIN_PASSWORD) return Response.json({ error: "Unauthorized" }, { status: 401 })
+      const { email } = await req.json()
+      const existing = await store.get("list", { type: "json" }).catch(() => []) || []
+      const updated = existing.filter(r => r.email.toLowerCase() !== email.toLowerCase())
+      await store.set("list", JSON.stringify(updated))
       return Response.json({ success: true })
     }
 

@@ -64,16 +64,11 @@ function Shop() {
         setOpeningDays(future)
       })
       .catch(() => setOpeningDays([]))
+    fetch('/api/register')
+      .then(r => r.json())
+      .then(setRegistration)
+      .catch(() => {})
   }, [])
-
-  useEffect(() => {
-    if (openingDays !== null && openingDays.length === 0) {
-      fetch('/api/register')
-        .then(r => r.json())
-        .then(setRegistration)
-        .catch(() => {})
-    }
-  }, [openingDays])
 
   const slots = useMemo(() => {
     if (!openingDays || openingDays.length === 0) return []
@@ -130,7 +125,7 @@ function Shop() {
     } catch { setRegStatus('error') }
   }
 
-  const noOpeningDays = openingDays !== null && openingDays.length === 0
+  const showRegistration = registration?.registrationOpen === true
 
   return (
     <div className="min-h-screen bg-cream">
@@ -151,7 +146,7 @@ function Shop() {
           </p>
 
           {/* Mobile cart button */}
-          {cartCount > 0 && !noOpeningDays && slots.length > 0 && (
+          {cartCount > 0 && !showRegistration && slots.length > 0 && (
             <button
               onClick={() => setShowCheckout(true)}
               className="lg:hidden absolute right-6 top-1/2 -translate-y-1/2 bg-wine text-cream px-4 py-2 font-sans text-xs tracking-widest uppercase flex items-center gap-2"
@@ -162,7 +157,7 @@ function Shop() {
         </div>
 
         {/* Nav strip */}
-        {!noOpeningDays && openingDays && openingDays.length > 0 && (
+        {!showRegistration && openingDays && openingDays.length > 0 && (
           <div className="border-t border-cream/10">
             <div className="max-w-6xl mx-auto px-6 lg:px-10 py-2 flex items-center justify-between">
               <span className="font-sans text-xs text-cream/40 tracking-wide">
@@ -178,12 +173,11 @@ function Shop() {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-10">
 
-        {/* Registration page — no opening days yet */}
-        {openingDays === null ? (
+        {openingDays === null || registration === null ? (
           <div className="flex justify-center py-16">
             <div className="w-8 h-8 border-2 border-olive/30 border-t-olive rounded-full animate-spin" />
           </div>
-        ) : noOpeningDays ? (
+        ) : showRegistration ? (
           <div className="max-w-lg mx-auto">
             <div className="divider mb-4">Interesse lijst</div>
             {registration?.registrationDate && (
