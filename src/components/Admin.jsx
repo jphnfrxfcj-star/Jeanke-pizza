@@ -140,15 +140,27 @@ function OrderCard({ order, onCancel }) {
 
 function PizzasTab({ password }) {
   const [pizzas, setPizzas] = useState([])
+  const [allIngredients, setAllIngredients] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({ name: '', ingredients: [], price: '', emoji: '🍕', imageUrl: '', toppingCost: '' })
   const [ingInput, setIngInput] = useState('')
+  const [newIngInput, setNewIngInput] = useState('')
 
   useEffect(() => {
-    fetch('/api/pizzas').then(r => r.json())
-      .then(d => { setPizzas(d.length ? d : staticPizzas); setLoading(false) })
-      .catch(() => { setPizzas(staticPizzas); setLoading(false) })
+    Promise.all([
+      fetch('/api/pizzas').then(r => r.json()),
+      fetch('/api/ingredients').then(r => r.json()),
+    ]).then(async ([d, ings]) => {
+      const list = d.length ? d : staticPizzas
+      // Seed to Blobs if empty
+      if (!d.length) {
+        await fetch('/api/pizzas', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify(staticPizzas) })
+      }
+      setPizzas(list)
+      setAllIngredients(Array.isArray(ings) ? ings : [])
+      setLoading(false)
+    }).catch(() => { setPizzas(staticPizzas); setLoading(false) })
   }, [])
 
   async function save(list) {
@@ -165,13 +177,38 @@ function PizzasTab({ password }) {
   }
   function startNew() { setEditing('new'); setForm({ name:'', ingredients:[], price:'', emoji:'🍕', imageUrl:'', toppingCost:'' }); setIngInput('') }
 
-  function addIngredient() {
+  function toggleIngredient(ing) {
+    setForm(f => ({
+      ...f,
+      ingredients: f.ingredients.includes(ing)
+        ? f.ingredients.filter(i => i !== ing)
+        : [...f.ingredients, ing]
+    }))
+  }
+  function addCustomIngredient() {
     const val = ingInput.trim().toLowerCase()
-    if (!val || form.ingredients.includes(val)) return
-    setForm(f => ({ ...f, ingredients: [...f.ingredients, val] }))
+    if (!val) return
+    if (!allIngredients.includes(val)) {
+      const updated = [...allIngredients, val].sort()
+      setAllIngredients(updated)
+      fetch('/api/ingredients', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify(updated) })
+    }
+    if (!form.ingredients.includes(val)) setForm(f => ({ ...f, ingredients: [...f.ingredients, val] }))
     setIngInput('')
   }
-  function removeIngredient(i) { setForm(f => ({ ...f, ingredients: f.ingredients.filter((_, idx) => idx !== i) })) }
+  function removeIngredientFromList(ing) {
+    const updated = allIngredients.filter(i => i !== ing)
+    setAllIngredients(updated)
+    fetch('/api/ingredients', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify(updated) })
+  }
+  function addToGlobalList() {
+    const val = newIngInput.trim().toLowerCase()
+    if (!val || allIngredients.includes(val)) return
+    const updated = [...allIngredients, val].sort()
+    setAllIngredients(updated)
+    fetch('/api/ingredients', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify(updated) })
+    setNewIngInput('')
+  }
 
   async function saveEdit(e) {
     e.preventDefault()
@@ -210,6 +247,29 @@ function PizzasTab({ password }) {
 
       <button onClick={startNew} className="btn-primary w-full">+ Pizza toevoegen</button>
 
+      {/* Globale ingrediëntenlijst beheren */}
+      <div className="bg-white border border-parchment">
+        <div className="px-5 py-4 border-b border-parchment">
+          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Ingrediëntenlijst</p>
+        </div>
+        <div className="px-5 py-4">
+          <div className="flex flex-wrap gap-1 mb-3">
+            {allIngredients.map(ing => (
+              <span key={ing} className="bg-parchment text-xs text-ink px-2 py-1 flex items-center gap-1">
+                {ing}
+                <button type="button" onClick={() => removeIngredientFromList(ing)} className="text-warm-gray hover:text-wine leading-none">×</button>
+              </span>
+            ))}
+          </div>
+          <div className="flex gap-1">
+            <input value={newIngInput} onChange={e=>setNewIngInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addToGlobalList() } }}
+              placeholder="Ingrediënt toevoegen..." className={INPUT + ' flex-1 text-xs'} />
+            <button type="button" onClick={addToGlobalList} className="px-3 bg-parchment border border-parchment text-ink text-sm hover:border-olive transition-colors">+</button>
+          </div>
+        </div>
+      </div>
+
       {editing !== null && (
         <div className="fixed inset-0 bg-ink/60 flex items-end sm:items-center justify-center z-50">
           <div className="bg-cream w-full sm:max-w-sm max-h-[92vh] overflow-y-auto">
@@ -224,22 +284,22 @@ function PizzasTab({ password }) {
                 <input required value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="Naam" className={INPUT+" flex-1"} />
               </div>
               <div>
-                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Ingrediënten</label>
-                {form.ingredients.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {form.ingredients.map((ing, i) => (
-                      <span key={i} className="bg-parchment text-xs text-ink px-2 py-1 flex items-center gap-1">
-                        {ing}
-                        <button type="button" onClick={() => removeIngredient(i)} className="text-warm-gray hover:text-wine leading-none">×</button>
-                      </span>
-                    ))}
-                  </div>
-                )}
+                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-2">Ingrediënten</label>
+                {/* Selecteerbare chips van de globale lijst */}
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {allIngredients.map(ing => (
+                    <button type="button" key={ing} onClick={() => toggleIngredient(ing)}
+                      className={`text-xs px-2.5 py-1 border transition-colors ${form.ingredients.includes(ing) ? 'bg-olive text-cream border-olive' : 'bg-white text-ink border-parchment hover:border-olive'}`}>
+                      {ing}
+                    </button>
+                  ))}
+                </div>
+                {/* Nieuw ingrediënt toevoegen aan de globale lijst */}
                 <div className="flex gap-1">
                   <input value={ingInput} onChange={e=>setIngInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addIngredient() } }}
-                    placeholder="Ingrediënt + Enter" className={INPUT + ' flex-1'} />
-                  <button type="button" onClick={addIngredient} className="px-3 bg-parchment border border-parchment text-ink text-sm hover:border-olive transition-colors">+</button>
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomIngredient() } }}
+                    placeholder="Nieuw ingrediënt..." className={INPUT + ' flex-1 text-xs'} />
+                  <button type="button" onClick={addCustomIngredient} className="px-3 bg-parchment border border-parchment text-ink text-sm hover:border-olive transition-colors">+</button>
                 </div>
               </div>
               <input value={form.imageUrl} onChange={e=>setForm(f=>({...f,imageUrl:e.target.value}))} placeholder="Foto URL (optioneel)" className={INPUT} />
