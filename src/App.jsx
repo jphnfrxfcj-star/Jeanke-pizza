@@ -228,6 +228,7 @@ function Shop() {
                   <div className="text-center py-4">
                     <p className="font-serif italic text-ink text-lg mb-1">Inschrijving ontvangen!</p>
                     <p className="font-sans text-xs text-warm-gray">We sturen u een bericht zodra het zover is.</p>
+                    <p className="font-sans text-xs text-warm-gray-light mt-1">Niet ontvangen? Controleer uw spam-map.</p>
                   </div>
                 ) : (
                   <form onSubmit={handleRegister} className="space-y-4">
