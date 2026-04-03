@@ -283,8 +283,11 @@ function Shop() {
             <p className="font-sans text-warm-gray text-sm mb-1">
               Uw pizza's zijn klaar om <strong className="text-ink">{successOrder.timeslot}</strong>.
             </p>
-            <p className="font-sans text-warm-gray-light text-xs mt-3 mb-8">
+            <p className="font-sans text-warm-gray-light text-xs mt-3 mb-1">
               Bevestiging verstuurd naar {successOrder.email}
+            </p>
+            <p className="font-sans text-warm-gray-light text-xs mb-8">
+              Niet ontvangen? Controleer uw spam-map.
             </p>
             <button onClick={() => setSuccessOrder(null)} className="btn-primary">
               Nieuwe bestelling
