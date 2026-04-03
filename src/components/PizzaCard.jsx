@@ -9,7 +9,9 @@ export default function PizzaCard({ pizza, quantity, onAdd, onRemove, currency, 
 
       <div className="p-5 flex flex-col flex-1">
         <h3 className="font-serif text-xl font-semibold text-ink mb-1">{pizza.name}</h3>
-        <p className="font-sans text-xs text-warm-gray italic leading-relaxed mb-4 flex-1">{pizza.description}</p>
+        <p className="font-sans text-xs text-warm-gray italic leading-relaxed mb-4 flex-1">
+          {Array.isArray(pizza.ingredients) ? pizza.ingredients.join(', ') : pizza.description}
+        </p>
 
         <div className={`flex items-center pt-3 border-t border-parchment ${showOrder ? 'justify-between' : ''}`}>
           <span className="font-serif text-lg text-wine">{currency}{pizza.price.toFixed(2)}</span>

@@ -2,44 +2,91 @@
   {
     "id": 1,
     "name": "Margherita",
-    "description": "Tomatensaus, mozzarella, verse basilicum",
-    "price": 10.00,
+    "ingredients": ["tomatensaus", "mozzarella"],
+    "price": 12.50,
     "emoji": "🍕",
-    "imageUrl": ""
+    "imageUrl": "",
+    "toppingCost": 0
   },
   {
     "id": 2,
-    "name": "Pepperoni",
-    "description": "Tomatensaus, mozzarella, pittige pepperoni",
+    "name": "Salami",
+    "ingredients": ["tomatensaus", "mozzarella", "salami"],
     "price": 12.50,
-    "emoji": "🍕"
+    "emoji": "🍕",
+    "imageUrl": "",
+    "toppingCost": 0
   },
   {
     "id": 3,
-    "name": "Quattro Stagioni",
-    "description": "Tomatensaus, mozzarella, champignons, artisjok, olijven, ham",
-    "price": 13.50,
-    "emoji": "🍕"
+    "name": "Salt Lover",
+    "ingredients": ["tomatensaus", "mozzarella", "tomaat", "ajuin", "kappers", "ansjovis", "olijven", "look"],
+    "price": 12.50,
+    "emoji": "🍕",
+    "imageUrl": "",
+    "toppingCost": 0
   },
   {
     "id": 4,
-    "name": "Hawaiana",
-    "description": "Tomatensaus, mozzarella, ham, ananas",
-    "price": 12.00,
-    "emoji": "🍕"
+    "name": "Pollo",
+    "ingredients": ["tomatensaus", "mozzarella", "paprika", "kip"],
+    "price": 12.50,
+    "emoji": "🍕",
+    "imageUrl": "",
+    "toppingCost": 0
   },
   {
     "id": 5,
-    "name": "Vegetariana",
-    "description": "Tomatensaus, mozzarella, paprika, courgette, champignons, rode ui",
-    "price": 11.50,
-    "emoji": "🌿"
+    "name": "Parma",
+    "ingredients": ["tomatensaus", "mozzarella", "courgette", "kerstomaatjes", "parmaham", "rucola", "look"],
+    "price": 12.50,
+    "emoji": "🍕",
+    "imageUrl": "",
+    "toppingCost": 0
   },
   {
     "id": 6,
-    "name": "Diavola",
-    "description": "Tomatensaus, mozzarella, pikante salami, jalapeños, rode peper",
-    "price": 13.00,
-    "emoji": "🌶️"
+    "name": "Burrata",
+    "ingredients": ["tomatensaus", "mozzarella", "mix van tomaten", "burrata", "rucola"],
+    "price": 12.50,
+    "emoji": "🍕",
+    "imageUrl": "",
+    "toppingCost": 0
+  },
+  {
+    "id": 7,
+    "name": "Burrata Deluxe",
+    "ingredients": ["tomatensaus", "mozzarella", "mix van tomaten", "burrata", "rucola", "parmaham"],
+    "price": 12.50,
+    "emoji": "🍕",
+    "imageUrl": "",
+    "toppingCost": 0
+  },
+  {
+    "id": 8,
+    "name": "BBQ Chicken",
+    "ingredients": ["BBQ-tomatensaus", "mozzarella", "kip", "paprika", "ajuin"],
+    "price": 12.50,
+    "emoji": "🍕",
+    "imageUrl": "",
+    "toppingCost": 0
+  },
+  {
+    "id": 9,
+    "name": "Classic Stekke",
+    "ingredients": ["tomatensaus", "mozzarella", "kip", "koude feta"],
+    "price": 12.50,
+    "emoji": "🍕",
+    "imageUrl": "",
+    "toppingCost": 0
+  },
+  {
+    "id": 10,
+    "name": "Hot Stekke",
+    "ingredients": ["tomatensaus", "mozzarella", "kip", "koude feta"],
+    "price": 12.50,
+    "emoji": "🌶️",
+    "imageUrl": "",
+    "toppingCost": 0
   }
 ]

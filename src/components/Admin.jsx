@@ -142,7 +142,8 @@ function PizzasTab({ password }) {
   const [pizzas, setPizzas] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
-  const [form, setForm] = useState({ name: '', description: '', price: '', emoji: '🍕', imageUrl: '', toppingCost: '' })
+  const [form, setForm] = useState({ name: '', ingredients: [], price: '', emoji: '🍕', imageUrl: '', toppingCost: '' })
+  const [ingInput, setIngInput] = useState('')
 
   useEffect(() => {
     fetch('/api/pizzas').then(r => r.json())
@@ -156,12 +157,25 @@ function PizzasTab({ password }) {
     setPizzas(list)
   }
 
-  function startEdit(p) { setEditing(p.id); setForm({ name: p.name, description: p.description, price: String(p.price), emoji: p.emoji, imageUrl: p.imageUrl||'', toppingCost: String(p.toppingCost??'') }) }
-  function startNew()   { setEditing('new'); setForm({ name:'', description:'', price:'', emoji:'🍕', imageUrl:'', toppingCost:'' }) }
+  function startEdit(p) {
+    setEditing(p.id)
+    const ings = Array.isArray(p.ingredients) ? p.ingredients : (p.description ? p.description.split(', ') : [])
+    setForm({ name: p.name, ingredients: ings, price: String(p.price), emoji: p.emoji, imageUrl: p.imageUrl||'', toppingCost: String(p.toppingCost??'') })
+    setIngInput('')
+  }
+  function startNew() { setEditing('new'); setForm({ name:'', ingredients:[], price:'', emoji:'🍕', imageUrl:'', toppingCost:'' }); setIngInput('') }
+
+  function addIngredient() {
+    const val = ingInput.trim().toLowerCase()
+    if (!val || form.ingredients.includes(val)) return
+    setForm(f => ({ ...f, ingredients: [...f.ingredients, val] }))
+    setIngInput('')
+  }
+  function removeIngredient(i) { setForm(f => ({ ...f, ingredients: f.ingredients.filter((_, idx) => idx !== i) })) }
 
   async function saveEdit(e) {
     e.preventDefault()
-    const updated = { ...form, price: parseFloat(form.price), toppingCost: form.toppingCost ? parseFloat(form.toppingCost) : 0 }
+    const updated = { ...form, price: parseFloat(form.price), toppingCost: form.toppingCost ? parseFloat(form.toppingCost) : 0, description: form.ingredients.join(', ') }
     let newList
     if (editing === 'new') { const maxId = pizzas.reduce((m,p) => Math.max(m,p.id), 0); newList = [...pizzas, { id: maxId+1, ...updated }] }
     else newList = pizzas.map(p => p.id===editing ? {...p,...updated} : p)
@@ -182,7 +196,9 @@ function PizzasTab({ password }) {
           }
           <div className="flex-1 min-w-0 py-3 pr-0">
             <p className="font-serif text-ink">{pizza.name}</p>
-            <p className="font-sans text-xs text-warm-gray truncate">{pizza.description}</p>
+            <p className="font-sans text-xs text-warm-gray truncate">
+              {Array.isArray(pizza.ingredients) ? pizza.ingredients.join(', ') : pizza.description}
+            </p>
             <p className="font-sans text-xs text-wine mt-0.5">€{pizza.price.toFixed(2)}</p>
           </div>
           <div className="flex flex-col gap-1 p-3 shrink-0">
@@ -207,7 +223,25 @@ function PizzasTab({ password }) {
                   className="w-14 border border-parchment bg-white px-2 py-3 text-center text-2xl focus:outline-none focus:border-olive" />
                 <input required value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="Naam" className={INPUT+" flex-1"} />
               </div>
-              <input required value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder="Ingrediënten" className={INPUT} />
+              <div>
+                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Ingrediënten</label>
+                {form.ingredients.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {form.ingredients.map((ing, i) => (
+                      <span key={i} className="bg-parchment text-xs text-ink px-2 py-1 flex items-center gap-1">
+                        {ing}
+                        <button type="button" onClick={() => removeIngredient(i)} className="text-warm-gray hover:text-wine leading-none">×</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-1">
+                  <input value={ingInput} onChange={e=>setIngInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addIngredient() } }}
+                    placeholder="Ingrediënt + Enter" className={INPUT + ' flex-1'} />
+                  <button type="button" onClick={addIngredient} className="px-3 bg-parchment border border-parchment text-ink text-sm hover:border-olive transition-colors">+</button>
+                </div>
+              </div>
               <input value={form.imageUrl} onChange={e=>setForm(f=>({...f,imageUrl:e.target.value}))} placeholder="Foto URL (optioneel)" className={INPUT} />
               <div className="flex gap-2">
                 <div className="flex-1">
