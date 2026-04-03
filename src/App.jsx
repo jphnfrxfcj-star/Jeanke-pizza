@@ -46,7 +46,6 @@ function Shop() {
   const [regName, setRegName] = useState('')
   const [regEmail, setRegEmail] = useState('')
   const [regPizzas, setRegPizzas] = useState(1)
-  const [regDate, setRegDate] = useState('')
   const [regStatus, setRegStatus] = useState('') // '' | 'loading' | 'success' | 'duplicate' | 'error'
 
   useEffect(() => {
@@ -108,7 +107,7 @@ function Shop() {
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: regName, email: regEmail, pizzas: regPizzas, date: regDate || null }),
+        body: JSON.stringify({ name: regName, email: regEmail, pizzas: regPizzas }),
       })
       const data = await res.json()
       if (res.status === 409) { setRegStatus('duplicate'); return }
@@ -253,21 +252,13 @@ function Shop() {
                     </div>
                     <div>
                       <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Aantal pizza's</label>
-                      <div className="flex items-center gap-3">
+                      <div className="flex border border-parchment">
                         <button type="button" onClick={() => setRegPizzas(p => Math.max(1, p - 1))}
-                          className="w-10 h-10 border border-parchment text-ink hover:border-olive flex items-center justify-center text-xl transition-colors">−</button>
-                        <span className="font-serif text-2xl text-ink w-8 text-center">{regPizzas}</span>
+                          className="px-4 py-3 text-ink hover:bg-parchment transition-colors text-lg leading-none">−</button>
+                        <span className="flex-1 flex items-center justify-center font-serif text-lg text-ink border-x border-parchment">{regPizzas}</span>
                         <button type="button" onClick={() => setRegPizzas(p => Math.min(10, p + 1))}
-                          className="w-10 h-10 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xl transition-colors">+</button>
+                          className="px-4 py-3 text-ink hover:bg-parchment transition-colors text-lg leading-none">+</button>
                       </div>
-                    </div>
-                    <div>
-                      <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Voorkeursdatum <span className="normal-case text-warm-gray-light">(optioneel)</span></label>
-                      <input
-                        type="date" value={regDate} onChange={e => setRegDate(e.target.value)}
-                        min={new Date().toISOString().split('T')[0]}
-                        className="w-full border border-parchment bg-cream px-4 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors"
-                      />
                     </div>
                     {regStatus === 'duplicate' && (
                       <p className="font-sans text-xs text-wine italic">Dit e-mailadres is al ingeschreven.</p>

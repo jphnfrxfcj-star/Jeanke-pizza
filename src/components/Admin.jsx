@@ -285,13 +285,27 @@ function OpeningTab({ password }) {
       {/* Registratie configuratie */}
       <div className="bg-white border border-parchment">
         <div className="px-5 py-4 border-b border-parchment">
-          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Registratie-instellingen</p>
+          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Registratie voor openingsdag</p>
         </div>
         <form onSubmit={saveRegConfig} className="px-5 py-4 space-y-3">
-          <div>
-            <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-1">Datum waarvoor inschrijving geldt</label>
-            <input type="date" value={regDate} onChange={e=>setRegDate(e.target.value)} className={INPUT} />
-          </div>
+          <p className="font-sans text-xs text-warm-gray italic">Kies de openingsdag waarvoor mensen kunnen inschrijven. Deze datum staat duidelijk vermeld op de registratiepagina.</p>
+          {days.length > 0 ? (
+            <div className="space-y-1">
+              {days.map(d => (
+                <label key={d.date} className={`flex items-center gap-3 px-4 py-3 border cursor-pointer transition-colors ${regDate === d.date ? 'border-olive bg-olive/5' : 'border-parchment hover:border-olive/40'}`}>
+                  <input type="radio" name="regDate" value={d.date} checked={regDate === d.date} onChange={e=>setRegDate(e.target.value)} className="accent-olive" />
+                  <span className="font-sans text-sm text-ink">{formatLongDate(d.date)}</span>
+                  {d.label && <span className="font-sans text-xs text-warm-gray">— {d.label}</span>}
+                </label>
+              ))}
+              <label className={`flex items-center gap-3 px-4 py-3 border cursor-pointer transition-colors ${regDate === '' ? 'border-olive bg-olive/5' : 'border-parchment hover:border-olive/40'}`}>
+                <input type="radio" name="regDate" value="" checked={regDate === ''} onChange={()=>setRegDate('')} className="accent-olive" />
+                <span className="font-sans text-sm text-warm-gray italic">Geen datum tonen</span>
+              </label>
+            </div>
+          ) : (
+            <p className="font-sans text-xs text-wine italic">Voeg eerst een openingsdag toe hieronder.</p>
+          )}
           <button type="submit" disabled={savingCfg} className="btn-primary w-full">{savingCfg ? 'Bezig...' : 'Opslaan'}</button>
         </form>
       </div>
