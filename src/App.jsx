@@ -166,7 +166,7 @@ function Shop() {
           <div className="border-t border-cream/10">
             <div className="max-w-6xl mx-auto px-6 lg:px-10 py-2 flex items-center justify-between">
               <span className="font-sans text-xs text-cream/40 tracking-wide">
-                Ophaaluren {config.openingHour}:00 – {config.closingHour}:00
+                Ophaaluren {settings?.openingHour ?? config.openingHour}:00 – {settings?.closingHour ?? config.closingHour}:00
               </span>
               <span className="font-sans text-xs text-cream/40 tracking-wide">
                 Elke {config.slotIntervalMinutes} min een slot
