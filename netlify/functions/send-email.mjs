@@ -109,6 +109,41 @@ export default async (req) => {
       })
     }
 
+    if (type === 'registration') {
+      const { name, pizzas, registrationDate } = body
+      const dateStr = registrationDate
+        ? new Date(registrationDate).toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+        : null
+      await transport.sendMail({
+        from: `"Jeanke's Pizza" <${GMAIL_USER}>`,
+        to: email,
+        subject: `Inschrijving ontvangen — Jeanke's Pizza`,
+        html: `
+<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F7F3EC;font-family:'Georgia',serif;">
+  <div style="max-width:520px;margin:40px auto;background:#fff;border:1px solid #EDE5D8;">
+    <div style="background:#3D4A2D;padding:36px 32px;text-align:center;">
+      <p style="color:#BFA06A;font-size:11px;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">Jeanke's Pizza</p>
+      <h1 style="color:#F7F3EC;font-size:26px;margin:0;font-style:italic;font-weight:400;">Inschrijving bevestigd</h1>
+    </div>
+    <div style="padding:32px;">
+      <p style="color:#1C1410;font-size:15px;margin:0 0 16px;">Ciao <strong>${name}</strong>,</p>
+      <p style="color:#8A7E72;font-size:14px;line-height:1.6;margin:0 0 24px;">
+        We hebben je inschrijving goed ontvangen voor <strong>${pizzas} pizza${pizzas > 1 ? "'s" : ''}</strong>${dateStr ? ` op <strong>${dateStr}</strong>` : ''}.
+        Je krijgt een bericht zodra de bestellingen opengaan.
+      </p>
+      <p style="color:#C5BAB0;font-size:11px;text-align:center;font-style:italic;margin:0;">
+        Jeanke's Pizza
+      </p>
+    </div>
+  </div>
+</body>
+</html>`,
+      })
+    }
+
     if (type === 'threshold') {
       const { count, threshold } = body
       await transport.sendMail({

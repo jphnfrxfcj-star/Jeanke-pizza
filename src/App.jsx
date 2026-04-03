@@ -114,6 +114,12 @@ function Shop() {
       if (!res.ok) { setRegStatus('error'); return }
       setRegistration({ count: data.count, max: data.max, openFrom: data.openFrom })
       setRegStatus('success')
+      // Bevestigingsmail naar inschrijver
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'registration', name: regName, email: regEmail, pizzas: regPizzas, registrationDate: registration?.registrationDate }),
+      }).catch(() => {})
       if (data.reached) {
         fetch('/api/send-email', {
           method: 'POST',
