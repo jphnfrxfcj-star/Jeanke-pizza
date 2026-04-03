@@ -107,7 +107,7 @@ function Shop() {
       const data = await res.json()
       if (res.status === 409) { setRegStatus('duplicate'); return }
       if (!res.ok) { setRegStatus('error'); return }
-      setRegistration({ count: data.count, max: data.max, openFrom: data.openFrom })
+      setRegistration(prev => ({ ...prev, count: data.count, max: data.max, openFrom: data.openFrom }))
       setRegStatus('success')
       // Bevestigingsmail naar inschrijver
       fetch('/api/send-email', {
