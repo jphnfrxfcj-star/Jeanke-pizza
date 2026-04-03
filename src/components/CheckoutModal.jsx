@@ -60,7 +60,7 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
 
   return (
     <div className="fixed inset-0 bg-ink/60 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-      <div className="bg-cream w-full sm:max-w-lg max-h-[95vh] overflow-y-auto">
+      <div className="bg-cream w-full sm:max-w-xl md:max-w-2xl max-h-[95vh] overflow-y-auto">
         {/* Header */}
         <div className="bg-olive px-6 py-5 flex items-start justify-between">
           <div>
@@ -114,7 +114,7 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
               {slotsForDate.length === 0 ? (
                 <p className="text-sm text-wine italic">Geen tijdsloten beschikbaar.</p>
               ) : (
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
                   {slotsForDate.map(slot => {
                     const booked = isBooked(selectedDate, slot.time)
                     return (

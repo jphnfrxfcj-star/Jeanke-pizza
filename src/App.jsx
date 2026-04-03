@@ -131,7 +131,7 @@ function Shop() {
 
       {/* Header */}
       <header className="bg-olive text-cream">
-        <div className="max-w-5xl mx-auto px-6 py-8 text-center relative">
+        <div className="max-w-6xl mx-auto px-6 lg:px-10 py-8 text-center relative">
           <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-wide">
             Jeanke's Pizza
           </h1>
@@ -158,7 +158,7 @@ function Shop() {
         {/* Nav strip */}
         {!noOpeningDays && openingDays && openingDays.length > 0 && (
           <div className="border-t border-cream/10">
-            <div className="max-w-5xl mx-auto px-6 py-2 flex items-center justify-between">
+            <div className="max-w-6xl mx-auto px-6 lg:px-10 py-2 flex items-center justify-between">
               <span className="font-sans text-xs text-cream/40 tracking-wide">
                 Ophaaluren {config.openingHour}:00 – {config.closingHour}:00
               </span>
@@ -170,7 +170,7 @@ function Shop() {
         )}
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-10">
 
         {/* Registration page — no opening days yet */}
         {openingDays === null ? (
@@ -336,7 +336,7 @@ function Shop() {
                   {[1,2,3,4].map(i => <div key={i} className="h-64 bg-parchment animate-pulse" />)}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                   {pizzas.map(pizza => (
                     <PizzaCard
                       key={pizza.id}

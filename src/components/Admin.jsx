@@ -33,10 +33,18 @@ export default function Admin() {
 
   const pw = config.adminPassword
 
+  const tabs = [
+    { key: 'orders',  label: 'Bestellingen', icon: '📋' },
+    { key: 'pizzas',  label: "Pizza's",      icon: '🍕' },
+    { key: 'opening', label: 'Planning',     icon: '📅' },
+    { key: 'winst',   label: 'Winst',        icon: '💰' },
+  ]
+
   return (
-    <div className="min-h-screen bg-cream pb-24">
-      <header className="bg-olive text-cream sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-cream">
+      {/* Header */}
+      <header className="bg-olive text-cream sticky top-0 z-20">
+        <div className="px-4 md:px-8 py-4 flex items-center justify-between">
           <div>
             <h1 className="font-serif text-lg italic">{config.storeName}</h1>
             <p className="font-sans text-xs text-cream/50 tracking-widest uppercase">Beheer</p>
@@ -45,21 +53,30 @@ export default function Admin() {
         </div>
       </header>
 
-      <div className="max-w-2xl mx-auto px-4 py-5">
-        {tab === 'orders'  && <OrdersTab password={pw} />}
-        {tab === 'pizzas'  && <PizzasTab password={pw} />}
-        {tab === 'opening' && <OpeningTab password={pw} />}
-        {tab === 'winst'   && <WinstTab  password={pw} />}
+      <div className="flex">
+        {/* Sidebar — desktop */}
+        <aside className="hidden md:flex flex-col w-52 shrink-0 bg-white border-r border-parchment sticky top-[61px] h-[calc(100vh-61px)]">
+          {tabs.map(t => (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className={`flex items-center gap-3 px-5 py-4 text-sm font-sans border-b border-parchment transition-colors text-left ${tab === t.key ? 'bg-olive/5 text-olive border-l-2 border-l-olive' : 'text-warm-gray hover:bg-parchment/50 border-l-2 border-l-transparent'}`}>
+              <span className="text-xl">{t.icon}</span>{t.label}
+            </button>
+          ))}
+        </aside>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0 px-4 md:px-8 py-5 pb-24 md:pb-8 max-w-2xl md:max-w-3xl">
+          {tab === 'orders'  && <OrdersTab password={pw} />}
+          {tab === 'pizzas'  && <PizzasTab password={pw} />}
+          {tab === 'opening' && <OpeningTab password={pw} />}
+          {tab === 'winst'   && <WinstTab  password={pw} />}
+        </div>
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-parchment z-10">
-        <div className="max-w-2xl mx-auto flex">
-          {[
-            { key: 'orders',  label: 'Bestellingen', icon: '📋' },
-            { key: 'pizzas',  label: "Pizza's",      icon: '🍕' },
-            { key: 'opening', label: 'Planning',     icon: '📅' },
-            { key: 'winst',   label: 'Winst',        icon: '💰' },
-          ].map(t => (
+      {/* Bottom nav — mobile only */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-parchment z-10">
+        <div className="flex">
+          {tabs.map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
               className={`flex-1 py-2 flex flex-col items-center gap-0.5 font-sans font-medium transition-colors text-[10px] sm:text-xs ${tab === t.key ? 'text-wine' : 'text-warm-gray'}`}>
               <span className="text-lg sm:text-xl">{t.icon}</span>{t.label}
