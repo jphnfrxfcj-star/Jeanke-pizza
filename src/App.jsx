@@ -45,6 +45,8 @@ function Shop() {
   const [registration, setRegistration] = useState(null)
   const [regName, setRegName] = useState('')
   const [regEmail, setRegEmail] = useState('')
+  const [regPizzas, setRegPizzas] = useState(1)
+  const [regDate, setRegDate] = useState('')
   const [regStatus, setRegStatus] = useState('') // '' | 'loading' | 'success' | 'duplicate' | 'error'
 
   useEffect(() => {
@@ -106,19 +108,18 @@ function Shop() {
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: regName, email: regEmail }),
+        body: JSON.stringify({ name: regName, email: regEmail, pizzas: regPizzas, date: regDate || null }),
       })
       const data = await res.json()
       if (res.status === 409) { setRegStatus('duplicate'); return }
       if (!res.ok) { setRegStatus('error'); return }
-      setRegistration({ count: data.count, threshold: data.threshold })
+      setRegistration({ count: data.count, max: data.max, openFrom: data.openFrom })
       setRegStatus('success')
-      // Notify owner if threshold reached
       if (data.reached) {
         fetch('/api/send-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'threshold', count: data.count, threshold: data.threshold }),
+          body: JSON.stringify({ type: 'threshold', count: data.count, threshold: data.openFrom }),
         }).catch(() => {})
       }
     } catch { setRegStatus('error') }
@@ -186,23 +187,27 @@ function Shop() {
 
             <div className="bg-white border border-parchment mb-8">
               <div className="px-6 py-5 border-b border-parchment text-center">
-                <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-1">Voortgang</p>
+                <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-1">Gereserveerde pizza's</p>
                 {registration ? (
                   <>
                     <p className="font-serif text-4xl text-ink mb-1">
-                      {registration.count}<span className="text-warm-gray text-2xl">/{registration.threshold}</span>
+                      {registration.count}<span className="text-warm-gray text-2xl">/{registration.max}</span>
                     </p>
-                    <p className="font-sans text-xs text-warm-gray italic">
-                      inschrijvingen
-                    </p>
-                    <div className="mt-4 h-2 bg-parchment rounded-full overflow-hidden">
+                    <div className="mt-4 h-2 bg-parchment rounded-full overflow-hidden relative">
+                      {/* Open-from marker */}
+                      <div className="absolute top-0 bottom-0 w-px bg-gold/60 z-10"
+                        style={{ left: `${(registration.openFrom / registration.max) * 100}%` }} />
                       <div
                         className="h-full bg-olive transition-all duration-500"
-                        style={{ width: `${Math.min(100, (registration.count / registration.threshold) * 100)}%` }}
+                        style={{ width: `${Math.min(100, (registration.count / registration.max) * 100)}%` }}
                       />
                     </div>
                     <p className="font-sans text-xs text-warm-gray mt-2">
-                      Nog {Math.max(0, registration.threshold - registration.count)} nodig om te openen
+                      {registration.count < registration.openFrom
+                        ? `Nog ${registration.openFrom - registration.count} pizza's nodig om te openen`
+                        : registration.count < registration.max
+                        ? `Open — nog ${registration.max - registration.count} plaatsen vrij`
+                        : 'Volzet'}
                     </p>
                   </>
                 ) : (
@@ -217,9 +222,8 @@ function Shop() {
 
                 {regStatus === 'success' ? (
                   <div className="text-center py-4">
-                    <p className="text-2xl mb-2">✓</p>
-                    <p className="font-serif italic text-ink">Inschrijving ontvangen!</p>
-                    <p className="font-sans text-xs text-warm-gray mt-1">We sturen u een bericht zodra het zover is.</p>
+                    <p className="font-serif italic text-ink text-lg mb-1">Inschrijving ontvangen!</p>
+                    <p className="font-sans text-xs text-warm-gray">We sturen u een bericht zodra het zover is.</p>
                   </div>
                 ) : (
                   <form onSubmit={handleRegister} className="space-y-4">
@@ -236,6 +240,24 @@ function Shop() {
                       <input
                         type="email" required value={regEmail} onChange={e => setRegEmail(e.target.value)}
                         placeholder="uw@email.be"
+                        className="w-full border border-parchment bg-cream px-4 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Aantal pizza's</label>
+                      <div className="flex items-center gap-3">
+                        <button type="button" onClick={() => setRegPizzas(p => Math.max(1, p - 1))}
+                          className="w-10 h-10 border border-parchment text-ink hover:border-olive flex items-center justify-center text-xl transition-colors">−</button>
+                        <span className="font-serif text-2xl text-ink w-8 text-center">{regPizzas}</span>
+                        <button type="button" onClick={() => setRegPizzas(p => Math.min(10, p + 1))}
+                          className="w-10 h-10 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xl transition-colors">+</button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Voorkeursdatum <span className="normal-case text-warm-gray-light">(optioneel)</span></label>
+                      <input
+                        type="date" value={regDate} onChange={e => setRegDate(e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
                         className="w-full border border-parchment bg-cream px-4 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors"
                       />
                     </div>

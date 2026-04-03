@@ -7,11 +7,7 @@ export default function PizzaCard({ pizza, quantity, onAdd, onRemove, currency }
           <img src={pizza.imageUrl} alt={pizza.name} className="w-full h-full object-cover" />
         </div>
       ) : (
-        <div className="bg-parchment/60 py-8 flex items-center justify-center relative overflow-hidden">
-          <div className="absolute inset-0 opacity-5"
-            style={{ backgroundImage: 'radial-gradient(circle, #BFA06A 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
-          <span className="text-6xl relative z-10">{pizza.emoji}</span>
-        </div>
+        <div className="h-20 bg-parchment/40 border-b border-parchment" />
       )}
 
       <div className="p-5 flex flex-col flex-1">

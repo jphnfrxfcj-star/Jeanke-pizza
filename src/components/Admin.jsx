@@ -235,7 +235,7 @@ function PizzasTab({ password }) {
 
 function OpeningTab({ password }) {
   const [days, setDays]   = useState([])
-  const [regs, setRegs]   = useState({ count: 0, threshold: 20 })
+  const [regs, setRegs]   = useState({ count: 0, max: 20, openFrom: 16 })
   const [regList, setRegList] = useState([])
   const [newDate, setNewDate] = useState('')
   const [newLabel, setNewLabel] = useState('')
@@ -245,13 +245,10 @@ function OpeningTab({ password }) {
     Promise.all([
       fetch('/api/opening-days').then(r=>r.json()),
       fetch('/api/register').then(r=>r.json()),
-      fetch('/api/orders', { headers: {'x-admin-password': password} }).then(r=>r.json()).catch(()=>[]),
-    ]).then(([d, r]) => { setDays(d); setRegs(r); setLoading(false) })
+      fetch('/api/register/list', { headers: {'x-admin-password': password} }).then(r=>r.json()).catch(()=>[]),
+    ]).then(([d, r, rl]) => { setDays(d); setRegs(r); setRegList(Array.isArray(rl) ? rl : []); setLoading(false) })
   }
-  useEffect(() => {
-    load()
-    fetch('/api/register').then(r=>r.json()).then(setRegs)
-  }, [])
+  useEffect(() => { load() }, [])
 
   async function addDay(e) {
     e.preventDefault()
@@ -273,21 +270,49 @@ function OpeningTab({ password }) {
       {/* Registraties */}
       <div className="bg-white border border-parchment">
         <div className="px-5 py-4 border-b border-parchment flex items-center justify-between">
-          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Inschrijvingen</p>
-          <span className={`font-serif text-lg ${regs.count >= regs.threshold ? 'text-olive' : 'text-wine'}`}>
-            {regs.count} / {regs.threshold}
+          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Gereserveerde pizza's</p>
+          <span className={`font-serif text-lg ${regs.count >= regs.openFrom ? 'text-olive' : 'text-wine'}`}>
+            {regs.count} / {regs.max}
           </span>
         </div>
         <div className="px-5 py-4">
-          <div className="w-full bg-parchment h-2 mb-3">
-            <div className="bg-olive h-2 transition-all" style={{ width: `${Math.min(100, (regs.count/regs.threshold)*100)}%` }} />
+          <div className="w-full bg-parchment h-2 mb-3 relative">
+            <div className="absolute top-0 bottom-0 w-px bg-gold/70 z-10"
+              style={{ left: `${(regs.openFrom / regs.max) * 100}%` }} />
+            <div className="bg-olive h-2 transition-all" style={{ width: `${Math.min(100, (regs.count/regs.max)*100)}%` }} />
           </div>
-          {regs.count >= regs.threshold
-            ? <p className="font-sans text-xs text-olive">✓ Drempel bereikt — plan een openingsdag!</p>
-            : <p className="font-sans text-xs text-warm-gray">{regs.threshold - regs.count} inschrijvingen nog nodig</p>
-          }
+          <p className="font-sans text-xs text-warm-gray">
+            {regs.count >= regs.max
+              ? 'Volzet'
+              : regs.count >= regs.openFrom
+              ? `Open — nog ${regs.max - regs.count} plaatsen vrij`
+              : `Nog ${regs.openFrom - regs.count} pizza's nodig om te openen`}
+          </p>
+          <p className="font-sans text-xs text-warm-gray-light mt-1">
+            Opent vanaf {regs.openFrom} · max {regs.max} pizza's
+          </p>
         </div>
       </div>
+
+      {/* Registratielijst */}
+      {regList.length > 0 && (
+        <div className="bg-white border border-parchment">
+          <div className="px-5 py-4 border-b border-parchment">
+            <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Wie heeft zich ingeschreven</p>
+          </div>
+          <ul className="divide-y divide-parchment">
+            {regList.map((r, i) => (
+              <li key={i} className="px-5 py-3 flex items-center justify-between">
+                <div>
+                  <p className="font-sans text-sm text-ink">{r.name}</p>
+                  <p className="font-sans text-xs text-warm-gray">{r.email}{r.date ? ` · voorkeur ${formatLongDate(r.date)}` : ''}</p>
+                </div>
+                <span className="font-serif text-wine text-lg">{r.pizzas || 1}×</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Openingsdagen */}
       <div className="bg-white border border-parchment">
