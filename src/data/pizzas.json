@@ -83,7 +83,7 @@
   {
     "id": 10,
     "name": "Hot Stekke",
-    "ingredients": ["tomatensaus", "mozzarella", "kip", "koude feta"],
+    "ingredients": ["tomatensaus", "mozzarella", "kip", "warme feta"],
     "price": 12.50,
     "emoji": "🌶️",
     "imageUrl": "",
