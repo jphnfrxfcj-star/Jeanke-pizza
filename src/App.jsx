@@ -132,9 +132,6 @@ function Shop() {
       {/* Header */}
       <header className="bg-olive text-cream">
         <div className="max-w-5xl mx-auto px-6 py-8 text-center relative">
-          <p className="font-sans text-xs tracking-[0.3em] uppercase text-gold/70 mb-2">
-            Handgemaakt · Artisanaal · Vers uit de oven
-          </p>
           <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-wide">
             Jeanke's Pizza
           </h1>
@@ -374,11 +371,7 @@ function Shop() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-parchment mt-16 py-8 text-center">
-        <p className="font-serif italic text-warm-gray-light text-sm">
-          Con amore — Jeanke's Pizza
-        </p>
-      </footer>
+      <footer className="border-t border-parchment mt-16 py-8" />
 
       {showCheckout && (
         <CheckoutModal
