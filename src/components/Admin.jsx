@@ -41,7 +41,7 @@ export default function Admin() {
   ]
 
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen bg-cream overflow-x-hidden">
       {/* Header */}
       <header className="bg-olive text-cream sticky top-0 z-20">
         <div className="px-4 md:px-8 py-4 flex items-center justify-between">
@@ -65,7 +65,7 @@ export default function Admin() {
         </aside>
 
         {/* Content */}
-        <div className="flex-1 min-w-0 px-4 md:px-8 py-5 pb-24 md:pb-8 max-w-2xl md:max-w-3xl">
+        <div className="flex-1 min-w-0 w-full px-4 md:px-8 py-5 pb-24 md:pb-8 max-w-2xl md:max-w-3xl overflow-hidden">
           {tab === 'orders'  && <OrdersTab password={pw} />}
           {tab === 'pizzas'  && <PizzasTab password={pw} />}
           {tab === 'opening' && <OpeningTab password={pw} />}
@@ -183,7 +183,7 @@ function OrderCard({ order, onCancel }) {
             </div>
             <button onClick={() => onCancel(order.key)} className="text-warm-gray-light hover:text-wine transition-colors p-1 shrink-0">✕</button>
           </div>
-          <p className="font-sans text-sm text-warm-gray mt-2 leading-relaxed">{order.order}</p>
+          <p className="font-sans text-sm text-warm-gray mt-2 leading-relaxed break-words">{order.order}</p>
           <p className="font-serif text-base text-wine mt-1">{order.total}</p>
         </div>
       </div>
@@ -475,32 +475,32 @@ function OpeningTab({ password }) {
           <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Openingsuren & capaciteit</p>
         </div>
         <form onSubmit={saveSettings} className="px-5 py-4 space-y-4">
-          <div className="flex gap-3">
-            <div className="flex-1">
+          <div className="grid grid-cols-3 gap-2">
+            <div>
               <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-1">Van</label>
               <div className="flex items-center border border-parchment bg-cream">
                 <input type="number" min="0" max="23" value={siteSettings.openingHour}
                   onChange={e=>setSiteSettings(s=>({...s, openingHour: Number(e.target.value)}))}
-                  className="w-full px-3 py-3 text-sm text-ink bg-transparent focus:outline-none" />
-                <span className="pr-3 text-warm-gray text-sm">u</span>
+                  className="w-full px-2 py-3 text-sm text-ink bg-transparent focus:outline-none min-w-0" />
+                <span className="pr-2 text-warm-gray text-sm shrink-0">u</span>
               </div>
             </div>
-            <div className="flex-1">
+            <div>
               <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-1">Tot</label>
               <div className="flex items-center border border-parchment bg-cream">
                 <input type="number" min="0" max="23" value={siteSettings.closingHour}
                   onChange={e=>setSiteSettings(s=>({...s, closingHour: Number(e.target.value)}))}
-                  className="w-full px-3 py-3 text-sm text-ink bg-transparent focus:outline-none" />
-                <span className="pr-3 text-warm-gray text-sm">u</span>
+                  className="w-full px-2 py-3 text-sm text-ink bg-transparent focus:outline-none min-w-0" />
+                <span className="pr-2 text-warm-gray text-sm shrink-0">u</span>
               </div>
             </div>
-            <div className="flex-1">
+            <div>
               <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-1">Max/slot</label>
               <div className="flex items-center border border-parchment bg-cream">
                 <input type="number" min="1" max="10" value={siteSettings.pizzasPerSlot}
                   onChange={e=>setSiteSettings(s=>({...s, pizzasPerSlot: Number(e.target.value)}))}
-                  className="w-full px-3 py-3 text-sm text-ink bg-transparent focus:outline-none" />
-                <span className="pr-3 text-warm-gray text-sm">🍕</span>
+                  className="w-full px-2 py-3 text-sm text-ink bg-transparent focus:outline-none min-w-0" />
+                <span className="pr-2 text-warm-gray text-sm shrink-0">p</span>
               </div>
             </div>
           </div>
@@ -523,14 +523,13 @@ function OpeningTab({ password }) {
           {days.length > 0 ? (
             <div className="space-y-1">
               {days.map(d => (
-                <label key={d.date} className={`flex items-center gap-3 px-4 py-3 border cursor-pointer transition-colors ${regDate === d.date ? 'border-olive bg-olive/5' : 'border-parchment hover:border-olive/40'}`}>
-                  <input type="radio" name="regDate" value={d.date} checked={regDate === d.date} onChange={e=>setRegDate(e.target.value)} className="accent-olive" />
-                  <span className="font-sans text-sm text-ink">{formatLongDate(d.date)}</span>
-                  {d.label && <span className="font-sans text-xs text-warm-gray">— {d.label}</span>}
+                <label key={d.date} className={`flex items-center gap-2 px-4 py-3 border cursor-pointer transition-colors ${regDate === d.date ? 'border-olive bg-olive/5' : 'border-parchment hover:border-olive/40'}`}>
+                  <input type="radio" name="regDate" value={d.date} checked={regDate === d.date} onChange={e=>setRegDate(e.target.value)} className="accent-olive shrink-0" />
+                  <span className="font-sans text-sm text-ink min-w-0 break-words">{formatLongDate(d.date)}{d.label ? <span className="text-warm-gray text-xs"> — {d.label}</span> : null}</span>
                 </label>
               ))}
-              <label className={`flex items-center gap-3 px-4 py-3 border cursor-pointer transition-colors ${regDate === '' ? 'border-olive bg-olive/5' : 'border-parchment hover:border-olive/40'}`}>
-                <input type="radio" name="regDate" value="" checked={regDate === ''} onChange={()=>setRegDate('')} className="accent-olive" />
+              <label className={`flex items-center gap-2 px-4 py-3 border cursor-pointer transition-colors ${regDate === '' ? 'border-olive bg-olive/5' : 'border-parchment hover:border-olive/40'}`}>
+                <input type="radio" name="regDate" value="" checked={regDate === ''} onChange={()=>setRegDate('')} className="accent-olive shrink-0" />
                 <span className="font-sans text-sm text-warm-gray italic">Geen datum tonen</span>
               </label>
             </div>
