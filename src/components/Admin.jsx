@@ -112,11 +112,49 @@ function OrdersTab({ password }) {
   const upcoming = [...orders].filter(o => o.date >= today).sort((a,b) => a.date.localeCompare(b.date)||a.time.localeCompare(b.time))
   const past     = [...orders].filter(o => o.date <  today).sort((a,b) => b.date.localeCompare(a.date)||b.time.localeCompare(a.time))
 
+  // Parse "2x Burrata (€25.00), 1x Margherita (€12.50)" → { Burrata: 2, Margherita: 1 }
+  function parsePizzaCounts(orderStr) {
+    const counts = {}
+    if (!orderStr) return counts
+    const re = /(\d+)x ([^(]+?)\s*\(/g
+    let m
+    while ((m = re.exec(orderStr)) !== null) {
+      const qty = parseInt(m[1], 10)
+      const name = m[2].trim()
+      counts[name] = (counts[name] || 0) + qty
+    }
+    return counts
+  }
+
+  const pizzaSummary = (() => {
+    const totals = {}
+    upcoming.forEach(o => {
+      const counts = parsePizzaCounts(o.order)
+      Object.entries(counts).forEach(([name, qty]) => { totals[name] = (totals[name] || 0) + qty })
+    })
+    return Object.entries(totals).sort((a, b) => b[1] - a[1])
+  })()
+
   if (loading) return <LoadingCards />
   if (!orders.length) return <Empty icon="📭" text="Nog geen bestellingen" />
 
   return (
     <div className="space-y-6">
+      {pizzaSummary.length > 0 && (
+        <div className="bg-white border border-parchment p-4">
+          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-3">
+            Boodschappenlijst ({pizzaSummary.reduce((s,[,n])=>s+n,0)} pizza's)
+          </p>
+          <div className="space-y-2">
+            {pizzaSummary.map(([name, qty]) => (
+              <div key={name} className="flex items-center justify-between gap-3">
+                <span className="font-sans text-sm text-ink">{name}</span>
+                <span className="font-serif text-lg text-olive leading-none">{qty}×</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {upcoming.length > 0 && <section>
         <SectionLabel>Aankomend ({upcoming.length})</SectionLabel>
         <div className="space-y-3">{upcoming.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} />)}</div>
