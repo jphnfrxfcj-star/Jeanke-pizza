@@ -629,6 +629,7 @@ function WinstTab({ password }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
   const [saved, setSaved]     = useState(false)
+  const [scanning, setScanning] = useState(null) // key of field being scanned
 
   useEffect(() => {
     Promise.all([fetch('/api/pizzas').then(r=>r.json()), fetch('/api/costs').then(r=>r.json())])
@@ -640,6 +641,32 @@ function WinstTab({ password }) {
     e.preventDefault(); setSaving(true)
     await fetch('/api/costs', { method:'PUT', headers:{'Content-Type':'application/json','x-admin-password':password}, body:JSON.stringify(costs) })
     setSaving(false); setSaved(true); setTimeout(()=>setSaved(false), 2000)
+  }
+
+  async function handleScan(key, file) {
+    if (!file) return
+    setScanning(key)
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      const dataUrl = e.target.result // data:image/jpeg;base64,...
+      const [meta, data] = dataUrl.split(',')
+      const mediaType = meta.match(/:(.*?);/)[1]
+      try {
+        const res = await fetch('/api/scan-label', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+          body: JSON.stringify({ image: data, mediaType }),
+        })
+        const { price } = await res.json()
+        if (price > 0) setCosts(c => ({ ...c, [key]: price }))
+        else alert('Geen prijs herkend. Probeer een duidelijkere foto.')
+      } catch {
+        alert('Scannen mislukt.')
+      } finally {
+        setScanning(null)
+      }
+    }
+    reader.readAsDataURL(file)
   }
 
   const baseCost = Object.values(costs).reduce((s,v) => s+(parseFloat(v)||0), 0)
@@ -654,6 +681,13 @@ function WinstTab({ password }) {
             <div key={key} className="flex items-center gap-3">
               <span className="text-xl w-7">{icon}</span>
               <span className="flex-1 font-sans text-sm text-warm-gray">{label}</span>
+              {/* Scan camera button */}
+              <label className={`cursor-pointer flex items-center justify-center w-9 h-9 border border-parchment bg-cream hover:border-olive transition-colors shrink-0 ${scanning === key ? 'opacity-50 pointer-events-none' : ''}`}
+                title="Etiket scannen">
+                <input type="file" accept="image/*" capture="environment" className="sr-only"
+                  onChange={e => handleScan(key, e.target.files[0])} />
+                {scanning === key ? <span className="text-xs text-warm-gray animate-pulse">...</span> : <span className="text-base">📷</span>}
+              </label>
               <div className="flex items-center border border-parchment w-24">
                 <span className="px-2 py-2 bg-parchment/50 text-warm-gray text-xs">€</span>
                 <input type="number" step="0.05" min="0" value={costs[key]} onChange={e=>setCosts(c=>({...c,[key]:e.target.value}))}
