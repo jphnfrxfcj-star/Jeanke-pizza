@@ -136,17 +136,18 @@ function OrdersTab({ password }) {
   const upcoming = [...orders].filter(o => o.date >= today).sort((a,b) => a.date.localeCompare(b.date)||a.time.localeCompare(b.time))
   const past     = [...orders].filter(o => o.date <  today).sort((a,b) => b.date.localeCompare(a.date)||b.time.localeCompare(a.time))
 
-  // Parse "2x Burrata (€25.00), 1x Margherita (€12.50)" → { Burrata: 2, ... }
+  // Parse "2x Napoletana (Salt Lover) (€25.00), 1x Margherita (€12.50)" → { "Napoletana (Salt Lover)": 2, ... }
+  // Splits per item first, then matches up to the LAST " (€" so names with parentheses work correctly
   function parsePizzaCounts(orderStr) {
     const counts = {}
     if (!orderStr) return counts
-    const re = /(\d+)x ([^(]+?)\s*\(/g
-    let m
-    while ((m = re.exec(orderStr)) !== null) {
+    orderStr.split(', ').forEach(item => {
+      const m = item.match(/^(\d+)x (.+) \([€$£]/)
+      if (!m) return
       const qty = parseInt(m[1], 10)
       const name = m[2].trim()
       counts[name] = (counts[name] || 0) + qty
-    }
+    })
     return counts
   }
 
