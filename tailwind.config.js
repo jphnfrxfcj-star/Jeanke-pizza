@@ -20,8 +20,8 @@ export default {
         'warm-gray-light': '#C5BAB0',
       },
       fontFamily: {
-        serif: ['"Playfair Display"', 'Georgia', 'serif'],
-        sans:  ['Lato', 'system-ui', 'sans-serif'],
+        serif: ['"DM Serif Display"', 'Georgia', 'serif'],
+        sans:  ['"DM Sans"', 'system-ui', 'sans-serif'],
       },
     },
   },
