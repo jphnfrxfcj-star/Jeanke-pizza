@@ -8,6 +8,7 @@ export default function Admin() {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem('adminPw') === config.adminPassword)
   const [password, setPassword] = useState('')
   const [tab, setTab] = useState('orders')
+  const [menuOpen, setMenuOpen] = useState(false)
 
   function handleLogin(e) {
     e.preventDefault()
@@ -34,56 +35,199 @@ export default function Admin() {
   const pw = config.adminPassword
 
   const tabs = [
+    { key: 'dag',     label: 'Dag',         icon: '🕐' },
     { key: 'orders',  label: 'Bestellingen', icon: '📋' },
     { key: 'pizzas',  label: "Pizza's",      icon: '🍕' },
     { key: 'opening', label: 'Planning',     icon: '📅' },
     { key: 'winst',   label: 'Winst',        icon: '💰' },
   ]
 
+  function navigate(key) { setTab(key); setMenuOpen(false) }
+
   return (
     <div className="min-h-screen bg-cream overflow-x-hidden">
       {/* Header */}
-      <header className="bg-olive text-cream sticky top-0 z-20">
-        <div className="px-4 md:px-8 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="font-serif text-lg italic">{config.storeName}</h1>
-            <p className="font-sans text-xs text-cream/50 tracking-widest uppercase">Beheer</p>
+      <header className="bg-olive text-cream sticky top-0 z-30">
+        <div className="px-4 py-4 flex items-center justify-between">
+          <button onClick={() => setMenuOpen(true)} className="flex flex-col gap-1.5 p-1 -ml-1">
+            <span className="block w-5 h-0.5 bg-cream/80" />
+            <span className="block w-5 h-0.5 bg-cream/80" />
+            <span className="block w-5 h-0.5 bg-cream/80" />
+          </button>
+          <div className="text-center">
+            <h1 className="font-serif text-lg italic leading-none">{config.storeName}</h1>
+            <p className="font-sans text-[10px] text-cream/50 tracking-widest uppercase mt-0.5">{tabs.find(t => t.key === tab)?.label}</p>
           </div>
           <a href="/" className="font-sans text-xs text-cream/60 hover:text-cream tracking-widest uppercase transition-colors">← Shop</a>
         </div>
       </header>
 
-      <div className="flex">
-        {/* Sidebar — desktop */}
-        <aside className="hidden md:flex flex-col w-52 shrink-0 bg-white border-r border-parchment sticky top-[61px] h-[calc(100vh-61px)]">
-          {tabs.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              className={`flex items-center gap-3 px-5 py-4 text-sm font-sans border-b border-parchment transition-colors text-left ${tab === t.key ? 'bg-olive/5 text-olive border-l-2 border-l-olive' : 'text-warm-gray hover:bg-parchment/50 border-l-2 border-l-transparent'}`}>
-              <span className="text-xl">{t.icon}</span>{t.label}
-            </button>
-          ))}
-        </aside>
+      {/* Drawer overlay */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-40 flex">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-ink/50" onClick={() => setMenuOpen(false)} />
+          {/* Drawer */}
+          <div className="relative w-64 max-w-[80vw] bg-white h-full flex flex-col shadow-xl">
+            <div className="bg-olive px-5 py-5">
+              <p className="font-sans text-xs text-cream/50 tracking-widest uppercase">Beheer</p>
+              <h2 className="font-serif text-xl italic text-cream mt-0.5">{config.storeName}</h2>
+            </div>
+            <nav className="flex-1 py-2">
+              {tabs.map(t => (
+                <button key={t.key} onClick={() => navigate(t.key)}
+                  className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-sans transition-colors text-left ${tab === t.key ? 'text-olive bg-olive/5 border-l-2 border-olive' : 'text-ink hover:bg-parchment/50 border-l-2 border-transparent'}`}>
+                  <span className="text-lg w-6">{t.icon}</span>{t.label}
+                </button>
+              ))}
+            </nav>
+            <div className="border-t border-parchment px-5 py-4">
+              <a href="/" className="font-sans text-sm text-warm-gray hover:text-ink transition-colors">← Terug naar shop</a>
+            </div>
+          </div>
+        </div>
+      )}
 
-        {/* Content */}
-        <div className="flex-1 min-w-0 w-full px-4 md:px-8 py-5 pb-24 md:pb-8 max-w-2xl md:max-w-3xl overflow-hidden">
-          {tab === 'orders'  && <OrdersTab password={pw} />}
-          {tab === 'pizzas'  && <PizzasTab password={pw} />}
-          {tab === 'opening' && <OpeningTab password={pw} />}
-          {tab === 'winst'   && <WinstTab  password={pw} />}
+      {/* Content */}
+      <div className="px-4 py-5 pb-8 max-w-2xl overflow-hidden">
+        {tab === 'dag'     && <DagTab     password={pw} />}
+        {tab === 'orders'  && <OrdersTab  password={pw} />}
+        {tab === 'pizzas'  && <PizzasTab  password={pw} />}
+        {tab === 'opening' && <OpeningTab password={pw} />}
+        {tab === 'winst'   && <WinstTab   password={pw} />}
+      </div>
+    </div>
+  )
+}
+
+// ─── Dag ───────────────────────────────────────────────────────────────────
+
+function DagTab({ password }) {
+  const [orders, setOrders] = useState([])
+  const [pizzas, setPizzas]   = useState([])
+  const [loading, setLoading] = useState(true)
+  const [checked, setChecked] = useState({}) // "key_pizzaName_idx" → bool
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/orders', { headers: { 'x-admin-password': password } }).then(r => r.json()),
+      fetch('/api/pizzas').then(r => r.json()),
+    ]).then(([ord, piz]) => {
+      setOrders(Array.isArray(ord) ? ord : [])
+      setPizzas(Array.isArray(piz) ? piz : [])
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
+
+  const today = new Date().toISOString().split('T')[0]
+  const todayOrders = [...orders]
+    .filter(o => o.date === today)
+    .sort((a, b) => a.time.localeCompare(b.time))
+
+  // Parse order string into list of { name, qty } items
+  function parseItems(orderStr) {
+    const items = []
+    if (!orderStr) return items
+    orderStr.split(', ').forEach(part => {
+      const m = part.match(/^(\d+)x (.+) \([€$£]/)
+      if (!m) return
+      const qty = parseInt(m[1], 10)
+      const name = m[2].trim()
+      for (let i = 0; i < qty; i++) items.push({ name, idx: i })
+    })
+    return items
+  }
+
+  function toggleCheck(key, name, idx) {
+    const id = `${key}__${name}__${idx}`
+    setChecked(c => ({ ...c, [id]: !c[id] }))
+  }
+  function isChecked(key, name, idx) { return !!checked[`${key}__${name}__${idx}`] }
+
+  // Group orders by timeslot
+  const byTime = todayOrders.reduce((acc, o) => {
+    const t = o.time; if (!acc[t]) acc[t] = []; acc[t].push(o); return acc
+  }, {})
+
+  if (loading) return <LoadingCards />
+
+  if (!todayOrders.length) return (
+    <div className="text-center py-16">
+      <p className="font-sans text-sm text-warm-gray">Geen bestellingen voor vandaag.</p>
+      <p className="font-sans text-xs text-warm-gray-light mt-1">{formatLongDate(today)}</p>
+    </div>
+  )
+
+  // Overall progress
+  const allItems = todayOrders.flatMap(o => parseItems(o.order).map((it, i) => ({ key: o.key, ...it })))
+  const doneCount = allItems.filter(it => isChecked(it.key, it.name, it.idx)).length
+
+  return (
+    <div className="space-y-1">
+      {/* Progress bar */}
+      <div className="bg-white border border-parchment p-4 mb-4">
+        <div className="flex justify-between text-xs font-sans text-warm-gray mb-2">
+          <span>{formatLongDate(today)}</span>
+          <span>{doneCount} / {allItems.length} klaar</span>
+        </div>
+        <div className="w-full bg-parchment h-1.5">
+          <div className="bg-olive h-1.5 transition-all duration-300"
+            style={{ width: `${allItems.length ? (doneCount / allItems.length) * 100 : 0}%` }} />
         </div>
       </div>
 
-      {/* Bottom nav — mobile only */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-parchment z-10">
-        <div className="flex">
-          {tabs.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              className={`flex-1 py-2 flex flex-col items-center gap-0.5 font-sans font-medium transition-colors text-[10px] sm:text-xs ${tab === t.key ? 'text-wine' : 'text-warm-gray'}`}>
-              <span className="text-lg sm:text-xl">{t.icon}</span>{t.label}
-            </button>
-          ))}
+      {/* Timeline per timeslot */}
+      {Object.entries(byTime).map(([time, slotOrders]) => {
+        const slotItems = slotOrders.flatMap(o => parseItems(o.order).map(it => ({ key: o.key, ...it })))
+        const slotDone = slotItems.filter(it => isChecked(it.key, it.name, it.idx)).length
+        const allDone = slotDone === slotItems.length
+
+        return (
+          <div key={time} className={`bg-white border transition-colors ${allDone ? 'border-olive/40 opacity-60' : 'border-parchment'}`}>
+            {/* Slot header */}
+            <div className={`px-4 py-3 flex items-center justify-between border-b ${allDone ? 'border-olive/20 bg-olive/5' : 'border-parchment'}`}>
+              <div className="flex items-center gap-3">
+                <span className={`font-serif text-xl ${allDone ? 'text-olive' : 'text-ink'}`}>{time}</span>
+                <span className="font-sans text-xs text-warm-gray">{slotOrders.length} best. · {slotItems.length} pizza's</span>
+              </div>
+              {allDone && <span className="font-sans text-xs text-olive tracking-wide uppercase">Klaar</span>}
+            </div>
+
+            {/* Orders in this slot */}
+            {slotOrders.map(order => {
+              const items = parseItems(order.order)
+              const orderDone = items.every(it => isChecked(order.key, it.name, it.idx))
+              return (
+                <div key={order.key} className={`border-b border-parchment last:border-0 ${orderDone ? 'bg-parchment/20' : ''}`}>
+                  <div className="px-4 pt-3 pb-1">
+                    <p className={`font-serif text-base ${orderDone ? 'text-warm-gray line-through' : 'text-ink'}`}>{order.name}</p>
+                  </div>
+                  <div className="px-4 pb-3 space-y-1">
+                    {items.map((it, i) => {
+                      const done = isChecked(order.key, it.name, it.idx)
+                      return (
+                        <button key={i} onClick={() => toggleCheck(order.key, it.name, it.idx)}
+                          className="w-full flex items-center gap-3 py-1.5 text-left">
+                          <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${done ? 'bg-olive border-olive' : 'border-warm-gray-light'}`}>
+                            {done && <span className="text-cream text-[10px] leading-none">✓</span>}
+                          </span>
+                          <span className={`font-sans text-sm transition-colors ${done ? 'line-through text-warm-gray-light' : 'text-ink'}`}>{it.name}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+      })}
+
+      {doneCount === allItems.length && allItems.length > 0 && (
+        <div className="text-center py-6">
+          <p className="font-serif text-xl italic text-olive">Alle pizza's klaar!</p>
         </div>
-      </nav>
+      )}
     </div>
   )
 }
