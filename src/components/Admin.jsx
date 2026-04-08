@@ -126,11 +126,11 @@ function OrdersTab({ password }) {
     load()
   }
 
-  const today    = new Date().toISOString().split('T')[0]
+  const today = new Date().toISOString().split('T')[0]
   const upcoming = [...orders].filter(o => o.date >= today).sort((a,b) => a.date.localeCompare(b.date)||a.time.localeCompare(b.time))
   const past     = [...orders].filter(o => o.date <  today).sort((a,b) => b.date.localeCompare(a.date)||b.time.localeCompare(a.time))
 
-  // Parse "2x Burrata (€25.00), 1x Margherita (€12.50)" → { Burrata: 2, Margherita: 1 }
+  // Parse "2x Burrata (€25.00), 1x Margherita (€12.50)" → { Burrata: 2, ... }
   function parsePizzaCounts(orderStr) {
     const counts = {}
     if (!orderStr) return counts
@@ -144,35 +144,26 @@ function OrdersTab({ password }) {
     return counts
   }
 
-  const pizzaSummary = (() => {
+  // Unique upcoming dates that have orders, sorted
+  const upcomingDates = [...new Set(upcoming.map(o => o.date))].sort()
+
+  // Summary per date
+  function summaryForDate(date) {
     const totals = {}
-    upcoming.forEach(o => {
-      const counts = parsePizzaCounts(o.order)
-      Object.entries(counts).forEach(([name, qty]) => { totals[name] = (totals[name] || 0) + qty })
+    upcoming.filter(o => o.date === date).forEach(o => {
+      Object.entries(parsePizzaCounts(o.order)).forEach(([name, qty]) => {
+        totals[name] = (totals[name] || 0) + qty
+      })
     })
     return Object.entries(totals).sort((a, b) => b[1] - a[1])
-  })()
+  }
 
   if (loading) return <LoadingCards />
   if (!orders.length) return <Empty icon="📭" text="Nog geen bestellingen" />
 
   return (
     <div className="space-y-6">
-      {pizzaSummary.length > 0 && (
-        <div className="bg-white border border-parchment p-4">
-          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-3">
-            Boodschappenlijst ({pizzaSummary.reduce((s,[,n])=>s+n,0)} pizza's)
-          </p>
-          <div className="space-y-2">
-            {pizzaSummary.map(([name, qty]) => (
-              <div key={name} className="flex items-center justify-between gap-3">
-                <span className="font-sans text-sm text-ink">{name}</span>
-                <span className="font-serif text-lg text-olive leading-none">{qty}×</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {upcomingDates.length > 0 && <ShoppingList dates={upcomingDates} summaryForDate={summaryForDate} />}
       {upcoming.length > 0 && <section>
         <SectionLabel>Aankomend ({upcoming.length})</SectionLabel>
         <div className="space-y-3">{upcoming.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} onEdit={startEdit} />)}</div>
@@ -218,6 +209,68 @@ function OrdersTab({ password }) {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function ShoppingList({ dates, summaryForDate }) {
+  const [selectedDate, setSelectedDate] = useState(dates[0])
+  const [checked, setChecked] = useState({})
+
+  // Reset checked when date changes
+  function selectDate(date) { setSelectedDate(date); setChecked({}) }
+
+  const items = summaryForDate(selectedDate)
+  const total = items.reduce((s, [, n]) => s + n, 0)
+  const doneCount = Object.values(checked).filter(Boolean).length
+
+  return (
+    <div className="bg-white border border-parchment">
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-parchment flex items-center justify-between gap-2">
+        <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Boodschappenlijst</p>
+        <span className="font-sans text-xs text-warm-gray">{doneCount}/{items.length} afgevinkt</span>
+      </div>
+
+      {/* Date tabs */}
+      {dates.length > 1 && (
+        <div className="flex border-b border-parchment overflow-x-auto">
+          {dates.map(date => (
+            <button key={date} onClick={() => selectDate(date)}
+              className={`flex-1 px-3 py-2.5 font-sans text-xs whitespace-nowrap transition-colors ${selectedDate === date ? 'bg-olive text-cream' : 'text-warm-gray hover:bg-parchment/50'}`}>
+              {formatShortDate(date)}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Checklist */}
+      <div className="divide-y divide-parchment">
+        {items.map(([name, qty]) => {
+          const done = !!checked[name]
+          return (
+            <button key={name} onClick={() => setChecked(c => ({ ...c, [name]: !c[name] }))}
+              className={`w-full flex items-center gap-4 px-4 py-4 text-left transition-colors active:bg-parchment/40 ${done ? 'bg-parchment/30' : ''}`}>
+              {/* Checkbox */}
+              <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${done ? 'bg-olive border-olive' : 'border-warm-gray-light'}`}>
+                {done && <span className="text-cream text-xs leading-none">✓</span>}
+              </span>
+              <span className={`font-sans text-base flex-1 transition-colors ${done ? 'line-through text-warm-gray-light' : 'text-ink'}`}>{name}</span>
+              <span className={`font-serif text-xl shrink-0 transition-colors ${done ? 'text-warm-gray-light' : 'text-olive'}`}>{qty}×</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Footer */}
+      <div className="px-4 py-3 border-t border-parchment flex items-center justify-between">
+        <span className="font-sans text-xs text-warm-gray">{total} pizza's totaal</span>
+        {doneCount > 0 && (
+          <button onClick={() => setChecked({})} className="font-sans text-xs text-warm-gray hover:text-wine transition-colors">
+            Reset
+          </button>
+        )}
+      </div>
     </div>
   )
 }
