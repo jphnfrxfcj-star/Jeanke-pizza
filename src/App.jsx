@@ -150,15 +150,6 @@ function Shop() {
             Piccola pizzeria artigianale
           </p>
 
-          {/* Mobile cart button */}
-          {cartCount > 0 && !showRegistration && slots.length > 0 && (
-            <button
-              onClick={() => setShowCheckout(true)}
-              className="lg:hidden absolute right-6 top-1/2 -translate-y-1/2 bg-wine text-cream px-4 py-2 font-sans text-xs tracking-widest uppercase flex items-center gap-2"
-            >
-              🛒 {cartCount}
-            </button>
-          )}
         </div>
 
         {/* Nav strip */}
@@ -378,6 +369,17 @@ function Shop() {
 
       {/* Footer */}
       <footer className="border-t border-parchment mt-16 py-8" />
+
+      {/* Floating cart button — mobile, fixed bottom */}
+      {cartCount > 0 && !showRegistration && slots.length > 0 && (
+        <div className="lg:hidden fixed bottom-6 left-0 right-0 flex justify-center z-20 px-6">
+          <button onClick={() => setShowCheckout(true)}
+            className="bg-wine text-cream px-6 py-3.5 font-sans text-sm tracking-widest uppercase flex items-center gap-3 shadow-lg w-full max-w-xs justify-center">
+            <span>Winkelmandje</span>
+            <span className="bg-cream text-wine font-bold text-xs rounded-full w-6 h-6 flex items-center justify-center">{cartCount}</span>
+          </button>
+        </div>
+      )}
 
       {showCheckout && (
         <CheckoutModal
