@@ -153,24 +153,30 @@ function OrdersTab({ password }) {
   // Unique upcoming dates that have orders, sorted
   const upcomingDates = [...new Set(upcoming.map(o => o.date))].sort()
 
-  // Build a name→ingredients map from the pizzas list
+  // Normalize pizza name for matching: lowercase + collapse whitespace
+  function normName(s) { return s.toLowerCase().replace(/\s+/g, ' ').trim() }
+
+  // Build a name→ingredients map with normalized keys
   const pizzaIngMap = Object.fromEntries(
-    pizzas.map(p => [p.name.toLowerCase(), Array.isArray(p.ingredients) ? p.ingredients : []])
+    pizzas.map(p => [normName(p.name), Array.isArray(p.ingredients) ? p.ingredients : []])
   )
 
-  // Ingredient totals per date: ingredient → total count needed
+  // Ingredient totals per date + unmatched pizza names for diagnostics
   function ingredientsForDate(date) {
     const totals = {}
+    const unmatched = new Set()
     upcoming.filter(o => o.date === date).forEach(o => {
       Object.entries(parsePizzaCounts(o.order)).forEach(([pizzaName, qty]) => {
-        const ings = pizzaIngMap[pizzaName.toLowerCase()] || []
+        const key = normName(pizzaName)
+        const ings = pizzaIngMap[key]
+        if (!ings) { unmatched.add(pizzaName); return }
         ings.forEach(ing => { totals[ing] = (totals[ing] || 0) + qty })
       })
     })
-    return Object.entries(totals).sort((a, b) => b[1] - a[1])
+    return { items: Object.entries(totals).sort((a, b) => b[1] - a[1]), unmatched: [...unmatched] }
   }
 
-  // Pizza summary per date (kept for context in the list header)
+  // Pizza summary per date
   function pizzasForDate(date) {
     const totals = {}
     upcoming.filter(o => o.date === date).forEach(o => {
@@ -243,7 +249,7 @@ function ShoppingList({ dates, ingredientsForDate, pizzasForDate }) {
 
   function selectDate(date) { setSelectedDate(date); setChecked({}); setShowPizzas(false) }
 
-  const ingredients = ingredientsForDate(selectedDate)
+  const { items: ingredients, unmatched } = ingredientsForDate(selectedDate)
   const pizzas = pizzasForDate(selectedDate)
   const doneCount = Object.values(checked).filter(Boolean).length
   const totalPizzas = pizzas.reduce((s, [, n]) => s + n, 0)
@@ -300,6 +306,16 @@ function ShoppingList({ dates, ingredientsForDate, pizzasForDate }) {
                 <span>{name}</span><span>{qty}×</span>
               </div>
             ))}
+          </div>
+        )}
+        {/* Unmatched pizza names — naam in bestelling ≠ naam in database */}
+        {unmatched.length > 0 && (
+          <div className="pt-1 border-t border-parchment">
+            <p className="font-sans text-xs text-wine mb-1">Ingrediënten onbekend voor:</p>
+            {unmatched.map(name => (
+              <p key={name} className="font-sans text-xs text-warm-gray">· {name}</p>
+            ))}
+            <p className="font-sans text-[10px] text-warm-gray-light mt-1">Controleer of de naam in de Pizza's-tab exact overeenkomt.</p>
           </div>
         )}
         {doneCount > 0 && (
