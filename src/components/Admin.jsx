@@ -241,6 +241,7 @@ function OrdersTab({ password }) {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
   const [editForm, setEditForm] = useState({ name: '', email: '', order: '', total: '' })
+  const [pastOpen, setPastOpen] = useState(false)
 
   function load() {
     setLoading(true)
@@ -299,10 +300,20 @@ function OrdersTab({ password }) {
           </div>
         ))}
       </section>}
-      {past.length > 0 && <section>
-        <SectionLabel>Voorbij</SectionLabel>
-        <div className="space-y-3 opacity-60">{past.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} onEdit={startEdit} />)}</div>
-      </section>}
+      {past.length > 0 && (
+        <section>
+          <button onClick={() => setPastOpen(v => !v)}
+            className="w-full flex items-center justify-between mb-3 group">
+            <span className="font-sans text-xs tracking-widest uppercase text-warm-gray">Voorbij ({past.length})</span>
+            <span className="font-sans text-xs text-warm-gray-light group-hover:text-warm-gray transition-colors">{pastOpen ? '▲ Inklappen' : '▼ Uitklappen'}</span>
+          </button>
+          {pastOpen && (
+            <div className="space-y-3 opacity-60">
+              {past.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} onEdit={startEdit} />)}
+            </div>
+          )}
+        </section>
+      )}
 
       {editing && (
         <div className="fixed inset-0 bg-ink/60 flex items-end sm:items-center justify-center z-50">
