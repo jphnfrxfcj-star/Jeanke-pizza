@@ -39,8 +39,8 @@ export default function Admin() {
     { key: 'orders',       label: 'Bestellingen',   icon: '📋' },
     { key: 'boodschappen', label: 'Boodschappen',   icon: '🛒' },
     { key: 'pizzas',       label: "Pizza's",        icon: '🍕' },
-    { key: 'opening',      label: 'Instellingen',   icon: '⚙️'  },
     { key: 'winst',        label: 'Winst',          icon: '💰' },
+    { key: 'opening',      label: 'Instellingen',   icon: '⚙️'  },
   ]
 
   function navigate(key) { setTab(key); setMenuOpen(false) }
