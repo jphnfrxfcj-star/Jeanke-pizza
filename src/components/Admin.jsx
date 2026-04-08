@@ -279,11 +279,25 @@ function OrdersTab({ password }) {
   if (loading) return <LoadingCards />
   if (!orders.length) return <Empty icon="📭" text="Nog geen bestellingen" />
 
+  // Group upcoming by date
+  const upcomingByDate = upcoming.reduce((acc, o) => {
+    if (!acc[o.date]) acc[o.date] = []
+    acc[o.date].push(o)
+    return acc
+  }, {})
+
   return (
     <div className="space-y-6">
-      {upcoming.length > 0 && <section>
-        <SectionLabel>Aankomend ({upcoming.length})</SectionLabel>
-        <div className="space-y-3">{upcoming.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} onEdit={startEdit} />)}</div>
+      {upcoming.length > 0 && <section className="space-y-5">
+        {Object.entries(upcomingByDate).map(([date, dayOrders]) => (
+          <div key={date}>
+            <div className="flex items-center justify-between mb-2">
+              <SectionLabel>{formatLongDate(date)}</SectionLabel>
+              <span className="font-sans text-xs text-warm-gray mb-3">{dayOrders.length} best.</span>
+            </div>
+            <div className="space-y-3">{dayOrders.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} onEdit={startEdit} />)}</div>
+          </div>
+        ))}
       </section>}
       {past.length > 0 && <section>
         <SectionLabel>Voorbij</SectionLabel>
@@ -403,10 +417,33 @@ function BoodschappenTab({ password }) {
 
 function ShoppingList({ dates, ingredientsForDate, pizzasForDate }) {
   const [selectedDate, setSelectedDate] = useState(dates[0])
-  const [checked, setChecked] = useState({})
   const [showPizzas, setShowPizzas] = useState(false)
 
-  function selectDate(date) { setSelectedDate(date); setChecked({}); setShowPizzas(false) }
+  const storageKey = `boodschappen_${selectedDate}`
+
+  const [checked, setChecked] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(storageKey) || '{}') } catch { return {} }
+  })
+
+  // Reload from localStorage when date changes
+  function selectDate(date) {
+    setSelectedDate(date)
+    setShowPizzas(false)
+    try { setChecked(JSON.parse(localStorage.getItem(`boodschappen_${date}`) || '{}')) } catch { setChecked({}) }
+  }
+
+  function toggle(name) {
+    setChecked(prev => {
+      const next = { ...prev, [name]: !prev[name] }
+      try { localStorage.setItem(storageKey, JSON.stringify(next)) } catch {}
+      return next
+    })
+  }
+
+  function reset() {
+    setChecked({})
+    try { localStorage.removeItem(storageKey) } catch {}
+  }
 
   const { items: ingredients, unmatched } = ingredientsForDate(selectedDate)
   const pizzas = pizzasForDate(selectedDate)
@@ -438,7 +475,7 @@ function ShoppingList({ dates, ingredientsForDate, pizzasForDate }) {
           {ingredients.map(([name, qty]) => {
             const done = !!checked[name]
             return (
-              <button key={name} onClick={() => setChecked(c => ({ ...c, [name]: !c[name] }))}
+              <button key={name} onClick={() => toggle(name)}
                 className={`w-full flex items-center gap-4 px-4 py-4 text-left transition-colors active:bg-parchment/40 ${done ? 'bg-parchment/30' : ''}`}>
                 <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${done ? 'bg-olive border-olive' : 'border-warm-gray-light'}`}>
                   {done && <span className="text-cream text-xs leading-none">✓</span>}
@@ -478,7 +515,7 @@ function ShoppingList({ dates, ingredientsForDate, pizzasForDate }) {
           </div>
         )}
         {doneCount > 0 && (
-          <button onClick={() => setChecked({})} className="font-sans text-xs text-wine hover:text-wine-light transition-colors">
+          <button onClick={reset} className="font-sans text-xs text-wine hover:text-wine-light transition-colors">
             Reset afvinklijst
           </button>
         )}
