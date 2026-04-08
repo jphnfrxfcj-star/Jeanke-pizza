@@ -796,18 +796,18 @@ function WinstTab({ password }) {
                   <span className="font-serif text-ink flex-1 min-w-0 truncate">{pizza.name}</span>
                   <span className={`font-sans text-xs px-2 py-0.5 shrink-0 ${pct >= 40 ? 'bg-olive/10 text-olive' : 'bg-wine/10 text-wine'}`}>{pct.toFixed(0)}%</span>
                 </div>
-                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="bg-parchment/50 p-2">
-                    <div className="text-warm-gray">Geschat</div>
-                    <div className="font-serif text-ink">€{est.toFixed(2)}</div>
+                    <div className="font-sans text-[10px] text-warm-gray uppercase tracking-wide mb-0.5">Geschat</div>
+                    <div className="font-serif text-base text-ink">€{est.toFixed(2)}</div>
                   </div>
                   <div className="bg-parchment/50 p-2">
-                    <div className="text-warm-gray">Prijs</div>
-                    <div className="font-serif text-ink">€{pizza.price.toFixed(2)}</div>
+                    <div className="font-sans text-[10px] text-warm-gray uppercase tracking-wide mb-0.5">Prijs</div>
+                    <div className="font-serif text-base text-ink">€{pizza.price.toFixed(2)}</div>
                   </div>
                   <div className={`p-2 ${margin >= 0 ? 'bg-olive/10' : 'bg-wine/10'}`}>
-                    <div className="text-warm-gray">Winst</div>
-                    <div className={`font-serif ${margin >= 0 ? 'text-olive' : 'text-wine'}`}>€{margin.toFixed(2)}</div>
+                    <div className="font-sans text-[10px] text-warm-gray uppercase tracking-wide mb-0.5">Winst</div>
+                    <div className={`font-serif text-base ${margin >= 0 ? 'text-olive' : 'text-wine'}`}>€{margin.toFixed(2)}</div>
                   </div>
                 </div>
               </div>
