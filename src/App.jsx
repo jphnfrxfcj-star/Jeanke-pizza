@@ -136,30 +136,36 @@ function Shop() {
     <div className="min-h-screen bg-cream">
 
       {/* Header */}
-      <header className="bg-olive text-cream">
-        <div className="max-w-6xl mx-auto px-6 lg:px-10 py-8 text-center relative">
-          <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-wide">
+      <header className="relative text-cream overflow-hidden">
+        {/* Hero image + overlay */}
+        <div className="absolute inset-0">
+          <img src="/hero.jpg" alt="" className="w-full h-full object-cover object-center" />
+          <div className="absolute inset-0 bg-black/55" />
+        </div>
+
+        {/* Content */}
+        <div className="relative max-w-6xl mx-auto px-6 lg:px-10 py-14 sm:py-20 text-center">
+          <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-wide drop-shadow-md">
             Jeanke's Pizza
           </h1>
           <div className="flex items-center justify-center gap-3 mt-3">
-            <div className="h-px w-12 bg-gold/40" />
+            <div className="h-px w-12 bg-gold/50" />
             <span className="text-gold text-lg">✦</span>
-            <div className="h-px w-12 bg-gold/40" />
+            <div className="h-px w-12 bg-gold/50" />
           </div>
-          <p className="font-serif italic text-cream/60 text-sm mt-2">
+          <p className="font-serif italic text-cream/70 text-sm mt-2 drop-shadow-sm">
             Piccola pizzeria artigianale
           </p>
-
         </div>
 
         {/* Nav strip */}
         {!showRegistration && openingDays && openingDays.length > 0 && (
-          <div className="border-t border-cream/10">
+          <div className="relative border-t border-white/10 bg-black/20">
             <div className="max-w-6xl mx-auto px-6 lg:px-10 py-2 flex items-center justify-between">
-              <span className="font-sans text-xs text-cream/40 tracking-wide">
+              <span className="font-sans text-xs text-cream/50 tracking-wide">
                 Ophaaluren {settings?.openingHour ?? config.openingHour}:00 – {settings?.closingHour ?? config.closingHour}:00
               </span>
-              <span className="font-sans text-xs text-cream/40 tracking-wide">
+              <span className="font-sans text-xs text-cream/50 tracking-wide">
                 Elke {config.slotIntervalMinutes} min een slot
               </span>
             </div>
