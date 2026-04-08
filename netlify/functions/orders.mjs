@@ -23,6 +23,17 @@ export default async (req) => {
       return Response.json(orders)
     }
 
+    if (req.method === "PUT") {
+      const { key, name, email, order, total } = await req.json()
+      const entry = all.find(s => s.key === key)
+      if (!entry) return Response.json({ error: "Not found" }, { status: 404 })
+      const token = entry.cancelToken
+      // Update all slots with the same cancelToken (multi-slot bookings)
+      const updated = all.map(s => s.cancelToken === token ? { ...s, name, email, order, total } : s)
+      await store.set("slots", JSON.stringify(updated))
+      return Response.json({ success: true })
+    }
+
     if (req.method === "DELETE") {
       const { key } = await req.json()
       // Find the cancelToken for this key, then remove all slots with that token

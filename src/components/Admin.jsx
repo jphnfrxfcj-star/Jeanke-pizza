@@ -93,6 +93,8 @@ export default function Admin() {
 function OrdersTab({ password }) {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState(null) // order object being edited
+  const [editForm, setEditForm] = useState({ name: '', email: '', order: '', total: '' })
 
   function load() {
     setLoading(true)
@@ -101,6 +103,22 @@ function OrdersTab({ password }) {
       .catch(() => setLoading(false))
   }
   useEffect(() => { load() }, [])
+
+  function startEdit(order) {
+    setEditing(order)
+    setEditForm({ name: order.name, email: order.email, order: order.order, total: order.total })
+  }
+
+  async function saveEdit(e) {
+    e.preventDefault()
+    await fetch('/api/orders', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+      body: JSON.stringify({ key: editing.key, ...editForm }),
+    })
+    setEditing(null)
+    load()
+  }
 
   async function cancelOrder(key) {
     if (!confirm('Bestelling annuleren?')) return
@@ -157,17 +175,54 @@ function OrdersTab({ password }) {
       )}
       {upcoming.length > 0 && <section>
         <SectionLabel>Aankomend ({upcoming.length})</SectionLabel>
-        <div className="space-y-3">{upcoming.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} />)}</div>
+        <div className="space-y-3">{upcoming.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} onEdit={startEdit} />)}</div>
       </section>}
       {past.length > 0 && <section>
         <SectionLabel>Voorbij</SectionLabel>
-        <div className="space-y-3 opacity-60">{past.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} />)}</div>
+        <div className="space-y-3 opacity-60">{past.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} onEdit={startEdit} />)}</div>
       </section>}
+
+      {editing && (
+        <div className="fixed inset-0 bg-ink/60 flex items-end sm:items-center justify-center z-50">
+          <div className="bg-cream w-full sm:max-w-sm max-h-[92vh] overflow-y-auto">
+            <div className="bg-olive px-5 py-4 flex justify-between items-center">
+              <div>
+                <h3 className="font-serif italic text-cream text-lg">Bestelling wijzigen</h3>
+                <p className="font-sans text-xs text-cream/60 mt-0.5">{editing.time} · {formatShortDate(editing.date)}</p>
+              </div>
+              <button onClick={() => setEditing(null)} className="text-cream/50 hover:text-cream text-2xl leading-none">×</button>
+            </div>
+            <form onSubmit={saveEdit} className="p-5 space-y-3">
+              <div>
+                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Naam</label>
+                <input required value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} className={INPUT} />
+              </div>
+              <div>
+                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">E-mail</label>
+                <input type="email" required value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} className={INPUT} />
+              </div>
+              <div>
+                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Bestelling</label>
+                <textarea required rows={3} value={editForm.order} onChange={e => setEditForm(f => ({ ...f, order: e.target.value }))}
+                  className={INPUT + ' resize-none'} />
+              </div>
+              <div>
+                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Totaal</label>
+                <input required value={editForm.total} onChange={e => setEditForm(f => ({ ...f, total: e.target.value }))} className={INPUT} />
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button type="submit" className="btn-primary flex-1">Opslaan</button>
+                <button type="button" onClick={() => setEditing(null)} className="btn-secondary flex-1">Annuleren</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-function OrderCard({ order, onCancel }) {
+function OrderCard({ order, onCancel, onEdit }) {
   return (
     <div className="bg-white border border-parchment p-4">
       <div className="flex items-start gap-3">
@@ -177,11 +232,14 @@ function OrderCard({ order, onCancel }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <div>
+            <div className="min-w-0">
               <p className="font-serif text-base text-ink">{order.name}</p>
-              <p className="font-sans text-xs text-warm-gray">{order.email}</p>
+              <p className="font-sans text-xs text-warm-gray truncate">{order.email}</p>
             </div>
-            <button onClick={() => onCancel(order.key)} className="text-warm-gray-light hover:text-wine transition-colors p-1 shrink-0">✕</button>
+            <div className="flex gap-1 shrink-0">
+              <button onClick={() => onEdit(order)} className="text-warm-gray-light hover:text-olive transition-colors p-1" title="Wijzigen">✎</button>
+              <button onClick={() => onCancel(order.key)} className="text-warm-gray-light hover:text-wine transition-colors p-1" title="Annuleren">✕</button>
+            </div>
           </div>
           <p className="font-sans text-sm text-warm-gray mt-2 leading-relaxed break-words">{order.order}</p>
           <p className="font-serif text-base text-wine mt-1">{order.total}</p>
