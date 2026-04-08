@@ -92,15 +92,21 @@ export default function Admin() {
 
 function OrdersTab({ password }) {
   const [orders, setOrders] = useState([])
+  const [pizzas, setPizzas] = useState([])
   const [loading, setLoading] = useState(true)
-  const [editing, setEditing] = useState(null) // order object being edited
+  const [editing, setEditing] = useState(null)
   const [editForm, setEditForm] = useState({ name: '', email: '', order: '', total: '' })
 
   function load() {
     setLoading(true)
-    fetch('/api/orders', { headers: { 'x-admin-password': password } })
-      .then(r => r.json()).then(d => { setOrders(Array.isArray(d) ? d : []); setLoading(false) })
-      .catch(() => setLoading(false))
+    Promise.all([
+      fetch('/api/orders', { headers: { 'x-admin-password': password } }).then(r => r.json()),
+      fetch('/api/pizzas').then(r => r.json()),
+    ]).then(([ord, piz]) => {
+      setOrders(Array.isArray(ord) ? ord : [])
+      setPizzas(Array.isArray(piz) ? piz : [])
+      setLoading(false)
+    }).catch(() => setLoading(false))
   }
   useEffect(() => { load() }, [])
 
@@ -147,8 +153,25 @@ function OrdersTab({ password }) {
   // Unique upcoming dates that have orders, sorted
   const upcomingDates = [...new Set(upcoming.map(o => o.date))].sort()
 
-  // Summary per date
-  function summaryForDate(date) {
+  // Build a name→ingredients map from the pizzas list
+  const pizzaIngMap = Object.fromEntries(
+    pizzas.map(p => [p.name.toLowerCase(), Array.isArray(p.ingredients) ? p.ingredients : []])
+  )
+
+  // Ingredient totals per date: ingredient → total count needed
+  function ingredientsForDate(date) {
+    const totals = {}
+    upcoming.filter(o => o.date === date).forEach(o => {
+      Object.entries(parsePizzaCounts(o.order)).forEach(([pizzaName, qty]) => {
+        const ings = pizzaIngMap[pizzaName.toLowerCase()] || []
+        ings.forEach(ing => { totals[ing] = (totals[ing] || 0) + qty })
+      })
+    })
+    return Object.entries(totals).sort((a, b) => b[1] - a[1])
+  }
+
+  // Pizza summary per date (kept for context in the list header)
+  function pizzasForDate(date) {
     const totals = {}
     upcoming.filter(o => o.date === date).forEach(o => {
       Object.entries(parsePizzaCounts(o.order)).forEach(([name, qty]) => {
@@ -163,7 +186,7 @@ function OrdersTab({ password }) {
 
   return (
     <div className="space-y-6">
-      {upcomingDates.length > 0 && <ShoppingList dates={upcomingDates} summaryForDate={summaryForDate} />}
+      {upcomingDates.length > 0 && <ShoppingList dates={upcomingDates} ingredientsForDate={ingredientsForDate} pizzasForDate={pizzasForDate} />}
       {upcoming.length > 0 && <section>
         <SectionLabel>Aankomend ({upcoming.length})</SectionLabel>
         <div className="space-y-3">{upcoming.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} onEdit={startEdit} />)}</div>
@@ -213,26 +236,25 @@ function OrdersTab({ password }) {
   )
 }
 
-function ShoppingList({ dates, summaryForDate }) {
+function ShoppingList({ dates, ingredientsForDate, pizzasForDate }) {
   const [selectedDate, setSelectedDate] = useState(dates[0])
   const [checked, setChecked] = useState({})
+  const [showPizzas, setShowPizzas] = useState(false)
 
-  // Reset checked when date changes
-  function selectDate(date) { setSelectedDate(date); setChecked({}) }
+  function selectDate(date) { setSelectedDate(date); setChecked({}); setShowPizzas(false) }
 
-  const items = summaryForDate(selectedDate)
-  const total = items.reduce((s, [, n]) => s + n, 0)
+  const ingredients = ingredientsForDate(selectedDate)
+  const pizzas = pizzasForDate(selectedDate)
   const doneCount = Object.values(checked).filter(Boolean).length
+  const totalPizzas = pizzas.reduce((s, [, n]) => s + n, 0)
 
   return (
     <div className="bg-white border border-parchment">
-      {/* Header */}
       <div className="px-4 py-3 border-b border-parchment flex items-center justify-between gap-2">
         <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Boodschappenlijst</p>
-        <span className="font-sans text-xs text-warm-gray">{doneCount}/{items.length} afgevinkt</span>
+        <span className="font-sans text-xs text-warm-gray">{doneCount}/{ingredients.length} afgevinkt</span>
       </div>
 
-      {/* Date tabs */}
       {dates.length > 1 && (
         <div className="flex border-b border-parchment overflow-x-auto">
           {dates.map(date => (
@@ -244,30 +266,45 @@ function ShoppingList({ dates, summaryForDate }) {
         </div>
       )}
 
-      {/* Checklist */}
-      <div className="divide-y divide-parchment">
-        {items.map(([name, qty]) => {
-          const done = !!checked[name]
-          return (
-            <button key={name} onClick={() => setChecked(c => ({ ...c, [name]: !c[name] }))}
-              className={`w-full flex items-center gap-4 px-4 py-4 text-left transition-colors active:bg-parchment/40 ${done ? 'bg-parchment/30' : ''}`}>
-              {/* Checkbox */}
-              <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${done ? 'bg-olive border-olive' : 'border-warm-gray-light'}`}>
-                {done && <span className="text-cream text-xs leading-none">✓</span>}
-              </span>
-              <span className={`font-sans text-base flex-1 transition-colors ${done ? 'line-through text-warm-gray-light' : 'text-ink'}`}>{name}</span>
-              <span className={`font-serif text-xl shrink-0 transition-colors ${done ? 'text-warm-gray-light' : 'text-olive'}`}>{qty}×</span>
-            </button>
-          )
-        })}
-      </div>
+      {ingredients.length === 0 ? (
+        <p className="px-4 py-4 font-sans text-sm text-warm-gray italic">Geen ingrediënten gevonden. Controleer of de pizza's ingrediënten hebben ingesteld.</p>
+      ) : (
+        <div className="divide-y divide-parchment">
+          {ingredients.map(([name, qty]) => {
+            const done = !!checked[name]
+            return (
+              <button key={name} onClick={() => setChecked(c => ({ ...c, [name]: !c[name] }))}
+                className={`w-full flex items-center gap-4 px-4 py-4 text-left transition-colors active:bg-parchment/40 ${done ? 'bg-parchment/30' : ''}`}>
+                <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${done ? 'bg-olive border-olive' : 'border-warm-gray-light'}`}>
+                  {done && <span className="text-cream text-xs leading-none">✓</span>}
+                </span>
+                <span className={`font-sans text-base flex-1 transition-colors ${done ? 'line-through text-warm-gray-light' : 'text-ink'}`}>{name}</span>
+                <span className={`font-serif text-xl shrink-0 transition-colors ${done ? 'text-warm-gray-light' : 'text-olive'}`}>{qty}×</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
 
-      {/* Footer */}
-      <div className="px-4 py-3 border-t border-parchment flex items-center justify-between">
-        <span className="font-sans text-xs text-warm-gray">{total} pizza's totaal</span>
+      <div className="px-4 py-3 border-t border-parchment space-y-2">
+        {/* Pizza breakdown toggle */}
+        <button onClick={() => setShowPizzas(v => !v)}
+          className="w-full flex items-center justify-between font-sans text-xs text-warm-gray hover:text-ink transition-colors">
+          <span>{totalPizzas} pizza's · {pizzas.length} soorten</span>
+          <span>{showPizzas ? '▲' : '▼'}</span>
+        </button>
+        {showPizzas && (
+          <div className="space-y-1 pt-1">
+            {pizzas.map(([name, qty]) => (
+              <div key={name} className="flex justify-between font-sans text-xs text-warm-gray">
+                <span>{name}</span><span>{qty}×</span>
+              </div>
+            ))}
+          </div>
+        )}
         {doneCount > 0 && (
-          <button onClick={() => setChecked({})} className="font-sans text-xs text-warm-gray hover:text-wine transition-colors">
-            Reset
+          <button onClick={() => setChecked({})} className="font-sans text-xs text-wine hover:text-wine-light transition-colors">
+            Reset afvinklijst
           </button>
         )}
       </div>
