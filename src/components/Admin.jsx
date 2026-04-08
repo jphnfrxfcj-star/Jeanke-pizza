@@ -35,11 +35,12 @@ export default function Admin() {
   const pw = config.adminPassword
 
   const tabs = [
-    { key: 'dag',     label: 'Dag',         icon: '🕐' },
-    { key: 'orders',  label: 'Bestellingen', icon: '📋' },
-    { key: 'pizzas',  label: "Pizza's",      icon: '🍕' },
-    { key: 'opening', label: 'Planning',     icon: '📅' },
-    { key: 'winst',   label: 'Winst',        icon: '💰' },
+    { key: 'dag',          label: 'Dag',            icon: '🕐' },
+    { key: 'orders',       label: 'Bestellingen',   icon: '📋' },
+    { key: 'boodschappen', label: 'Boodschappen',   icon: '🛒' },
+    { key: 'pizzas',       label: "Pizza's",        icon: '🍕' },
+    { key: 'opening',      label: 'Instellingen',   icon: '⚙️'  },
+    { key: 'winst',        label: 'Winst',          icon: '💰' },
   ]
 
   function navigate(key) { setTab(key); setMenuOpen(false) }
@@ -90,11 +91,12 @@ export default function Admin() {
 
       {/* Content */}
       <div className="px-4 py-5 pb-8 max-w-2xl overflow-hidden">
-        {tab === 'dag'     && <DagTab     password={pw} />}
-        {tab === 'orders'  && <OrdersTab  password={pw} />}
-        {tab === 'pizzas'  && <PizzasTab  password={pw} />}
-        {tab === 'opening' && <OpeningTab password={pw} />}
-        {tab === 'winst'   && <WinstTab   password={pw} />}
+        {tab === 'dag'          && <DagTab          password={pw} />}
+        {tab === 'orders'       && <OrdersTab       password={pw} />}
+        {tab === 'boodschappen' && <BoodschappenTab password={pw} />}
+        {tab === 'pizzas'       && <PizzasTab       password={pw} />}
+        {tab === 'opening'      && <OpeningTab      password={pw} />}
+        {tab === 'winst'        && <WinstTab        password={pw} />}
       </div>
     </div>
   )
@@ -236,21 +238,15 @@ function DagTab({ password }) {
 
 function OrdersTab({ password }) {
   const [orders, setOrders] = useState([])
-  const [pizzas, setPizzas] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
   const [editForm, setEditForm] = useState({ name: '', email: '', order: '', total: '' })
 
   function load() {
     setLoading(true)
-    Promise.all([
-      fetch('/api/orders', { headers: { 'x-admin-password': password } }).then(r => r.json()),
-      fetch('/api/pizzas').then(r => r.json()),
-    ]).then(([ord, piz]) => {
-      setOrders(Array.isArray(ord) ? ord : [])
-      setPizzas(Array.isArray(piz) ? piz : [])
-      setLoading(false)
-    }).catch(() => setLoading(false))
+    fetch('/api/orders', { headers: { 'x-admin-password': password } })
+      .then(r => r.json()).then(d => { setOrders(Array.isArray(d) ? d : []); setLoading(false) })
+      .catch(() => setLoading(false))
   }
   useEffect(() => { load() }, [])
 
@@ -280,64 +276,11 @@ function OrdersTab({ password }) {
   const upcoming = [...orders].filter(o => o.date >= today).sort((a,b) => a.date.localeCompare(b.date)||a.time.localeCompare(b.time))
   const past     = [...orders].filter(o => o.date <  today).sort((a,b) => b.date.localeCompare(a.date)||b.time.localeCompare(a.time))
 
-  // Parse "2x Napoletana (Salt Lover) (€25.00), 1x Margherita (€12.50)" → { "Napoletana (Salt Lover)": 2, ... }
-  // Splits per item first, then matches up to the LAST " (€" so names with parentheses work correctly
-  function parsePizzaCounts(orderStr) {
-    const counts = {}
-    if (!orderStr) return counts
-    orderStr.split(', ').forEach(item => {
-      const m = item.match(/^(\d+)x (.+) \([€$£]/)
-      if (!m) return
-      const qty = parseInt(m[1], 10)
-      const name = m[2].trim()
-      counts[name] = (counts[name] || 0) + qty
-    })
-    return counts
-  }
-
-  // Unique upcoming dates that have orders, sorted
-  const upcomingDates = [...new Set(upcoming.map(o => o.date))].sort()
-
-  // Normalize pizza name for matching: lowercase + collapse whitespace
-  function normName(s) { return s.toLowerCase().replace(/\s+/g, ' ').trim() }
-
-  // Build a name→ingredients map with normalized keys
-  const pizzaIngMap = Object.fromEntries(
-    pizzas.map(p => [normName(p.name), Array.isArray(p.ingredients) ? p.ingredients : []])
-  )
-
-  // Ingredient totals per date + unmatched pizza names for diagnostics
-  function ingredientsForDate(date) {
-    const totals = {}
-    const unmatched = new Set()
-    upcoming.filter(o => o.date === date).forEach(o => {
-      Object.entries(parsePizzaCounts(o.order)).forEach(([pizzaName, qty]) => {
-        const key = normName(pizzaName)
-        const ings = pizzaIngMap[key]
-        if (!ings) { unmatched.add(pizzaName); return }
-        ings.forEach(ing => { totals[ing] = (totals[ing] || 0) + qty })
-      })
-    })
-    return { items: Object.entries(totals).sort((a, b) => b[1] - a[1]), unmatched: [...unmatched] }
-  }
-
-  // Pizza summary per date
-  function pizzasForDate(date) {
-    const totals = {}
-    upcoming.filter(o => o.date === date).forEach(o => {
-      Object.entries(parsePizzaCounts(o.order)).forEach(([name, qty]) => {
-        totals[name] = (totals[name] || 0) + qty
-      })
-    })
-    return Object.entries(totals).sort((a, b) => b[1] - a[1])
-  }
-
   if (loading) return <LoadingCards />
   if (!orders.length) return <Empty icon="📭" text="Nog geen bestellingen" />
 
   return (
     <div className="space-y-6">
-      {upcomingDates.length > 0 && <ShoppingList dates={upcomingDates} ingredientsForDate={ingredientsForDate} pizzasForDate={pizzasForDate} />}
       {upcoming.length > 0 && <section>
         <SectionLabel>Aankomend ({upcoming.length})</SectionLabel>
         <div className="space-y-3">{upcoming.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} onEdit={startEdit} />)}</div>
@@ -385,6 +328,77 @@ function OrdersTab({ password }) {
       )}
     </div>
   )
+}
+
+// ─── Boodschappen ──────────────────────────────────────────────────────────
+
+function parsePizzaCounts(orderStr) {
+  const counts = {}
+  if (!orderStr) return counts
+  orderStr.split(', ').forEach(item => {
+    const m = item.match(/^(\d+)x (.+) \([€$£]/)
+    if (!m) return
+    const qty = parseInt(m[1], 10)
+    const name = m[2].trim()
+    counts[name] = (counts[name] || 0) + qty
+  })
+  return counts
+}
+
+function normName(s) { return s.toLowerCase().replace(/\s+/g, ' ').trim() }
+
+function BoodschappenTab({ password }) {
+  const [orders, setOrders] = useState([])
+  const [pizzas, setPizzas] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/orders', { headers: { 'x-admin-password': password } }).then(r => r.json()),
+      fetch('/api/pizzas').then(r => r.json()),
+    ]).then(([ord, piz]) => {
+      setOrders(Array.isArray(ord) ? ord : [])
+      setPizzas(Array.isArray(piz) ? piz : [])
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
+
+  const today = new Date().toISOString().split('T')[0]
+  const upcoming = orders.filter(o => o.date >= today)
+  const upcomingDates = [...new Set(upcoming.map(o => o.date))].sort()
+
+  const pizzaIngMap = Object.fromEntries(
+    pizzas.map(p => [normName(p.name), Array.isArray(p.ingredients) ? p.ingredients : []])
+  )
+
+  function ingredientsForDate(date) {
+    const totals = {}
+    const unmatched = new Set()
+    upcoming.filter(o => o.date === date).forEach(o => {
+      Object.entries(parsePizzaCounts(o.order)).forEach(([pizzaName, qty]) => {
+        const key = normName(pizzaName)
+        const ings = pizzaIngMap[key]
+        if (!ings) { unmatched.add(pizzaName); return }
+        ings.forEach(ing => { totals[ing] = (totals[ing] || 0) + qty })
+      })
+    })
+    return { items: Object.entries(totals).sort((a, b) => b[1] - a[1]), unmatched: [...unmatched] }
+  }
+
+  function pizzasForDate(date) {
+    const totals = {}
+    upcoming.filter(o => o.date === date).forEach(o => {
+      Object.entries(parsePizzaCounts(o.order)).forEach(([name, qty]) => {
+        totals[name] = (totals[name] || 0) + qty
+      })
+    })
+    return Object.entries(totals).sort((a, b) => b[1] - a[1])
+  }
+
+  if (loading) return <LoadingCards />
+  if (!upcomingDates.length) return <Empty icon="🛒" text="Geen aankomende bestellingen" />
+
+  return <ShoppingList dates={upcomingDates} ingredientsForDate={ingredientsForDate} pizzasForDate={pizzasForDate} />
 }
 
 function ShoppingList({ dates, ingredientsForDate, pizzasForDate }) {
