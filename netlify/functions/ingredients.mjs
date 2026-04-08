@@ -10,13 +10,19 @@ const DEFAULT_INGREDIENTS = [
   "koude feta", "warme feta"
 ]
 
+// Migrate old string[] to { name, cost }[]
+function normalize(data) {
+  if (!Array.isArray(data)) return DEFAULT_INGREDIENTS.map(name => ({ name, cost: 0 }))
+  return data.map(i => typeof i === 'string' ? { name: i, cost: 0 } : i)
+}
+
 export default async (req) => {
   try {
     const store = getStore({ name: "ingredients", consistency: "strong" })
 
     if (req.method === "GET") {
       const data = await store.get("list", { type: "json" }).catch(() => null)
-      return Response.json(data || DEFAULT_INGREDIENTS)
+      return Response.json(normalize(data))
     }
 
     const pw = req.headers.get("x-admin-password")
@@ -24,7 +30,11 @@ export default async (req) => {
 
     if (req.method === "PUT") {
       const list = await req.json()
-      await store.set("list", JSON.stringify([...new Set(list)].sort()))
+      const normalized = normalize(list)
+      // Dedup by name, sort alphabetically
+      const deduped = [...new Map(normalized.map(i => [i.name, i])).values()]
+        .sort((a, b) => a.name.localeCompare(b.name))
+      await store.set("list", JSON.stringify(deduped))
       return Response.json({ success: true })
     }
 

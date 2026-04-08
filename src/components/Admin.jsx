@@ -208,7 +208,6 @@ function PizzasTab({ password }) {
       fetch('/api/ingredients').then(r => r.json()),
     ]).then(async ([d, ings]) => {
       const list = d.length ? d : staticPizzas
-      // Seed to Blobs if empty
       if (!d.length) {
         await fetch('/api/pizzas', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify(staticPizzas) })
       }
@@ -217,6 +216,11 @@ function PizzasTab({ password }) {
       setLoading(false)
     }).catch(() => { setPizzas(staticPizzas); setLoading(false) })
   }, [])
+
+  function saveIngredients(updated) {
+    setAllIngredients(updated)
+    fetch('/api/ingredients', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify(updated) })
+  }
 
   async function save(list) {
     const res = await fetch('/api/pizzas', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify(list) })
@@ -227,47 +231,42 @@ function PizzasTab({ password }) {
   function startEdit(p) {
     setEditing(p.id)
     const ings = Array.isArray(p.ingredients) ? p.ingredients : (p.description ? p.description.split(', ') : [])
-    setForm({ name: p.name, ingredients: ings, price: String(p.price), emoji: p.emoji, imageUrl: p.imageUrl||'', toppingCost: String(p.toppingCost??'') })
+    setForm({ name: p.name, ingredients: ings, price: String(p.price), emoji: p.emoji, imageUrl: p.imageUrl||'' })
     setIngInput('')
   }
-  function startNew() { setEditing('new'); setForm({ name:'', ingredients:[], price:'', emoji:'🍕', imageUrl:'', toppingCost:'' }); setIngInput('') }
+  function startNew() { setEditing('new'); setForm({ name:'', ingredients:[], price:'', emoji:'🍕', imageUrl:'' }); setIngInput('') }
 
-  function toggleIngredient(ing) {
+  // allIngredients is now { name, cost }[] — form.ingredients stays string[]
+  function toggleIngredient(name) {
     setForm(f => ({
       ...f,
-      ingredients: f.ingredients.includes(ing)
-        ? f.ingredients.filter(i => i !== ing)
-        : [...f.ingredients, ing]
+      ingredients: f.ingredients.includes(name)
+        ? f.ingredients.filter(i => i !== name)
+        : [...f.ingredients, name]
     }))
   }
   function addCustomIngredient() {
     const val = ingInput.trim().toLowerCase()
     if (!val) return
-    if (!allIngredients.includes(val)) {
-      const updated = [...allIngredients, val].sort()
-      setAllIngredients(updated)
-      fetch('/api/ingredients', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify(updated) })
+    if (!allIngredients.some(i => i.name === val)) {
+      saveIngredients([...allIngredients, { name: val, cost: 0 }].sort((a, b) => a.name.localeCompare(b.name)))
     }
     if (!form.ingredients.includes(val)) setForm(f => ({ ...f, ingredients: [...f.ingredients, val] }))
     setIngInput('')
   }
-  function removeIngredientFromList(ing) {
-    const updated = allIngredients.filter(i => i !== ing)
-    setAllIngredients(updated)
-    fetch('/api/ingredients', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify(updated) })
+  function removeIngredientFromList(name) {
+    saveIngredients(allIngredients.filter(i => i.name !== name))
   }
   function addToGlobalList() {
     const val = newIngInput.trim().toLowerCase()
-    if (!val || allIngredients.includes(val)) return
-    const updated = [...allIngredients, val].sort()
-    setAllIngredients(updated)
-    fetch('/api/ingredients', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify(updated) })
+    if (!val || allIngredients.some(i => i.name === val)) return
+    saveIngredients([...allIngredients, { name: val, cost: 0 }].sort((a, b) => a.name.localeCompare(b.name)))
     setNewIngInput('')
   }
 
   async function saveEdit(e) {
     e.preventDefault()
-    const updated = { ...form, price: parseFloat(form.price), toppingCost: form.toppingCost ? parseFloat(form.toppingCost) : 0, description: form.ingredients.join(', ') }
+    const updated = { ...form, price: parseFloat(form.price), description: form.ingredients.join(', ') }
     let newList
     if (editing === 'new') { const maxId = pizzas.reduce((m,p) => Math.max(m,p.id), 0); newList = [...pizzas, { id: maxId+1, ...updated }] }
     else newList = pizzas.map(p => p.id===editing ? {...p,...updated} : p)
@@ -310,9 +309,9 @@ function PizzasTab({ password }) {
         <div className="px-5 py-4">
           <div className="flex flex-wrap gap-1 mb-3">
             {allIngredients.map(ing => (
-              <span key={ing} className="bg-parchment text-xs text-ink px-2 py-1 flex items-center gap-1">
-                {ing}
-                <button type="button" onClick={() => removeIngredientFromList(ing)} className="text-warm-gray hover:text-wine leading-none">×</button>
+              <span key={ing.name} className="bg-parchment text-xs text-ink px-2 py-1 flex items-center gap-1">
+                {ing.name}
+                <button type="button" onClick={() => removeIngredientFromList(ing.name)} className="text-warm-gray hover:text-wine leading-none">×</button>
               </span>
             ))}
           </div>
@@ -343,9 +342,9 @@ function PizzasTab({ password }) {
                 {/* Selecteerbare chips van de globale lijst */}
                 <div className="flex flex-wrap gap-1 mb-3">
                   {allIngredients.map(ing => (
-                    <button type="button" key={ing} onClick={() => toggleIngredient(ing)}
-                      className={`text-xs px-2.5 py-1 border transition-colors ${form.ingredients.includes(ing) ? 'bg-olive text-cream border-olive' : 'bg-white text-ink border-parchment hover:border-olive'}`}>
-                      {ing}
+                    <button type="button" key={ing.name} onClick={() => toggleIngredient(ing.name)}
+                      className={`text-xs px-2.5 py-1 border transition-colors ${form.ingredients.includes(ing.name) ? 'bg-olive text-cream border-olive' : 'bg-white text-ink border-parchment hover:border-olive'}`}>
+                      {ing.name}
                     </button>
                   ))}
                 </div>
@@ -358,15 +357,9 @@ function PizzasTab({ password }) {
                 </div>
               </div>
               <input value={form.imageUrl} onChange={e=>setForm(f=>({...f,imageUrl:e.target.value}))} placeholder="Foto URL (optioneel)" className={INPUT} />
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Verkoopprijs</label>
-                  <input required type="number" step="0.50" min="0" value={form.price} onChange={e=>setForm(f=>({...f,price:e.target.value}))} placeholder="€" className={INPUT} />
-                </div>
-                <div className="flex-1">
-                  <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Belegkosten</label>
-                  <input type="number" step="0.10" min="0" value={form.toppingCost} onChange={e=>setForm(f=>({...f,toppingCost:e.target.value}))} placeholder="€" className={INPUT} />
-                </div>
+              <div>
+                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Verkoopprijs</label>
+                <input required type="number" step="0.50" min="0" value={form.price} onChange={e=>setForm(f=>({...f,price:e.target.value}))} placeholder="€" className={INPUT} />
               </div>
               <div className="flex gap-2 pt-1">
                 <button type="submit" className="btn-primary flex-1">Opslaan</button>
@@ -624,110 +617,257 @@ const COST_LABELS = {
 }
 
 function WinstTab({ password }) {
-  const [pizzas, setPizzas] = useState([])
-  const [costs, setCosts]   = useState({ hout:0.50, bloem:0.30, saus:0.40, kaas:1.20 })
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving]   = useState(false)
-  const [saved, setSaved]     = useState(false)
-  const [scanning, setScanning] = useState(null) // key of field being scanned
+  const [pizzas, setPizzas]         = useState([])
+  const [ingredients, setIngredients] = useState([])
+  const [baseCosts, setBaseCosts]   = useState({ hout: 0.50, bloem: 0.30, saus: 0.40, kaas: 1.20 })
+  const [openingDays, setOpeningDays] = useState([])
+  const [orders, setOrders]         = useState([])
+  const [expenses, setExpenses]     = useState([])
+  const [loading, setLoading]       = useState(true)
+  const [savingBase, setSavingBase] = useState(false)
+  const [savedBase, setSavedBase]   = useState(false)
+  const [addingFor, setAddingFor]   = useState(null) // date string
+  const [expForm, setExpForm]       = useState({ description: '', amount: '' })
 
   useEffect(() => {
-    Promise.all([fetch('/api/pizzas').then(r=>r.json()), fetch('/api/costs').then(r=>r.json())])
-      .then(([p,c]) => { setPizzas(p.length?p:staticPizzas); setCosts(c); setLoading(false) })
-      .catch(() => { setPizzas(staticPizzas); setLoading(false) })
+    Promise.all([
+      fetch('/api/pizzas').then(r => r.json()),
+      fetch('/api/ingredients').then(r => r.json()),
+      fetch('/api/costs').then(r => r.json()),
+      fetch('/api/opening-days').then(r => r.json()),
+      fetch('/api/orders', { headers: { 'x-admin-password': password } }).then(r => r.json()),
+      fetch('/api/expenses', { headers: { 'x-admin-password': password } }).then(r => r.json()),
+    ]).then(([p, ings, c, days, ord, exp]) => {
+      setPizzas(p.length ? p : staticPizzas)
+      setIngredients(Array.isArray(ings) ? ings : [])
+      setBaseCosts(c)
+      setOpeningDays(days)
+      setOrders(Array.isArray(ord) ? ord : [])
+      setExpenses(Array.isArray(exp) ? exp : [])
+      setLoading(false)
+    }).catch(() => setLoading(false))
   }, [])
 
-  async function saveCosts(e) {
-    e.preventDefault(); setSaving(true)
-    await fetch('/api/costs', { method:'PUT', headers:{'Content-Type':'application/json','x-admin-password':password}, body:JSON.stringify(costs) })
-    setSaving(false); setSaved(true); setTimeout(()=>setSaved(false), 2000)
+  const baseCostTotal = Object.values(baseCosts).reduce((s, v) => s + (parseFloat(v) || 0), 0)
+  const ingMap = Object.fromEntries(ingredients.map(i => [i.name, parseFloat(i.cost) || 0]))
+
+  function estimatedCost(pizza) {
+    const ingCost = (Array.isArray(pizza.ingredients) ? pizza.ingredients : [])
+      .reduce((s, name) => s + (ingMap[name] || 0), 0)
+    return baseCostTotal + ingCost
   }
 
-  async function handleScan(key, file) {
-    if (!file) return
-    setScanning(key)
-    const reader = new FileReader()
-    reader.onload = async (e) => {
-      const dataUrl = e.target.result // data:image/jpeg;base64,...
-      const [meta, data] = dataUrl.split(',')
-      const mediaType = meta.match(/:(.*?);/)[1]
-      try {
-        const res = await fetch('/api/scan-label', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-          body: JSON.stringify({ image: data, mediaType }),
-        })
-        const { price } = await res.json()
-        if (price > 0) setCosts(c => ({ ...c, [key]: price }))
-        else alert('Geen prijs herkend. Probeer een duidelijkere foto.')
-      } catch {
-        alert('Scannen mislukt.')
-      } finally {
-        setScanning(null)
-      }
-    }
-    reader.readAsDataURL(file)
+  function parseTotal(str) {
+    return parseFloat((str || '').replace(/[^0-9.,]/g, '').replace(',', '.')) || 0
   }
 
-  const baseCost = Object.values(costs).reduce((s,v) => s+(parseFloat(v)||0), 0)
+  async function saveBaseCosts(e) {
+    e.preventDefault(); setSavingBase(true)
+    await fetch('/api/costs', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify(baseCosts) })
+    setSavingBase(false); setSavedBase(true); setTimeout(() => setSavedBase(false), 2000)
+  }
+
+  async function saveIngCost(name, val) {
+    const updated = ingredients.map(i => i.name === name ? { ...i, cost: parseFloat(val) || 0 } : i)
+    setIngredients(updated)
+    await fetch('/api/ingredients', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify(updated) })
+  }
+
+  async function addExpense(date) {
+    if (!expForm.description || !expForm.amount) return
+    const res = await fetch('/api/expenses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+      body: JSON.stringify({ date, description: expForm.description, amount: parseFloat(expForm.amount) }),
+    })
+    const entry = await res.json()
+    setExpenses(prev => [...prev, entry])
+    setExpForm({ description: '', amount: '' })
+    setAddingFor(null)
+  }
+
+  async function deleteExpense(id) {
+    await fetch('/api/expenses', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ id }) })
+    setExpenses(prev => prev.filter(e => e.id !== id))
+  }
+
   if (loading) return <LoadingCards />
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
+
+      {/* ── Per avond ── */}
+      <div>
+        <SectionLabel>Per avond</SectionLabel>
+        {openingDays.length === 0
+          ? <div className="bg-white border border-parchment p-5 text-center">
+              <p className="font-sans text-sm text-warm-gray italic">Nog geen openingsdagen gepland.</p>
+            </div>
+          : [...openingDays].sort((a, b) => a.date.localeCompare(b.date)).map(day => {
+              const dayOrders  = orders.filter(o => o.date === day.date)
+              const revenue    = dayOrders.reduce((s, o) => s + parseTotal(o.total), 0)
+              const dayExp     = expenses.filter(e => e.date === day.date)
+              const totalExp   = dayExp.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
+              const result     = revenue - totalExp
+              return (
+                <div key={day.date} className="bg-white border border-parchment mb-3">
+                  {/* Header */}
+                  <div className="px-4 py-3 border-b border-parchment flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-serif text-sm text-ink break-words">{formatLongDate(day.date)}</p>
+                      {day.label && <p className="font-sans text-xs text-warm-gray">{day.label}</p>}
+                    </div>
+                    <span className={`font-serif text-lg shrink-0 ${result >= 0 ? 'text-olive' : 'text-wine'}`}>
+                      {result >= 0 ? '+' : ''}€{result.toFixed(2)}
+                    </span>
+                  </div>
+                  {/* Samenvatting */}
+                  <div className="px-4 py-3 space-y-1 border-b border-parchment">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-sans text-warm-gray">Omzet</span>
+                      <span className="font-serif text-ink">
+                        €{revenue.toFixed(2)}
+                        <span className="font-sans text-xs text-warm-gray ml-1">({dayOrders.length} best.)</span>
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="font-sans text-warm-gray">Uitgaven</span>
+                      <span className="font-serif text-ink">−€{totalExp.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  {/* Uitgavenlijst */}
+                  {dayExp.length > 0 && (
+                    <ul className="divide-y divide-parchment border-b border-parchment">
+                      {dayExp.map(exp => (
+                        <li key={exp.id} className="px-4 py-2 flex items-center justify-between gap-2">
+                          <span className="font-sans text-xs text-ink min-w-0 truncate">{exp.description}</span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="font-sans text-xs text-warm-gray">€{parseFloat(exp.amount).toFixed(2)}</span>
+                            <button onClick={() => deleteExpense(exp.id)} className="text-warm-gray-light hover:text-wine leading-none">✕</button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {/* Uitgave toevoegen */}
+                  {addingFor === day.date ? (
+                    <div className="px-4 py-3 space-y-2">
+                      <input value={expForm.description}
+                        onChange={e => setExpForm(f => ({ ...f, description: e.target.value }))}
+                        placeholder="Omschrijving (bv. mozzarella 2kg)" className={INPUT + ' text-sm'} />
+                      <div className="flex gap-2">
+                        <div className="flex items-center border border-parchment bg-cream flex-1">
+                          <span className="px-2 text-warm-gray text-sm shrink-0">€</span>
+                          <input type="number" step="0.01" min="0" value={expForm.amount}
+                            onChange={e => setExpForm(f => ({ ...f, amount: e.target.value }))}
+                            placeholder="0.00" className="flex-1 px-2 py-3 text-sm focus:outline-none bg-transparent min-w-0" />
+                        </div>
+                        <button onClick={() => addExpense(day.date)} className="btn-primary px-4">+</button>
+                        <button onClick={() => { setAddingFor(null); setExpForm({ description: '', amount: '' }) }}
+                          className="btn-secondary px-3">×</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="px-4 py-2">
+                      <button onClick={() => { setAddingFor(day.date); setExpForm({ description: '', amount: '' }) }}
+                        className="font-sans text-xs text-warm-gray hover:text-olive transition-colors">
+                        + Uitgave toevoegen
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
+            })
+        }
+      </div>
+
+      {/* ── Per pizza — geschatte marge ── */}
+      <div>
+        <SectionLabel>Per pizza — geschatte marge</SectionLabel>
+        <div className="space-y-2">
+          {pizzas.map(pizza => {
+            const est    = estimatedCost(pizza)
+            const margin = pizza.price - est
+            const pct    = pizza.price > 0 ? (margin / pizza.price) * 100 : 0
+            return (
+              <div key={pizza.id} className="bg-white border border-parchment p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg shrink-0">{pizza.emoji}</span>
+                  <span className="font-serif text-ink flex-1 min-w-0 truncate">{pizza.name}</span>
+                  <span className={`font-sans text-xs px-2 py-0.5 shrink-0 ${pct >= 40 ? 'bg-olive/10 text-olive' : 'bg-wine/10 text-wine'}`}>{pct.toFixed(0)}%</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="bg-parchment/50 p-2">
+                    <div className="text-warm-gray">Geschat</div>
+                    <div className="font-serif text-ink">€{est.toFixed(2)}</div>
+                  </div>
+                  <div className="bg-parchment/50 p-2">
+                    <div className="text-warm-gray">Prijs</div>
+                    <div className="font-serif text-ink">€{pizza.price.toFixed(2)}</div>
+                  </div>
+                  <div className={`p-2 ${margin >= 0 ? 'bg-olive/10' : 'bg-wine/10'}`}>
+                    <div className="text-warm-gray">Winst</div>
+                    <div className={`font-serif ${margin >= 0 ? 'text-olive' : 'text-wine'}`}>€{margin.toFixed(2)}</div>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        <p className="font-sans text-xs text-warm-gray mt-2 italic">Geschatte kostprijs = basiskosten + som ingrediëntkosten. Verkoopprijs stel je zelf in bij Pizza's.</p>
+      </div>
+
+      {/* ── Kostprijs ingrediënten ── */}
+      <div className="bg-white border border-parchment">
+        <div className="px-5 py-4 border-b border-parchment">
+          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Kostprijs ingrediënten</p>
+          <p className="font-sans text-xs text-warm-gray mt-1 italic">Kostprijs per portie/stuk. Wijzigingen worden automatisch opgeslagen.</p>
+        </div>
+        <div className="divide-y divide-parchment">
+          {ingredients.map(ing => (
+            <div key={ing.name} className="flex items-center gap-3 px-4 py-2">
+              <span className="flex-1 font-sans text-sm text-ink">{ing.name}</span>
+              <div className="flex items-center border border-parchment w-24 shrink-0">
+                <span className="px-2 py-2 bg-parchment/50 text-warm-gray text-xs">€</span>
+                <input type="number" step="0.05" min="0"
+                  value={ing.cost > 0 ? ing.cost : ''}
+                  onChange={e => setIngredients(prev => prev.map(i => i.name === ing.name ? { ...i, cost: e.target.value } : i))}
+                  onBlur={e => saveIngCost(ing.name, e.target.value)}
+                  placeholder="0.00"
+                  className="w-full py-2 px-2 text-sm text-right focus:outline-none bg-white" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Basiskosten ── */}
       <div className="bg-white border border-parchment p-5">
-        <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-4">Basiskosten per pizza</p>
-        <form onSubmit={saveCosts} className="space-y-3">
-          {Object.entries(COST_LABELS).map(([key,{label,icon}]) => (
+        <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-1">Basiskosten per pizza</p>
+        <p className="font-sans text-xs text-warm-gray mb-4 italic">Vaste kosten die voor elke pizza gelden (deeg, saus, oven).</p>
+        <form onSubmit={saveBaseCosts} className="space-y-3">
+          {Object.entries(COST_LABELS).map(([key, { label, icon }]) => (
             <div key={key} className="flex items-center gap-3">
               <span className="text-xl w-7">{icon}</span>
               <span className="flex-1 font-sans text-sm text-warm-gray">{label}</span>
-              {/* Scan camera button */}
-              <label className={`cursor-pointer flex items-center justify-center w-9 h-9 border border-parchment bg-cream hover:border-olive transition-colors shrink-0 ${scanning === key ? 'opacity-50 pointer-events-none' : ''}`}
-                title="Etiket scannen">
-                <input type="file" accept="image/*" capture="environment" className="sr-only"
-                  onChange={e => handleScan(key, e.target.files[0])} />
-                {scanning === key ? <span className="text-xs text-warm-gray animate-pulse">...</span> : <span className="text-base">📷</span>}
-              </label>
-              <div className="flex items-center border border-parchment w-24">
+              <div className="flex items-center border border-parchment w-24 shrink-0">
                 <span className="px-2 py-2 bg-parchment/50 text-warm-gray text-xs">€</span>
-                <input type="number" step="0.05" min="0" value={costs[key]} onChange={e=>setCosts(c=>({...c,[key]:e.target.value}))}
+                <input type="number" step="0.05" min="0" value={baseCosts[key]}
+                  onChange={e => setBaseCosts(c => ({ ...c, [key]: e.target.value }))}
                   className="w-full py-2 px-2 text-sm text-right focus:outline-none bg-white" />
               </div>
             </div>
           ))}
           <div className="flex justify-between pt-2 border-t border-parchment">
             <span className="font-sans text-xs text-warm-gray uppercase tracking-wide">Totaal basis</span>
-            <span className="font-serif text-ink">€{baseCost.toFixed(2)}</span>
+            <span className="font-serif text-ink">€{baseCostTotal.toFixed(2)}</span>
           </div>
-          <button type="submit" disabled={saving} className="btn-primary w-full">{saved?'✓ Opgeslagen':saving?'Bezig...':'Opslaan'}</button>
+          <button type="submit" disabled={savingBase} className="btn-primary w-full">
+            {savedBase ? '✓ Opgeslagen' : savingBase ? 'Bezig...' : 'Opslaan'}
+          </button>
         </form>
       </div>
 
-      <div className="bg-white border border-parchment p-5">
-        <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-4">Winst per pizza</p>
-        <div className="space-y-3">
-          {pizzas.map(pizza => {
-            const tc = parseFloat(pizza.toppingCost)||0
-            const cost = baseCost+tc
-            const profit = pizza.price-cost
-            const margin = pizza.price>0?(profit/pizza.price)*100:0
-            return (
-              <div key={pizza.id} className="border border-parchment p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xl">{pizza.emoji}</span>
-                  <span className="font-serif flex-1 text-ink">{pizza.name}</span>
-                  <span className={`font-sans text-xs px-2 py-0.5 ${margin>=50?'bg-olive/10 text-olive':'bg-wine/10 text-wine'}`}>{margin.toFixed(0)}%</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                  <div className="bg-parchment/50 p-2"><div className="text-warm-gray">Prijs</div><div className="font-serif text-ink">€{pizza.price.toFixed(2)}</div></div>
-                  <div className="bg-parchment/50 p-2"><div className="text-warm-gray">Kosten</div><div className="font-serif text-ink">€{cost.toFixed(2)}</div></div>
-                  <div className={`p-2 ${profit>=0?'bg-olive/10':'bg-wine/10'}`}><div className="text-warm-gray">Winst</div><div className={`font-serif ${profit>=0?'text-olive':'text-wine'}`}>€{profit.toFixed(2)}</div></div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
     </div>
   )
 }
