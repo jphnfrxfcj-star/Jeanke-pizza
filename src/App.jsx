@@ -177,7 +177,7 @@ function Shop() {
 
         {openingDays === null || registration === null ? (
           <div className="flex justify-center py-16">
-            <div className="w-8 h-8 border-2 border-olive/30 border-t-olive rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
           </div>
         ) : showRegistration ? (
           <div className="max-w-lg mx-auto">
@@ -204,7 +204,7 @@ function Shop() {
                       <div className="absolute top-0 bottom-0 w-px bg-gold/60 z-10"
                         style={{ left: `${(registration.openFrom / registration.max) * 100}%` }} />
                       <div
-                        className="h-full bg-olive transition-all duration-500"
+                        className="h-full bg-wine transition-all duration-500"
                         style={{ width: `${Math.min(100, (registration.count / registration.max) * 100)}%` }}
                       />
                     </div>
@@ -217,7 +217,7 @@ function Shop() {
                     </p>
                   </>
                 ) : (
-                  <div className="w-6 h-6 border-2 border-olive/30 border-t-olive rounded-full animate-spin mx-auto my-2" />
+                  <div className="w-6 h-6 border-2 border-gold/30 border-t-gold rounded-full animate-spin mx-auto my-2" />
                 )}
               </div>
 
@@ -239,7 +239,7 @@ function Shop() {
                       <input
                         type="text" required value={regName} onChange={e => setRegName(e.target.value)}
                         placeholder="Uw naam"
-                        className="w-full border border-parchment bg-cream px-4 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors"
+                        className="w-full border border-parchment bg-cream px-4 py-3 text-sm text-ink focus:outline-none focus:border-gold transition-colors"
                       />
                     </div>
                     <div>
@@ -247,7 +247,7 @@ function Shop() {
                       <input
                         type="email" required value={regEmail} onChange={e => setRegEmail(e.target.value)}
                         placeholder="uw@email.be"
-                        className="w-full border border-parchment bg-cream px-4 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors"
+                        className="w-full border border-parchment bg-cream px-4 py-3 text-sm text-ink focus:outline-none focus:border-gold transition-colors"
                       />
                     </div>
                     <div>
@@ -324,7 +324,7 @@ function Shop() {
                   <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Openingsdagen</p>
                   <div className="flex flex-wrap gap-2">
                     {openingDays.map(d => (
-                      <span key={d.date} className="bg-olive/10 border border-olive/20 text-olive text-xs font-sans px-3 py-1.5">
+                      <span key={d.date} className="bg-parchment border border-gold/30 text-ink text-xs font-sans px-3 py-1.5">
                         {new Date(d.date + 'T12:00:00').toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long' })}
                         {d.label && <span className="ml-1 text-warm-gray">— {d.label}</span>}
                       </span>
