@@ -305,7 +305,7 @@ function Shop() {
               Uw pizza's zijn klaar om{' '}
               <strong className="text-ink">
                 {successOrder.timeslots?.length > 1
-                  ? `${successOrder.timeslots[0]} – ${successOrder.timeslots[successOrder.timeslots.length - 1]}`
+                  ? successOrder.timeslots[successOrder.timeslots.length - 1]
                   : successOrder.timeslot}
               </strong>.
             </p>
