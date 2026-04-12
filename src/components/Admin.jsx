@@ -5,6 +5,23 @@ import staticPizzas from '../data/pizzas.json'
 
 const INPUT = "w-full border border-parchment bg-cream px-4 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors"
 
+const ALLERGENS = [
+  { key: 'gluten',       label: 'Gluten' },
+  { key: 'melk',         label: 'Melk' },
+  { key: 'eieren',       label: 'Eieren' },
+  { key: 'vis',          label: 'Vis' },
+  { key: 'schaaldieren', label: 'Schaaldieren' },
+  { key: 'soja',         label: 'Soja' },
+  { key: 'noten',        label: 'Noten' },
+  { key: 'pinda',        label: 'Pinda' },
+  { key: 'sesam',        label: 'Sesam' },
+  { key: 'selderij',     label: 'Selderij' },
+  { key: 'mosterd',      label: 'Mosterd' },
+  { key: 'sulfiet',      label: 'Sulfieten' },
+  { key: 'lupine',       label: 'Lupine' },
+  { key: 'weekdieren',   label: 'Weekdieren' },
+]
+
 export default function Admin() {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem('adminPw') === config.adminPassword)
   const [password, setPassword] = useState('')
@@ -568,7 +585,7 @@ function PizzasTab({ password }) {
   const [allIngredients, setAllIngredients] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
-  const [form, setForm] = useState({ name: '', ingredients: [], price: '', emoji: '🍕', imageUrl: '', toppingCost: '' })
+  const [form, setForm] = useState({ name: '', ingredients: [], allergens: [], price: '', emoji: '🍕', imageUrl: '' })
   const [ingInput, setIngInput] = useState('')
   const [newIngInput, setNewIngInput] = useState('')
 
@@ -601,10 +618,10 @@ function PizzasTab({ password }) {
   function startEdit(p) {
     setEditing(p.id)
     const ings = Array.isArray(p.ingredients) ? p.ingredients : (p.description ? p.description.split(', ') : [])
-    setForm({ name: p.name, ingredients: ings, price: String(p.price), emoji: p.emoji, imageUrl: p.imageUrl||'' })
+    setForm({ name: p.name, ingredients: ings, allergens: Array.isArray(p.allergens) ? p.allergens : [], price: String(p.price), emoji: p.emoji, imageUrl: p.imageUrl||'' })
     setIngInput('')
   }
-  function startNew() { setEditing('new'); setForm({ name:'', ingredients:[], price:'', emoji:'🍕', imageUrl:'' }); setIngInput('') }
+  function startNew() { setEditing('new'); setForm({ name:'', ingredients:[], allergens:[], price:'', emoji:'🍕', imageUrl:'' }); setIngInput('') }
 
   // allIngredients is now { name, cost }[] — form.ingredients stays string[]
   function toggleIngredient(name) {
@@ -636,7 +653,7 @@ function PizzasTab({ password }) {
 
   async function saveEdit(e) {
     e.preventDefault()
-    const updated = { ...form, price: parseFloat(form.price), description: form.ingredients.join(', ') }
+    const updated = { ...form, price: parseFloat(form.price), description: form.ingredients.join(', '), allergens: form.allergens }
     let newList
     if (editing === 'new') { const maxId = pizzas.reduce((m,p) => Math.max(m,p.id), 0); newList = [...pizzas, { id: maxId+1, ...updated }] }
     else newList = pizzas.map(p => p.id===editing ? {...p,...updated} : p)
@@ -724,6 +741,21 @@ function PizzasTab({ password }) {
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomIngredient() } }}
                     placeholder="Nieuw ingrediënt..." className={INPUT + ' flex-1 text-xs'} />
                   <button type="button" onClick={addCustomIngredient} className="px-3 bg-parchment border border-parchment text-ink text-sm hover:border-olive transition-colors">+</button>
+                </div>
+              </div>
+              <div>
+                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-2">Allergenen</label>
+                <div className="flex flex-wrap gap-1">
+                  {ALLERGENS.map(a => {
+                    const active = form.allergens.includes(a.key)
+                    return (
+                      <button type="button" key={a.key}
+                        onClick={() => setForm(f => ({ ...f, allergens: active ? f.allergens.filter(k => k !== a.key) : [...f.allergens, a.key] }))}
+                        className={`text-xs px-2.5 py-1 border transition-colors ${active ? 'bg-wine text-cream border-wine' : 'bg-white text-ink border-parchment hover:border-wine/40'}`}>
+                        {a.label}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
               <input value={form.imageUrl} onChange={e=>setForm(f=>({...f,imageUrl:e.target.value}))} placeholder="Foto URL (optioneel)" className={INPUT} />
