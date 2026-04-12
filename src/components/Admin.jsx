@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Clock, ClipboardList, ShoppingBasket, ChefHat, TrendingUp, Settings, Menu } from 'lucide-react'
 import config from '../data/config.json'
 import staticPizzas from '../data/pizzas.json'
 
@@ -35,12 +36,12 @@ export default function Admin() {
   const pw = config.adminPassword
 
   const tabs = [
-    { key: 'dag',          label: 'Dag',            icon: '🕐' },
-    { key: 'orders',       label: 'Bestellingen',   icon: '📋' },
-    { key: 'boodschappen', label: 'Boodschappen',   icon: '🛒' },
-    { key: 'pizzas',       label: "Pizza's",        icon: '🍕' },
-    { key: 'winst',        label: 'Winst',          icon: '💰' },
-    { key: 'opening',      label: 'Instellingen',   icon: '⚙️'  },
+    { key: 'dag',          label: 'Dag',           Icon: Clock },
+    { key: 'orders',       label: 'Bestellingen',  Icon: ClipboardList },
+    { key: 'boodschappen', label: 'Boodschappen',  Icon: ShoppingBasket },
+    { key: 'pizzas',       label: "Pizza's",       Icon: ChefHat },
+    { key: 'winst',        label: 'Winst',         Icon: TrendingUp },
+    { key: 'opening',      label: 'Instellingen',  Icon: Settings },
   ]
 
   function navigate(key) { setTab(key); setMenuOpen(false) }
@@ -50,10 +51,8 @@ export default function Admin() {
       {/* Header */}
       <header className="bg-olive text-cream sticky top-0 z-30">
         <div className="px-4 py-4 flex items-center justify-between">
-          <button onClick={() => setMenuOpen(true)} className="flex flex-col gap-1.5 p-1 -ml-1">
-            <span className="block w-5 h-0.5 bg-cream/80" />
-            <span className="block w-5 h-0.5 bg-cream/80" />
-            <span className="block w-5 h-0.5 bg-cream/80" />
+          <button onClick={() => setMenuOpen(true)} className="p-1 -ml-1 cursor-pointer">
+            <Menu size={20} className="text-cream/80" />
           </button>
           <div className="text-center">
             <h1 className="font-serif text-lg italic leading-none">{config.storeName}</h1>
@@ -77,8 +76,8 @@ export default function Admin() {
             <nav className="flex-1 py-2">
               {tabs.map(t => (
                 <button key={t.key} onClick={() => navigate(t.key)}
-                  className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-sans transition-colors text-left ${tab === t.key ? 'text-olive bg-olive/5 border-l-2 border-olive' : 'text-ink hover:bg-parchment/50 border-l-2 border-transparent'}`}>
-                  <span className="text-lg w-6">{t.icon}</span>{t.label}
+                  className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-sans transition-colors text-left cursor-pointer ${tab === t.key ? 'text-olive bg-olive/5 border-l-2 border-olive' : 'text-ink hover:bg-parchment/50 border-l-2 border-transparent'}`}>
+                  <t.Icon size={17} className="shrink-0" />{t.label}
                 </button>
               ))}
             </nav>
@@ -1246,7 +1245,7 @@ function WinstTab({ password }) {
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 function LoadingCards() {
-  return <div className="space-y-3">{[1,2,3].map(i=><div key={i} className="bg-white border border-parchment h-20 animate-pulse"/>)}</div>
+  return <div className="space-y-3">{[1,2,3].map(i=><div key={i} className="bg-white border border-parchment h-20 animate-pulse motion-reduce:animate-none"/>)}</div>
 }
 function Empty({ icon, text }) {
   return <div className="text-center py-16"><div className="text-5xl mb-3 opacity-40">{icon}</div><p className="font-sans text-sm text-warm-gray">{text}</p></div>

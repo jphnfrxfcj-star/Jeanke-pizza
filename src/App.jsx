@@ -177,7 +177,7 @@ function Shop() {
 
         {openingDays === null || registration === null ? (
           <div className="flex justify-center py-16">
-            <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin motion-reduce:animate-none" />
           </div>
         ) : showRegistration ? (
           <div className="max-w-lg mx-auto">
@@ -217,7 +217,7 @@ function Shop() {
                     </p>
                   </>
                 ) : (
-                  <div className="w-6 h-6 border-2 border-gold/30 border-t-gold rounded-full animate-spin mx-auto my-2" />
+                  <div className="w-6 h-6 border-2 border-gold/30 border-t-gold rounded-full animate-spin motion-reduce:animate-none mx-auto my-2" />
                 )}
               </div>
 

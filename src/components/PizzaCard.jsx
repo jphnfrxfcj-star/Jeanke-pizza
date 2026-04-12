@@ -20,9 +20,9 @@ export default function PizzaCard({ pizza, quantity, onAdd, onRemove, currency, 
               <button onClick={() => onAdd(pizza)} className="btn-primary py-2 px-4">Toevoegen</button>
             ) : (
               <div className="flex items-center gap-2">
-                <button onClick={() => onRemove(pizza)} className="w-7 h-7 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center transition-colors">−</button>
+                <button onClick={() => onRemove(pizza)} className="w-7 h-7 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center transition-colors cursor-pointer">−</button>
                 <span className="font-serif text-base w-4 text-center">{quantity}</span>
-                <button onClick={() => onAdd(pizza)} className="w-7 h-7 bg-wine hover:bg-wine-light text-cream flex items-center justify-center transition-colors">+</button>
+                <button onClick={() => onAdd(pizza)} className="w-7 h-7 bg-wine hover:bg-wine-light text-cream flex items-center justify-center transition-colors cursor-pointer">+</button>
               </div>
             )
           )}
