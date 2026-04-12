@@ -13,9 +13,10 @@
   input, select, textarea {
     font-size: 16px;
   }
-  /* Normalize date input height across platforms */
+  /* Normalize date input height — strip iOS native WebKit rendering */
   input[type="date"] {
-    @apply py-2 leading-tight;
+    -webkit-appearance: none;
+    @apply appearance-none py-2 leading-tight;
   }
   /* Cursor-pointer on all interactive elements */
   button, [role="button"], label[for], summary {
