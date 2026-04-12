@@ -320,16 +320,20 @@ function Shop() {
             {/* Menu */}
             <div className="lg:col-span-2">
               {openingDays.length > 0 && (
-                <div className="mb-6 bg-white border border-parchment px-5 py-4">
-                  <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Openingsdagen</p>
-                  <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
-                    {openingDays.map(d => (
-                      <span key={d.date} className="bg-parchment border border-gold/30 text-ink text-xs font-sans px-3 py-1.5 w-full sm:w-auto">
-                        {new Date(d.date + 'T12:00:00').toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long' })}
-                        {d.label && <span className="ml-1 text-warm-gray">— {d.label}</span>}
+                <div className="mb-6 border border-parchment bg-white divide-y divide-parchment">
+                  {openingDays.map(d => (
+                    <div key={d.date} className="flex items-center gap-4 pl-4 pr-5 py-3 border-l-2 border-l-wine">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-serif text-base text-ink">
+                          {new Date(d.date + 'T12:00:00').toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long' })}
+                        </p>
+                        {d.label && <p className="font-sans text-xs text-warm-gray mt-0.5">{d.label}</p>}
+                      </div>
+                      <span className="font-sans text-xs text-warm-gray-light shrink-0">
+                        {new Date(d.date + 'T12:00:00').toLocaleDateString('nl-BE', { year: 'numeric' })}
                       </span>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               )}
 
