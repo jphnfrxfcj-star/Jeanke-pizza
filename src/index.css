@@ -16,7 +16,11 @@
   /* Normalize date input height — strip iOS native WebKit rendering */
   input[type="date"] {
     -webkit-appearance: none;
-    @apply appearance-none py-3 leading-normal;
+    appearance: none;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    line-height: 1.5rem;
+    min-height: 3rem;
   }
   /* Cursor-pointer on all interactive elements */
   button, [role="button"], label[for], summary {
