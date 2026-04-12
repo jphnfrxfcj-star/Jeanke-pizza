@@ -373,16 +373,20 @@ function Shop() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-parchment mt-16 py-8" />
+      {/* Footer — extra padding on mobile for floating cart bar */}
+      <footer className="border-t border-parchment mt-16 py-8 lg:pb-8 pb-20" />
 
       {/* Floating cart button — mobile, fixed bottom */}
-      {cartCount > 0 && !showRegistration && slots.length > 0 && (
-        <div className="lg:hidden fixed bottom-6 left-0 right-0 flex justify-center z-20 px-6">
-          <button onClick={() => setShowCheckout(true)}
-            className="bg-wine text-cream px-6 py-3.5 font-sans text-sm tracking-widest uppercase flex items-center gap-3 shadow-lg w-full max-w-xs justify-center">
+      {!showRegistration && slots.length > 0 && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20">
+          <button onClick={() => setShowCheckout(true)} disabled={cartCount === 0}
+            className={`w-full flex items-center justify-between px-6 py-4 font-sans text-sm tracking-widest uppercase transition-colors
+              ${cartCount > 0 ? 'bg-wine text-cream' : 'bg-ink/80 text-cream/50 cursor-default'}`}>
             <span>Winkelmandje</span>
-            <span className="bg-cream text-wine font-bold text-xs rounded-full w-6 h-6 flex items-center justify-center">{cartCount}</span>
+            {cartCount > 0
+              ? <span className="bg-cream text-wine font-bold text-xs rounded-full w-6 h-6 flex items-center justify-center">{cartCount}</span>
+              : <span className="font-sans text-xs normal-case text-cream/40">Leeg</span>
+            }
           </button>
         </div>
       )}
