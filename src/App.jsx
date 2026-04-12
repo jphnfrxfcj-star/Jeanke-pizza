@@ -322,9 +322,9 @@ function Shop() {
               {openingDays.length > 0 && (
                 <div className="mb-6 bg-white border border-parchment px-5 py-4">
                   <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Openingsdagen</p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
                     {openingDays.map(d => (
-                      <span key={d.date} className="bg-parchment border border-gold/30 text-ink text-xs font-sans px-3 py-1.5">
+                      <span key={d.date} className="bg-parchment border border-gold/30 text-ink text-xs font-sans px-3 py-1.5 w-full sm:w-auto">
                         {new Date(d.date + 'T12:00:00').toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long' })}
                         {d.label && <span className="ml-1 text-warm-gray">— {d.label}</span>}
                       </span>
