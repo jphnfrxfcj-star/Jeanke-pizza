@@ -968,7 +968,7 @@ function OpeningTab({ password }) {
         }
         <form onSubmit={addDay} className="px-5 py-4 border-t border-parchment space-y-2">
           <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Dag toevoegen</p>
-          <input type="date" required value={newDate} onChange={e=>setNewDate(e.target.value)} className={INPUT.replace('py-3', 'py-2')} />
+          <input type="date" required value={newDate} onChange={e=>setNewDate(e.target.value)} className={INPUT} />
           <input type="text" value={newLabel} onChange={e=>setNewLabel(e.target.value)} placeholder="Optionele notitie (bv. 'Zomer editie')" className={INPUT} />
           <button type="submit" className="btn-primary w-full">Dag toevoegen</button>
         </form>
