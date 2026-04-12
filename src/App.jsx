@@ -302,7 +302,12 @@ function Shop() {
               Bedankt, <strong className="text-ink">{successOrder.name}</strong>.
             </p>
             <p className="font-sans text-warm-gray text-sm mb-1">
-              Uw pizza's zijn klaar om <strong className="text-ink">{successOrder.timeslot}</strong>.
+              Uw pizza's zijn klaar om{' '}
+              <strong className="text-ink">
+                {successOrder.timeslots?.length > 1
+                  ? `${successOrder.timeslots[0]} – ${successOrder.timeslots[successOrder.timeslots.length - 1]}`
+                  : successOrder.timeslot}
+              </strong>.
             </p>
             <p className="font-sans text-warm-gray-light text-xs mt-3 mb-1">
               Bevestiging verstuurd naar {successOrder.email}

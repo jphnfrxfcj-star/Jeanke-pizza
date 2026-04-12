@@ -6,11 +6,15 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
   const [selectedDate, setSelectedDate] = useState(slots[0]?.date ?? '')
   const [selectedSlot, setSelectedSlot] = useState('')
   const [loading, setLoading] = useState(false)
+  const [slotsLoading, setSlotsLoading] = useState(true)
   const [error, setError] = useState('')
   const [bookedSlots, setBookedSlots] = useState([])
 
   useEffect(() => {
-    fetch('/api/slots').then(r => r.json()).then(setBookedSlots).catch(() => {})
+    fetch('/api/slots')
+      .then(r => r.json())
+      .then(d => { setBookedSlots(d); setSlotsLoading(false) })
+      .catch(() => setSlotsLoading(false))
   }, [])
 
   const pizzasPerSlot = settings?.pizzasPerSlot ?? 3
@@ -77,7 +81,7 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
         }),
       }).catch(() => {})
 
-      onSuccess({ name, email, date: selectedDate, timeslot: selectedSlot, total })
+      onSuccess({ name, email, date: selectedDate, timeslot: selectedSlot, timeslots, total })
     } catch (err) {
       console.error('Submit error:', err)
       setError('Er ging iets mis. Probeer opnieuw.')
@@ -142,7 +146,13 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
                   </span>
                 )}
               </div>
-              {slotsForDate.length === 0 ? (
+              {slotsLoading ? (
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
+                  {[...Array(8)].map((_, i) => (
+                    <div key={i} className="h-9 bg-parchment animate-pulse motion-reduce:animate-none" />
+                  ))}
+                </div>
+              ) : slotsForDate.length === 0 ? (
                 <p className="text-sm text-wine italic">Geen tijdsloten beschikbaar.</p>
               ) : (
                 <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
@@ -170,20 +180,20 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
             <div>
               <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Naam</label>
               <input type="text" required value={name} onChange={e => setName(e.target.value)} placeholder="Uw naam"
-                className="w-full border border-parchment bg-white px-4 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors" />
+                className="w-full border border-parchment bg-white px-4 py-3 text-sm text-ink focus:outline-none focus:border-gold transition-colors" />
             </div>
 
             {/* Email */}
             <div>
               <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">E-mail</label>
               <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="uw@email.be"
-                className="w-full border border-parchment bg-white px-4 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors" />
+                className="w-full border border-parchment bg-white px-4 py-3 text-sm text-ink focus:outline-none focus:border-gold transition-colors" />
             </div>
 
             {error && <p className="text-xs text-wine italic">{error}</p>}
 
-            <button type="submit" disabled={loading} className="btn-primary w-full">
-              {loading ? 'Een moment...' : 'Bestelling bevestigen'}
+            <button type="submit" disabled={loading || slotsLoading} className="btn-primary w-full">
+              {loading ? 'Even geduld...' : 'Bestelling bevestigen'}
             </button>
           </form>
         </div>
