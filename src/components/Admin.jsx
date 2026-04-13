@@ -1273,11 +1273,12 @@ function WinstTab({ password }) {
         <div className="px-5 py-4 border-b border-parchment">
           <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Kostprijs ingrediënten</p>
           <p className="font-sans text-xs text-warm-gray mt-1 italic">Kostprijs per portie/stuk. Wijzigingen worden automatisch opgeslagen.</p>
+          <p className="font-sans text-xs text-wine mt-1 italic">Let op: ingrediënten die al in de basiskosten zitten (bv. kaas/mozzarella, saus/tomatensaus) hier op €0 laten om dubbeltelling te vermijden.</p>
         </div>
         <div className="divide-y divide-parchment">
           {ingredients.map(ing => (
             <div key={ing.name} className="flex items-center gap-3 px-4 py-2">
-              <span className="flex-1 font-sans text-sm text-ink">{ing.name}</span>
+              <span className="flex-1 font-sans text-sm text-ink capitalize">{ing.name}</span>
               <div className="flex items-center border border-parchment w-24 shrink-0">
                 <span className="px-2 py-2 bg-parchment/50 text-warm-gray text-xs">€</span>
                 <input type="number" step="0.05" min="0"
