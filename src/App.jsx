@@ -159,11 +159,11 @@ function Shop() {
 
           {/* Info pills */}
           {!showRegistration && openingDays && openingDays.length > 0 && (
-            <div className="flex items-center justify-center gap-3 flex-wrap mt-7">
-              <span className="bg-black/40 border border-white/15 text-cream/85 font-sans text-xs px-4 py-2 rounded-full tracking-wide">
+            <div className="flex items-center justify-center gap-2 sm:gap-3 mt-6 sm:mt-7">
+              <span className="bg-black/40 border border-white/15 text-cream/85 font-sans text-xs px-3 sm:px-4 py-1.5 sm:py-2 rounded-full whitespace-nowrap">
                 · Ophaaluren {settings?.openingHour ?? config.openingHour}:00 – {settings?.closingHour ?? config.closingHour}:00
               </span>
-              <span className="bg-black/40 border border-white/15 text-cream/85 font-sans text-xs px-4 py-2 rounded-full tracking-wide">
+              <span className="bg-black/40 border border-white/15 text-cream/85 font-sans text-xs px-3 sm:px-4 py-1.5 sm:py-2 rounded-full whitespace-nowrap">
                 · Elke {config.slotIntervalMinutes} min een tijdslot
               </span>
             </div>
