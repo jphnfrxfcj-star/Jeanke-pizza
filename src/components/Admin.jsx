@@ -136,7 +136,7 @@ export default function Admin() {
         )}
 
         {/* Content */}
-        <div className="px-4 lg:px-8 py-6 pb-10 max-w-3xl w-full overflow-hidden">
+        <div className="px-4 lg:px-8 py-6 pb-10 w-full overflow-hidden">
           {tab === 'dag'          && <DagTab          password={pw} />}
           {tab === 'orders'       && <OrdersTab       password={pw} />}
           {tab === 'boodschappen' && <BoodschappenTab password={pw} />}
@@ -344,7 +344,7 @@ function OrdersTab({ password }) {
               <SectionLabel>{formatLongDate(date)}</SectionLabel>
               <span className="font-sans text-xs text-warm-gray mb-3">{dayOrders.length} best.</span>
             </div>
-            <div className="space-y-3">{dayOrders.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} onEdit={startEdit} />)}</div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">{dayOrders.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} onEdit={startEdit} />)}</div>
           </div>
         ))}
       </section>}
@@ -356,7 +356,7 @@ function OrdersTab({ password }) {
             <span className="font-sans text-xs text-warm-gray-light group-hover:text-warm-gray transition-colors">{pastOpen ? '▲ Inklappen' : '▼ Uitklappen'}</span>
           </button>
           {pastOpen && (
-            <div className="space-y-3 opacity-60">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 opacity-60">
               {past.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} onEdit={startEdit} />)}
             </div>
           )}
@@ -698,6 +698,7 @@ function PizzasTab({ password }) {
 
   return (
     <div className="space-y-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
       {pizzas.map(pizza => (
         <div key={pizza.id} className="bg-white border border-parchment flex items-center gap-3 overflow-hidden">
           {pizza.imageUrl
@@ -717,6 +718,7 @@ function PizzasTab({ password }) {
           </div>
         </div>
       ))}
+      </div>
 
       <button onClick={startNew} className="btn-primary w-full">+ Pizza toevoegen</button>
 
@@ -878,7 +880,10 @@ function OpeningTab({ password }) {
   if (loading) return <LoadingCards />
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
+
+      {/* ── Left column ── */}
+      <div className="space-y-5">
 
       {/* Modus schakelaar */}
       <div className="bg-white border border-parchment px-5 py-4 flex items-center justify-between gap-4">
@@ -939,6 +944,11 @@ function OpeningTab({ password }) {
           </button>
         </form>
       </div>
+
+      </div>{/* end left column */}
+
+      {/* ── Right column ── */}
+      <div className="space-y-5">
 
       {/* Registratie configuratie */}
       <div className="bg-white border border-parchment">
@@ -1037,6 +1047,8 @@ function OpeningTab({ password }) {
           <button type="submit" className="btn-primary w-full">Dag toevoegen</button>
         </form>
       </div>
+
+      </div>{/* end right column */}
     </div>
   )
 }
@@ -1128,9 +1140,10 @@ function WinstTab({ password }) {
   if (loading) return <LoadingCards />
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
 
-      {/* ── Per avond ── */}
+      {/* ── Left column: Per avond ── */}
+      <div className="space-y-6">
       <div>
         <SectionLabel>Per avond</SectionLabel>
         {openingDays.length === 0
@@ -1215,6 +1228,10 @@ function WinstTab({ password }) {
         }
       </div>
 
+      </div>{/* end left column */}
+
+      {/* ── Right column: Marge + Kosten ── */}
+      <div className="space-y-6">
       {/* ── Per pizza — geschatte marge ── */}
       <div>
         <SectionLabel>Per pizza — geschatte marge</SectionLabel>
@@ -1302,6 +1319,7 @@ function WinstTab({ password }) {
         </form>
       </div>
 
+      </div>{/* end right column */}
     </div>
   )
 }
