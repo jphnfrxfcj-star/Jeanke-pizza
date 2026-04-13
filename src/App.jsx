@@ -156,22 +156,33 @@ function Shop() {
           <p className="font-serif italic text-cream/70 text-sm mt-2 drop-shadow-sm">
             Piccola pizzeria artigianale
           </p>
-        </div>
 
-        {/* Nav strip */}
-        {!showRegistration && openingDays && openingDays.length > 0 && (
-          <div className="relative border-t border-white/10 bg-black/20">
-            <div className="max-w-6xl mx-auto px-6 lg:px-10 py-2 flex items-center justify-between">
-              <span className="font-sans text-xs text-cream/50 tracking-wide">
-                Ophaaluren {settings?.openingHour ?? config.openingHour}:00 – {settings?.closingHour ?? config.closingHour}:00
+          {/* Info pills */}
+          {!showRegistration && openingDays && openingDays.length > 0 && (
+            <div className="flex items-center justify-center gap-3 flex-wrap mt-7">
+              <span className="bg-black/40 border border-white/15 text-cream/85 font-sans text-xs px-4 py-2 rounded-full tracking-wide">
+                · Ophaaluren {settings?.openingHour ?? config.openingHour}:00 – {settings?.closingHour ?? config.closingHour}:00
               </span>
-              <span className="font-sans text-xs text-cream/50 tracking-wide">
-                Elke {config.slotIntervalMinutes} min een slot
+              <span className="bg-black/40 border border-white/15 text-cream/85 font-sans text-xs px-4 py-2 rounded-full tracking-wide">
+                · Elke {config.slotIntervalMinutes} min een tijdslot
               </span>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </header>
+
+      {/* Announcement bar */}
+      {!showRegistration && openingDays && openingDays.length > 0 && (
+        <div className="bg-wine text-cream">
+          <div className="max-w-6xl mx-auto px-6 lg:px-10 py-2.5 text-center">
+            <p className="font-sans text-xs tracking-wide">
+              <span className="font-bold">Volgende besteldag:</span>{' '}
+              {new Date(openingDays[0].date + 'T12:00:00').toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              {openingDays[0].label && <span className="text-cream/70"> — {openingDays[0].label}</span>}
+            </p>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-10">
 
@@ -325,20 +336,19 @@ function Shop() {
             {/* Menu */}
             <div className="lg:col-span-2">
               {openingDays.length > 0 && (
-                <div className="mb-6 border border-parchment bg-white divide-y divide-parchment">
-                  {openingDays.map(d => (
-                    <div key={d.date} className="flex items-center gap-4 pl-4 pr-5 py-3 border-l-2 border-l-wine">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-serif text-base text-ink">
-                          {new Date(d.date + 'T12:00:00').toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long' })}
-                        </p>
-                        {d.label && <p className="font-sans text-xs text-warm-gray mt-0.5">{d.label}</p>}
-                      </div>
-                      <span className="font-sans text-xs text-warm-gray-light shrink-0">
-                        {new Date(d.date + 'T12:00:00').toLocaleDateString('nl-BE', { year: 'numeric' })}
-                      </span>
-                    </div>
-                  ))}
+                <div className="mb-8">
+                  <p className="font-sans text-xs tracking-widest uppercase text-wine mb-1">Besteldag</p>
+                  <h2 className="font-serif text-3xl text-ink">
+                    {new Date(openingDays[0].date + 'T12:00:00').toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  </h2>
+                  {openingDays[0].label && (
+                    <p className="font-sans text-sm text-warm-gray mt-1">{openingDays[0].label}</p>
+                  )}
+                  {openingDays.length > 1 && (
+                    <p className="font-sans text-xs text-warm-gray-light mt-2">
+                      + {openingDays.length - 1} andere besteldag{openingDays.length > 2 ? 'en' : ''}
+                    </p>
+                  )}
                 </div>
               )}
 
