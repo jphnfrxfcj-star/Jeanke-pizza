@@ -64,55 +64,87 @@ export default function Admin() {
   function navigate(key) { setTab(key); setMenuOpen(false) }
 
   return (
-    <div className="min-h-screen bg-cream overflow-x-hidden">
-      {/* Header */}
-      <header className="bg-olive text-cream sticky top-0 z-30">
-        <div className="px-4 py-4 flex items-center justify-between">
-          <button onClick={() => setMenuOpen(true)} className="p-1 -ml-1 cursor-pointer">
-            <Menu size={20} className="text-cream/80" />
-          </button>
-          <div className="text-center">
-            <h1 className="font-serif text-lg italic leading-none">{config.storeName}</h1>
-            <p className="font-sans text-[10px] text-cream/50 tracking-widest uppercase mt-0.5">{tabs.find(t => t.key === tab)?.label}</p>
-          </div>
-          <a href="/" className="font-sans text-xs text-cream/60 hover:text-cream tracking-widest uppercase transition-colors">← Shop</a>
-        </div>
-      </header>
+    <div className="min-h-screen bg-cream flex">
 
-      {/* Drawer overlay */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-40 flex">
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-ink/50" onClick={() => setMenuOpen(false)} />
-          {/* Drawer */}
-          <div className="relative w-64 max-w-[80vw] bg-white h-full flex flex-col shadow-xl">
-            <div className="bg-olive px-5 py-5">
-              <p className="font-sans text-xs text-cream/50 tracking-widest uppercase">Beheer</p>
-              <h2 className="font-serif text-xl italic text-cream mt-0.5">{config.storeName}</h2>
+      {/* ── Desktop sidebar (lg+) ── */}
+      <aside className="hidden lg:flex flex-col w-60 shrink-0 bg-white border-r border-parchment sticky top-0 h-screen">
+        <div className="bg-olive px-5 py-6">
+          <p className="font-sans text-xs text-cream/50 tracking-widest uppercase">Beheer</p>
+          <h1 className="font-serif text-xl italic text-cream mt-0.5">{config.storeName}</h1>
+        </div>
+        <nav className="flex-1 py-2 overflow-y-auto">
+          {tabs.map(t => (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-sans transition-colors text-left cursor-pointer ${tab === t.key ? 'text-olive bg-olive/5 border-l-2 border-olive' : 'text-ink hover:bg-parchment/50 border-l-2 border-transparent'}`}>
+              <t.Icon size={16} className="shrink-0" />{t.label}
+            </button>
+          ))}
+        </nav>
+        <div className="border-t border-parchment px-5 py-4">
+          <a href="/" className="font-sans text-sm text-warm-gray hover:text-ink transition-colors">← Terug naar shop</a>
+        </div>
+      </aside>
+
+      {/* ── Main area ── */}
+      <div className="flex-1 flex flex-col min-w-0">
+
+        {/* Mobile header */}
+        <header className="lg:hidden bg-olive text-cream sticky top-0 z-30">
+          <div className="px-4 py-4 flex items-center justify-between">
+            <button onClick={() => setMenuOpen(true)} className="p-1 -ml-1 cursor-pointer">
+              <Menu size={20} className="text-cream/80" />
+            </button>
+            <div className="text-center">
+              <h1 className="font-serif text-lg italic leading-none">{config.storeName}</h1>
+              <p className="font-sans text-[10px] text-cream/50 tracking-widest uppercase mt-0.5">{tabs.find(t => t.key === tab)?.label}</p>
             </div>
-            <nav className="flex-1 py-2">
-              {tabs.map(t => (
-                <button key={t.key} onClick={() => navigate(t.key)}
-                  className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-sans transition-colors text-left cursor-pointer ${tab === t.key ? 'text-olive bg-olive/5 border-l-2 border-olive' : 'text-ink hover:bg-parchment/50 border-l-2 border-transparent'}`}>
-                  <t.Icon size={17} className="shrink-0" />{t.label}
-                </button>
-              ))}
-            </nav>
-            <div className="border-t border-parchment px-5 py-4">
-              <a href="/" className="font-sans text-sm text-warm-gray hover:text-ink transition-colors">← Terug naar shop</a>
+            <a href="/" className="font-sans text-xs text-cream/60 hover:text-cream tracking-widest uppercase transition-colors">← Shop</a>
+          </div>
+        </header>
+
+        {/* Desktop page title bar */}
+        <div className="hidden lg:flex items-center justify-between px-8 py-5 border-b border-parchment bg-white">
+          <div>
+            <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Beheer</p>
+            <h2 className="font-serif text-2xl italic text-ink mt-0.5">{tabs.find(t => t.key === tab)?.label}</h2>
+          </div>
+          <a href="/" className="font-sans text-xs text-warm-gray hover:text-ink tracking-widest uppercase transition-colors">← Terug naar shop</a>
+        </div>
+
+        {/* Mobile drawer overlay */}
+        {menuOpen && (
+          <div className="fixed inset-0 z-40 flex lg:hidden">
+            <div className="absolute inset-0 bg-ink/50" onClick={() => setMenuOpen(false)} />
+            <div className="relative w-64 max-w-[80vw] bg-white h-full flex flex-col shadow-xl">
+              <div className="bg-olive px-5 py-5">
+                <p className="font-sans text-xs text-cream/50 tracking-widest uppercase">Beheer</p>
+                <h2 className="font-serif text-xl italic text-cream mt-0.5">{config.storeName}</h2>
+              </div>
+              <nav className="flex-1 py-2">
+                {tabs.map(t => (
+                  <button key={t.key} onClick={() => navigate(t.key)}
+                    className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-sans transition-colors text-left cursor-pointer ${tab === t.key ? 'text-olive bg-olive/5 border-l-2 border-olive' : 'text-ink hover:bg-parchment/50 border-l-2 border-transparent'}`}>
+                    <t.Icon size={17} className="shrink-0" />{t.label}
+                  </button>
+                ))}
+              </nav>
+              <div className="border-t border-parchment px-5 py-4">
+                <a href="/" className="font-sans text-sm text-warm-gray hover:text-ink transition-colors">← Terug naar shop</a>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Content */}
-      <div className="px-4 py-5 pb-8 max-w-2xl overflow-hidden">
-        {tab === 'dag'          && <DagTab          password={pw} />}
-        {tab === 'orders'       && <OrdersTab       password={pw} />}
-        {tab === 'boodschappen' && <BoodschappenTab password={pw} />}
-        {tab === 'pizzas'       && <PizzasTab       password={pw} />}
-        {tab === 'opening'      && <OpeningTab      password={pw} />}
-        {tab === 'winst'        && <WinstTab        password={pw} />}
+        {/* Content */}
+        <div className="px-4 lg:px-8 py-6 pb-10 max-w-3xl w-full overflow-hidden">
+          {tab === 'dag'          && <DagTab          password={pw} />}
+          {tab === 'orders'       && <OrdersTab       password={pw} />}
+          {tab === 'boodschappen' && <BoodschappenTab password={pw} />}
+          {tab === 'pizzas'       && <PizzasTab       password={pw} />}
+          {tab === 'opening'      && <OpeningTab      password={pw} />}
+          {tab === 'winst'        && <WinstTab        password={pw} />}
+        </div>
+
       </div>
     </div>
   )
