@@ -353,17 +353,20 @@ function Shop() {
               )}
 
               {/* Suggesties */}
-              {pizzas.filter(p => p.suggestion).length > 0 && (
-                <div className="mb-10 -mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 lg:px-6 py-8 lg:py-6 bg-parchment/50 border-y lg:border border-parchment">
-                  <div className="divider mb-6">Suggesties</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {pizzas.filter(p => p.suggestion).map(pizza => (
-                      <div key={pizza.id} className="bg-white border border-parchment border-t-2 border-t-wine flex overflow-hidden">
-                        {pizza.imageUrl && (
-                          <img src={pizza.imageUrl} alt={pizza.name} className="w-28 shrink-0 object-cover" />
-                        )}
-                        <div className="p-4 flex flex-col flex-1 min-w-0">
-                          <h3 className="font-serif text-lg text-ink mb-1">{pizza.name}</h3>
+              {(() => {
+                const suggestions = pizzas.filter(p => p.suggestion)
+                if (!suggestions.length) return null
+                return (
+                  <div className="mb-10 -mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 lg:px-6 py-8 lg:py-6 bg-parchment/50 border-y lg:border border-parchment">
+                    <div className="divider mb-6">Suggesties</div>
+                    <div className={`grid gap-4 ${suggestions.length >= 2 ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
+                      {suggestions.map(pizza => (
+                        <div key={pizza.id} className="bg-white border border-parchment border-t-2 border-t-wine flex overflow-hidden">
+                          {pizza.imageUrl && (
+                            <img src={pizza.imageUrl} alt={pizza.name} className="w-28 shrink-0 object-cover" />
+                          )}
+                          <div className="p-4 flex flex-col flex-1 min-w-0">
+                            <h3 className="font-serif text-xl italic text-ink mb-1">{pizza.name}</h3>
                           <p className="font-sans text-xs text-warm-gray italic leading-relaxed flex-1">
                             {Array.isArray(pizza.ingredients) ? pizza.ingredients.join(', ') : pizza.description}
                           </p>
@@ -385,10 +388,11 @@ function Shop() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )
+              })()}
 
               <div className="divider mb-7">Il Menù</div>
               {pizzas.length === 0 ? (
