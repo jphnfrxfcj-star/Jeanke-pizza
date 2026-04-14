@@ -401,7 +401,7 @@ function Shop() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {pizzas.map(pizza => (
+                  {pizzas.filter(p => !p.suggestion).map(pizza => (
                     <PizzaCard
                       key={pizza.id}
                       pizza={pizza}
