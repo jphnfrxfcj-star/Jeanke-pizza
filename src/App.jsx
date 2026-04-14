@@ -352,21 +352,39 @@ function Shop() {
                 </div>
               )}
 
-              {/* Van het moment */}
+              {/* Suggesties */}
               {pizzas.filter(p => p.suggestion).length > 0 && (
-                <div className="mb-10">
-                  <div className="divider mb-6">Van het moment</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="mb-10 -mx-4 sm:-mx-6 lg:-mx-10 px-4 sm:px-6 lg:px-10 py-8 bg-parchment/50 border-y border-parchment">
+                  <div className="divider mb-6">Suggesties</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {pizzas.filter(p => p.suggestion).map(pizza => (
-                      <div key={pizza.id} className="relative">
-                        <span className="absolute top-3 left-3 z-10 font-sans text-[10px] tracking-widest uppercase bg-wine text-cream px-2 py-1">Seizoen</span>
-                        <PizzaCard
-                          pizza={pizza}
-                          quantity={getQuantity(pizza.id)}
-                          onAdd={addToCart}
-                          onRemove={removeFromCart}
-                          currency={config.currency}
-                        />
+                      <div key={pizza.id} className="bg-white border border-parchment border-t-2 border-t-wine flex overflow-hidden">
+                        {pizza.imageUrl
+                          ? <img src={pizza.imageUrl} alt={pizza.name} className="w-28 shrink-0 object-cover" />
+                          : <div className="w-28 shrink-0 bg-parchment flex items-center justify-center text-4xl">{pizza.emoji}</div>
+                        }
+                        <div className="p-4 flex flex-col flex-1 min-w-0">
+                          <h3 className="font-serif text-lg text-ink mb-1">{pizza.name}</h3>
+                          <p className="font-sans text-xs text-warm-gray italic leading-relaxed flex-1">
+                            {Array.isArray(pizza.ingredients) ? pizza.ingredients.join(', ') : pizza.description}
+                          </p>
+                          {pizza.allergens?.length > 0 && (
+                            <p className="font-sans text-[10px] text-warm-gray-light tracking-wide mt-1">
+                              <span className="not-italic uppercase">Allergenen:</span> {pizza.allergens.join(' · ')}
+                            </p>
+                          )}
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-parchment">
+                            <span className="font-serif text-lg text-wine">{config.currency}{pizza.price.toFixed(2)}</span>
+                            {getQuantity(pizza.id) === 0
+                              ? <button onClick={() => addToCart(pizza)} className="btn-primary py-1.5 px-3">Toevoegen</button>
+                              : <div className="flex items-center gap-2">
+                                  <button onClick={() => removeFromCart(pizza)} className="w-7 h-7 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center transition-colors">−</button>
+                                  <span className="font-serif text-base w-4 text-center">{getQuantity(pizza.id)}</span>
+                                  <button onClick={() => addToCart(pizza)} className="w-7 h-7 bg-wine hover:bg-wine-light text-cream flex items-center justify-center transition-colors">+</button>
+                                </div>
+                            }
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>

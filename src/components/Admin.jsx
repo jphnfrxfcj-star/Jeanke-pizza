@@ -708,7 +708,7 @@ function PizzasTab({ password }) {
           <div className="flex-1 min-w-0 py-3 pr-0">
             <div className="flex items-center gap-2 flex-wrap">
               <p className="font-serif text-ink">{pizza.name}</p>
-              {pizza.suggestion && <span className="font-sans text-[10px] tracking-widest uppercase bg-wine/10 text-wine px-2 py-0.5">Van het moment</span>}
+              {pizza.suggestion && <span className="font-sans text-[10px] tracking-widest uppercase bg-wine/10 text-wine px-2 py-0.5">Suggestie</span>}
             </div>
             <p className="font-sans text-xs text-warm-gray truncate">
               {Array.isArray(pizza.ingredients) ? pizza.ingredients.join(', ') : pizza.description}
@@ -807,8 +807,8 @@ function PizzasTab({ password }) {
                   <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${form.suggestion ? 'left-5' : 'left-0.5'}`} />
                 </div>
                 <div>
-                  <p className="font-sans text-sm text-ink">Van het moment</p>
-                  <p className="font-sans text-xs text-warm-gray">Verschijnt als seizoenssuggestie bovenaan het menu</p>
+                  <p className="font-sans text-sm text-ink">Suggestie</p>
+                  <p className="font-sans text-xs text-warm-gray">Verschijnt als suggestie bovenaan het menu</p>
                 </div>
               </label>
               <div className="flex gap-2 pt-1">
