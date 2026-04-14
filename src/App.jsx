@@ -359,10 +359,9 @@ function Shop() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {pizzas.filter(p => p.suggestion).map(pizza => (
                       <div key={pizza.id} className="bg-white border border-parchment border-t-2 border-t-wine flex overflow-hidden">
-                        {pizza.imageUrl
-                          ? <img src={pizza.imageUrl} alt={pizza.name} className="w-28 shrink-0 object-cover" />
-                          : <div className="w-28 shrink-0 bg-parchment flex items-center justify-center text-4xl">{pizza.emoji}</div>
-                        }
+                        {pizza.imageUrl && (
+                          <img src={pizza.imageUrl} alt={pizza.name} className="w-28 shrink-0 object-cover" />
+                        )}
                         <div className="p-4 flex flex-col flex-1 min-w-0">
                           <h3 className="font-serif text-lg text-ink mb-1">{pizza.name}</h3>
                           <p className="font-sans text-xs text-warm-gray italic leading-relaxed flex-1">
