@@ -354,7 +354,7 @@ function Shop() {
 
               {/* Suggesties */}
               {pizzas.filter(p => p.suggestion).length > 0 && (
-                <div className="mb-10 -mx-4 sm:-mx-6 lg:-mx-10 px-4 sm:px-6 lg:px-10 py-8 bg-parchment/50 border-y border-parchment">
+                <div className="mb-10 -mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 lg:px-6 py-8 lg:py-6 bg-parchment/50 border-y lg:border border-parchment">
                   <div className="divider mb-6">Suggesties</div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {pizzas.filter(p => p.suggestion).map(pizza => (
