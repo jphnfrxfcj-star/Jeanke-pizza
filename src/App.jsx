@@ -366,7 +366,7 @@ function Shop() {
                             <img src={pizza.imageUrl} alt={pizza.name} className="w-28 shrink-0 object-cover" />
                           )}
                           <div className="p-4 flex flex-col flex-1 min-w-0">
-                            <h3 className="font-serif text-xl italic text-ink mb-1">{pizza.name}</h3>
+                            <h3 className="font-serif text-xl font-semibold text-ink mb-1">{pizza.name}</h3>
                           <p className="font-sans text-xs text-warm-gray italic leading-relaxed flex-1">
                             {Array.isArray(pizza.ingredients) ? pizza.ingredients.join(', ') : pizza.description}
                           </p>
