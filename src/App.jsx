@@ -352,6 +352,27 @@ function Shop() {
                 </div>
               )}
 
+              {/* Van het moment */}
+              {pizzas.filter(p => p.suggestion).length > 0 && (
+                <div className="mb-10">
+                  <div className="divider mb-6">Van het moment</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {pizzas.filter(p => p.suggestion).map(pizza => (
+                      <div key={pizza.id} className="relative">
+                        <span className="absolute top-3 left-3 z-10 font-sans text-[10px] tracking-widest uppercase bg-wine text-cream px-2 py-1">Seizoen</span>
+                        <PizzaCard
+                          pizza={pizza}
+                          quantity={getQuantity(pizza.id)}
+                          onAdd={addToCart}
+                          onRemove={removeFromCart}
+                          currency={config.currency}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="divider mb-7">Il Menù</div>
               {pizzas.length === 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

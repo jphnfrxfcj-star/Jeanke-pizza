@@ -650,10 +650,10 @@ function PizzasTab({ password }) {
   function startEdit(p) {
     setEditing(p.id)
     const ings = Array.isArray(p.ingredients) ? p.ingredients : (p.description ? p.description.split(', ') : [])
-    setForm({ name: p.name, ingredients: ings, allergens: Array.isArray(p.allergens) ? p.allergens : [], price: String(p.price), emoji: p.emoji, imageUrl: p.imageUrl||'' })
+    setForm({ name: p.name, ingredients: ings, allergens: Array.isArray(p.allergens) ? p.allergens : [], price: String(p.price), emoji: p.emoji, imageUrl: p.imageUrl||'', suggestion: !!p.suggestion })
     setIngInput('')
   }
-  function startNew() { setEditing('new'); setForm({ name:'', ingredients:[], allergens:[], price:'', emoji:'🍕', imageUrl:'' }); setIngInput('') }
+  function startNew() { setEditing('new'); setForm({ name:'', ingredients:[], allergens:[], price:'', emoji:'🍕', imageUrl:'', suggestion: false }); setIngInput('') }
 
   // allIngredients is now { name, cost }[] — form.ingredients stays string[]
   function toggleIngredient(name) {
@@ -685,7 +685,7 @@ function PizzasTab({ password }) {
 
   async function saveEdit(e) {
     e.preventDefault()
-    const updated = { ...form, price: parseFloat(form.price), description: form.ingredients.join(', '), allergens: form.allergens }
+    const updated = { ...form, price: parseFloat(form.price), description: form.ingredients.join(', '), allergens: form.allergens, suggestion: form.suggestion }
     let newList
     if (editing === 'new') { const maxId = pizzas.reduce((m,p) => Math.max(m,p.id), 0); newList = [...pizzas, { id: maxId+1, ...updated }] }
     else newList = pizzas.map(p => p.id===editing ? {...p,...updated} : p)
@@ -706,7 +706,10 @@ function PizzasTab({ password }) {
             : <div className="w-16 h-16 bg-parchment flex items-center justify-center text-3xl shrink-0">{pizza.emoji}</div>
           }
           <div className="flex-1 min-w-0 py-3 pr-0">
-            <p className="font-serif text-ink">{pizza.name}</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-serif text-ink">{pizza.name}</p>
+              {pizza.suggestion && <span className="font-sans text-[10px] tracking-widest uppercase bg-wine/10 text-wine px-2 py-0.5">Van het moment</span>}
+            </div>
             <p className="font-sans text-xs text-warm-gray truncate">
               {Array.isArray(pizza.ingredients) ? pizza.ingredients.join(', ') : pizza.description}
             </p>
@@ -797,6 +800,17 @@ function PizzasTab({ password }) {
                 <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Verkoopprijs</label>
                 <input required type="number" step="0.50" min="0" value={form.price} onChange={e=>setForm(f=>({...f,price:e.target.value}))} placeholder="€" className={INPUT} />
               </div>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <div className="relative">
+                  <input type="checkbox" className="sr-only" checked={form.suggestion} onChange={e=>setForm(f=>({...f,suggestion:e.target.checked}))} />
+                  <div className={`w-10 h-5 rounded-full transition-colors ${form.suggestion ? 'bg-wine' : 'bg-parchment'}`} />
+                  <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${form.suggestion ? 'left-5' : 'left-0.5'}`} />
+                </div>
+                <div>
+                  <p className="font-sans text-sm text-ink">Van het moment</p>
+                  <p className="font-sans text-xs text-warm-gray">Verschijnt als seizoenssuggestie bovenaan het menu</p>
+                </div>
+              </label>
               <div className="flex gap-2 pt-1">
                 <button type="submit" className="btn-primary flex-1">Opslaan</button>
                 <button type="button" onClick={()=>setEditing(null)} className="btn-secondary flex-1">Annuleren</button>
