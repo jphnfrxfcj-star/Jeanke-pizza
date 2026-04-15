@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-export default function CheckoutModal({ items, slots, onClose, onSuccess, onAdd, onRemove, currency, settings }) {
+export default function CheckoutModal({ items, wineCart = [], slots, onClose, onSuccess, onAdd, onRemove, currency, settings }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [selectedDate, setSelectedDate] = useState(slots[0]?.date ?? '')
@@ -20,10 +20,15 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, onAdd,
   const pizzasPerSlot = settings?.pizzasPerSlot ?? 3
   const totalPizzas = items.reduce((sum, i) => sum + i.quantity, 0)
   const slotsNeeded = Math.ceil(totalPizzas / pizzasPerSlot)
-  const total = items.reduce((sum, i) => sum + i.pizza.price * i.quantity, 0)
+  const pizzaTotal = items.reduce((sum, i) => sum + i.pizza.price * i.quantity, 0)
+  const wineTotal  = wineCart.reduce((sum, i) => sum + i.wine.price * i.quantity, 0)
+  const total = pizzaTotal + wineTotal
   const availableDates = [...new Set(slots.map(s => s.date))]
   const slotsForDate = slots.filter(s => s.date === selectedDate)
-  const orderText = items.map(i => `${i.quantity}x ${i.pizza.name} (${currency}${(i.pizza.price * i.quantity).toFixed(2)})`).join(', ')
+  const orderText = [
+    ...items.map(i => `${i.quantity}x ${i.pizza.name} (${currency}${(i.pizza.price * i.quantity).toFixed(2)})`),
+    ...wineCart.map(i => `${i.quantity}x ${i.wine.name} (${currency}${(i.wine.price * i.quantity).toFixed(2)})`),
+  ].join(', ')
 
   function isBooked(date, time) { return bookedSlots.includes(`${date}_${time}`) }
 
@@ -115,6 +120,13 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, onAdd,
                     <button type="button" onClick={() => onAdd(pizza)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xs transition-colors">+</button>
                   </div>
                   <span className="text-sm text-wine w-14 text-right">{currency}{(pizza.price * quantity).toFixed(2)}</span>
+                </li>
+              ))}
+              {wineCart.map(({ wine, quantity }) => (
+                <li key={`w-${wine.id}`} className="px-4 py-2 flex items-center gap-3">
+                  <span className="flex-1 text-sm text-ink">{wine.name}</span>
+                  <span className="font-sans text-xs text-warm-gray">{quantity}×</span>
+                  <span className="text-sm text-wine w-14 text-right">{currency}{(wine.price * quantity).toFixed(2)}</span>
                 </li>
               ))}
             </ul>

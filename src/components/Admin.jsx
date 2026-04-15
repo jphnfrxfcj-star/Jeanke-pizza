@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Clock, ClipboardList, ShoppingBasket, ChefHat, TrendingUp, Settings, Menu } from 'lucide-react'
+import { Clock, ClipboardList, ShoppingBasket, ChefHat, TrendingUp, Settings, Menu, Wine } from 'lucide-react'
 import config from '../data/config.json'
 import staticPizzas from '../data/pizzas.json'
 
@@ -57,6 +57,7 @@ export default function Admin() {
     { key: 'orders',       label: 'Bestellingen',  Icon: ClipboardList },
     { key: 'boodschappen', label: 'Boodschappen',  Icon: ShoppingBasket },
     { key: 'pizzas',       label: "Pizza's",       Icon: ChefHat },
+    { key: 'wijnen',       label: 'Wijnen',        Icon: Wine },
     { key: 'winst',        label: 'Winst',         Icon: TrendingUp },
     { key: 'opening',      label: 'Instellingen',  Icon: Settings },
   ]
@@ -141,6 +142,7 @@ export default function Admin() {
           {tab === 'orders'       && <OrdersTab       password={pw} />}
           {tab === 'boodschappen' && <BoodschappenTab password={pw} />}
           {tab === 'pizzas'       && <PizzasTab       password={pw} />}
+          {tab === 'wijnen'       && <WijnenTab       password={pw} />}
           {tab === 'opening'      && <OpeningTab      password={pw} />}
           {tab === 'winst'        && <WinstTab        password={pw} />}
         </div>
@@ -814,6 +816,151 @@ function PizzasTab({ password }) {
               <div className="flex gap-2 pt-1">
                 <button type="submit" className="btn-primary flex-1">Opslaan</button>
                 <button type="button" onClick={()=>setEditing(null)} className="btn-secondary flex-1">Annuleren</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Wijnen ────────────────────────────────────────────────────────────────
+
+function WijnenTab({ password }) {
+  const [wines, setWines]   = useState([])
+  const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState(null)
+  const [form, setForm]     = useState({ name: '', type: 'rood', price: '', description: '', tags: [] })
+  const [tagInput, setTagInput] = useState('')
+
+  useEffect(() => {
+    fetch('/api/wines').then(r => r.json())
+      .then(d => { setWines(Array.isArray(d) ? d : []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  async function save(list) {
+    await fetch('/api/wines', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify(list) })
+    setWines(list)
+  }
+
+  function startEdit(w) {
+    setEditing(w.id)
+    setForm({ name: w.name, type: w.type, price: String(w.price), description: w.description || '', tags: w.tags || [] })
+    setTagInput('')
+  }
+  function startNew() { setEditing('new'); setForm({ name: '', type: 'rood', price: '', description: '', tags: [] }); setTagInput('') }
+
+  async function saveEdit(e) {
+    e.preventDefault()
+    const updated = { ...form, price: parseFloat(form.price) }
+    let newList
+    if (editing === 'new') { const maxId = wines.reduce((m, w) => Math.max(m, w.id), 0); newList = [...wines, { id: maxId + 1, ...updated }] }
+    else newList = wines.map(w => w.id === editing ? { ...w, ...updated } : w)
+    await save(newList); setEditing(null)
+  }
+
+  async function deleteWine(id) {
+    if (!confirm('Wijn verwijderen?')) return
+    await save(wines.filter(w => w.id !== id))
+  }
+
+  function addTag() {
+    const val = tagInput.trim().toLowerCase()
+    if (!val || form.tags.includes(val)) return
+    setForm(f => ({ ...f, tags: [...f.tags, val] }))
+    setTagInput('')
+  }
+
+  const TYPE_STYLE = {
+    rood: 'bg-wine/10 text-wine',
+    wit:  'bg-gold/20 text-warm-gray',
+    rosé: 'bg-pink-50 text-pink-400',
+  }
+
+  if (loading) return <LoadingCards />
+
+  return (
+    <div className="space-y-3">
+      {wines.length === 0 && <Empty icon="🍷" text="Nog geen wijnen toegevoegd" />}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {wines.map(wine => (
+          <div key={wine.id} className="bg-white border border-parchment flex items-start gap-3 p-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-serif text-ink">{wine.name}</p>
+                <span className={`font-sans text-[10px] tracking-widest uppercase px-2 py-0.5 ${TYPE_STYLE[wine.type] || ''}`}>{wine.type}</span>
+              </div>
+              {wine.description && <p className="font-sans text-xs text-warm-gray mt-0.5">{wine.description}</p>}
+              {wine.tags?.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {wine.tags.map(tag => <span key={tag} className="font-sans text-[10px] bg-parchment text-warm-gray px-1.5 py-0.5">{tag}</span>)}
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              <p className="font-serif text-wine">€{wine.price.toFixed(2)}</p>
+              <button onClick={() => startEdit(wine)} className="font-sans text-xs text-ink bg-parchment px-3 py-1 hover:bg-gold/20 transition-colors">Bewerk</button>
+              <button onClick={() => deleteWine(wine.id)} className="font-sans text-xs text-wine bg-wine/5 px-3 py-1 hover:bg-wine/10 transition-colors">Verwijder</button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <button onClick={startNew} className="btn-primary w-full">+ Wijn toevoegen</button>
+
+      {editing !== null && (
+        <div className="fixed inset-0 bg-ink/60 flex items-end sm:items-center justify-center z-50">
+          <div className="bg-cream w-full sm:max-w-sm max-h-[92vh] overflow-y-auto">
+            <div className="bg-olive px-5 py-4 flex justify-between items-center">
+              <h3 className="font-serif italic text-cream text-lg">{editing === 'new' ? 'Nieuwe wijn' : 'Bewerken'}</h3>
+              <button onClick={() => setEditing(null)} className="text-cream/50 hover:text-cream text-2xl">×</button>
+            </div>
+            <form onSubmit={saveEdit} className="p-5 space-y-3">
+              <div>
+                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Naam</label>
+                <input required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Chianti Classico" className={INPUT} />
+              </div>
+              <div>
+                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-2">Type</label>
+                <div className="flex gap-2">
+                  {['rood', 'wit', 'rosé'].map(t => (
+                    <button type="button" key={t} onClick={() => setForm(f => ({ ...f, type: t }))}
+                      className={`flex-1 py-2 text-xs font-sans border transition-colors capitalize ${form.type === t ? 'bg-olive text-cream border-olive' : 'bg-white text-ink border-parchment hover:border-olive'}`}>
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Omschrijving</label>
+                <input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Droge Italiaanse rode wijn" className={INPUT} />
+              </div>
+              <div>
+                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Prijs</label>
+                <input required type="number" step="0.50" min="0" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} placeholder="€" className={INPUT} />
+              </div>
+              <div>
+                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Pairingstags</label>
+                <p className="font-sans text-xs text-warm-gray italic mb-2">Ingrediënten waarmee deze wijn past (bv. salami, groenten, vis)</p>
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {form.tags.map(tag => (
+                    <span key={tag} className="bg-parchment text-xs text-ink px-2 py-1 flex items-center gap-1">
+                      {tag}
+                      <button type="button" onClick={() => setForm(f => ({ ...f, tags: f.tags.filter(t => t !== tag) }))} className="text-warm-gray hover:text-wine leading-none">×</button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-1">
+                  <input value={tagInput} onChange={e => setTagInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag() } }}
+                    placeholder="ingrediënt toevoegen..." className={INPUT + ' flex-1 text-xs'} />
+                  <button type="button" onClick={addTag} className="px-3 bg-parchment border border-parchment text-ink text-sm hover:border-olive transition-colors">+</button>
+                </div>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button type="submit" className="btn-primary flex-1">Opslaan</button>
+                <button type="button" onClick={() => setEditing(null)} className="btn-secondary flex-1">Annuleren</button>
               </div>
             </form>
           </div>

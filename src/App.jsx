@@ -39,9 +39,11 @@ export default function App() {
 
 function Shop() {
   const [cart, setCart] = useState([])
+  const [wineCart, setWineCart] = useState([])
   const [showCheckout, setShowCheckout] = useState(false)
   const [successOrder, setSuccessOrder] = useState(null)
   const [pizzas, setPizzas] = useState([])
+  const [wines, setWines] = useState([])
   const [openingDays, setOpeningDays] = useState(null) // null = loading
   const [registration, setRegistration] = useState(null)
   const [settings, setSettings] = useState(null)
@@ -72,7 +74,7 @@ function Shop() {
       .catch(() => {})
     fetch('/api/settings')
       .then(r => r.json())
-      .then(setSettings)
+      .then(s => { setSettings(s); if (s.wijnEnabled) fetch('/api/wines').then(r => r.json()).then(d => setWines(Array.isArray(d) ? d : [])).catch(() => {}) })
       .catch(() => setSettings({}))
   }, [])
 
@@ -97,8 +99,24 @@ function Shop() {
     })
   }
   function getQuantity(id) { return cart.find(i => i.pizza.id === id)?.quantity ?? 0 }
-  function handleSuccess(order) { setSuccessOrder(order); setShowCheckout(false); setCart([]) }
-  function clearCart() { setCart([]) }
+  function handleSuccess(order) { setSuccessOrder(order); setShowCheckout(false); setCart([]); setWineCart([]) }
+  function clearCart() { setCart([]); setWineCart([]) }
+
+  function addWine(wine) {
+    setWineCart(prev => {
+      const ex = prev.find(i => i.wine.id === wine.id)
+      if (ex) return prev.map(i => i.wine.id === wine.id ? { ...i, quantity: i.quantity + 1 } : i)
+      return [...prev, { wine, quantity: 1 }]
+    })
+  }
+  function removeWine(wine) {
+    setWineCart(prev => {
+      const ex = prev.find(i => i.wine.id === wine.id)
+      if (!ex) return prev
+      if (ex.quantity === 1) return prev.filter(i => i.wine.id !== wine.id)
+      return prev.map(i => i.wine.id === wine.id ? { ...i, quantity: i.quantity - 1 } : i)
+    })
+  }
 
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0)
 
@@ -428,6 +446,11 @@ function Shop() {
                   onCheckout={() => setShowCheckout(true)}
                   currency={config.currency}
                   hasSlots={slots.length > 0}
+                  wines={wines}
+                  wineCart={wineCart}
+                  onAddWine={addWine}
+                  onRemoveWine={removeWine}
+                  wijnEnabled={!!settings?.wijnEnabled}
                 />
               </div>
             </div>
@@ -465,6 +488,7 @@ function Shop() {
       {showCheckout && cart.length > 0 && (
         <CheckoutModal
           items={cart}
+          wineCart={wineCart}
           slots={slots}
           onClose={() => setShowCheckout(false)}
           onSuccess={handleSuccess}
