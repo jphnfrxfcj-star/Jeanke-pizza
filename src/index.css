@@ -9,10 +9,6 @@
   h1, h2, h3 {
     @apply font-serif;
   }
-  /* Prevent iOS Safari from auto-zooming on input focus */
-  input, select, textarea {
-    font-size: 16px;
-  }
   /* Normalize date input height — strip iOS native WebKit rendering */
   input[type="date"] {
     -webkit-appearance: none;
@@ -32,6 +28,12 @@
   [role="button"]:focus-visible {
     @apply outline-2 outline-offset-2 outline-olive;
   }
+}
+
+/* Prevent iOS Safari auto-zoom on input focus.
+   Must be outside @layer so it wins over Tailwind utility classes (text-sm etc.) */
+input, select, textarea {
+  font-size: 16px;
 }
 
 @layer components {
