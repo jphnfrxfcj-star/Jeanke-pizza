@@ -442,25 +442,25 @@ function Shop() {
                     {wines.map(wine => {
                       const qty = wineCart.find(i => i.wine.id === wine.id)?.quantity ?? 0
                       return (
-                        <div key={wine.id} className="border border-parchment bg-white p-4 flex flex-col gap-2">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className="font-serif text-lg text-ink">{wine.name}</p>
-                              {wine.type && <p className="font-sans text-xs text-warm-gray uppercase tracking-widest mt-0.5">{wine.type}</p>}
+                        <div key={wine.id} className="bg-white border border-parchment hover:border-gold/40 transition-colors duration-300 flex flex-col">
+                          <div className="p-5 flex flex-col flex-1">
+                            <h3 className="font-serif text-xl font-semibold text-ink mb-1">{wine.name}</h3>
+                            {wine.type && <p className="font-sans text-[10px] text-warm-gray uppercase tracking-widest mb-1">{wine.type}</p>}
+                            <p className="font-sans text-xs text-warm-gray italic leading-relaxed mb-2 flex-1">
+                              {wine.description || ''}
+                            </p>
+                            <div className="flex items-center justify-between pt-3 border-t border-parchment">
+                              <span className="font-serif text-lg text-wine">{config.currency}{wine.price.toFixed(2)}</span>
+                              {qty === 0 ? (
+                                <button onClick={() => addWine(wine)} className="btn-primary py-2 px-4">Toevoegen</button>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <button onClick={() => removeWine(wine)} className="w-7 h-7 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center transition-colors">−</button>
+                                  <span className="font-serif text-base w-4 text-center">{qty}</span>
+                                  <button onClick={() => addWine(wine)} className="w-7 h-7 bg-wine hover:bg-wine-light text-cream flex items-center justify-center transition-colors">+</button>
+                                </div>
+                              )}
                             </div>
-                            <span className="font-serif text-lg text-wine shrink-0">{config.currency}{wine.price.toFixed(2)}</span>
-                          </div>
-                          {wine.description && <p className="font-sans text-xs text-warm-gray leading-relaxed flex-1">{wine.description}</p>}
-                          <div className="flex justify-end mt-1">
-                            {qty === 0 ? (
-                              <button onClick={() => addWine(wine)} className="btn-primary py-1.5 px-3">Toevoegen</button>
-                            ) : (
-                              <div className="flex items-center gap-2">
-                                <button onClick={() => removeWine(wine)} className="w-7 h-7 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center transition-colors">−</button>
-                                <span className="font-serif text-base w-4 text-center">{qty}</span>
-                                <button onClick={() => addWine(wine)} className="w-7 h-7 bg-wine hover:bg-wine-light text-cream flex items-center justify-center transition-colors">+</button>
-                              </div>
-                            )}
                           </div>
                         </div>
                       )
