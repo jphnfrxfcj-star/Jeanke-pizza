@@ -828,16 +828,21 @@ function PizzasTab({ password }) {
 // ─── Wijnen ────────────────────────────────────────────────────────────────
 
 function WijnenTab({ password }) {
-  const [wines, setWines]   = useState([])
-  const [loading, setLoading] = useState(true)
-  const [editing, setEditing] = useState(null)
-  const [form, setForm]     = useState({ name: '', type: 'rood', price: '', description: '', tags: [] })
-  const [tagInput, setTagInput] = useState('')
+  const [wines, setWines]           = useState([])
+  const [allIngredients, setAllIngredients] = useState([])
+  const [loading, setLoading]       = useState(true)
+  const [editing, setEditing]       = useState(null)
+  const [form, setForm]             = useState({ name: '', type: 'rood', price: '', description: '', tags: [] })
 
   useEffect(() => {
-    fetch('/api/wines').then(r => r.json())
-      .then(d => { setWines(Array.isArray(d) ? d : []); setLoading(false) })
-      .catch(() => setLoading(false))
+    Promise.all([
+      fetch('/api/wines').then(r => r.json()),
+      fetch('/api/ingredients').then(r => r.json()),
+    ]).then(([w, ings]) => {
+      setWines(Array.isArray(w) ? w : [])
+      setAllIngredients(Array.isArray(ings) ? ings : [])
+      setLoading(false)
+    }).catch(() => setLoading(false))
   }, [])
 
   async function save(list) {
@@ -848,9 +853,8 @@ function WijnenTab({ password }) {
   function startEdit(w) {
     setEditing(w.id)
     setForm({ name: w.name, type: w.type, price: String(w.price), description: w.description || '', tags: w.tags || [] })
-    setTagInput('')
   }
-  function startNew() { setEditing('new'); setForm({ name: '', type: 'rood', price: '', description: '', tags: [] }); setTagInput('') }
+  function startNew() { setEditing('new'); setForm({ name: '', type: 'rood', price: '', description: '', tags: [] }) }
 
   async function saveEdit(e) {
     e.preventDefault()
@@ -864,13 +868,6 @@ function WijnenTab({ password }) {
   async function deleteWine(id) {
     if (!confirm('Wijn verwijderen?')) return
     await save(wines.filter(w => w.id !== id))
-  }
-
-  function addTag() {
-    const val = tagInput.trim().toLowerCase()
-    if (!val || form.tags.includes(val)) return
-    setForm(f => ({ ...f, tags: [...f.tags, val] }))
-    setTagInput('')
   }
 
   const TYPE_STYLE = {
@@ -941,21 +938,19 @@ function WijnenTab({ password }) {
                 <input required type="number" step="0.50" min="0" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} placeholder="€" className={INPUT} />
               </div>
               <div>
-                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Pairingstags</label>
-                <p className="font-sans text-xs text-warm-gray italic mb-2">Ingrediënten waarmee deze wijn past (bv. salami, groenten, vis)</p>
-                <div className="flex flex-wrap gap-1 mb-2">
-                  {form.tags.map(tag => (
-                    <span key={tag} className="bg-parchment text-xs text-ink px-2 py-1 flex items-center gap-1">
-                      {tag}
-                      <button type="button" onClick={() => setForm(f => ({ ...f, tags: f.tags.filter(t => t !== tag) }))} className="text-warm-gray hover:text-wine leading-none">×</button>
-                    </span>
-                  ))}
-                </div>
-                <div className="flex gap-1">
-                  <input value={tagInput} onChange={e => setTagInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag() } }}
-                    placeholder="ingrediënt toevoegen..." className={INPUT + ' flex-1 text-xs'} />
-                  <button type="button" onClick={addTag} className="px-3 bg-parchment border border-parchment text-ink text-sm hover:border-olive transition-colors">+</button>
+                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-2">Past bij</label>
+                <p className="font-sans text-xs text-warm-gray italic mb-2">Selecteer ingrediënten waarmee deze wijn past</p>
+                <div className="flex flex-wrap gap-1">
+                  {allIngredients.map(ing => {
+                    const active = form.tags.includes(ing.name)
+                    return (
+                      <button type="button" key={ing.name}
+                        onClick={() => setForm(f => ({ ...f, tags: active ? f.tags.filter(t => t !== ing.name) : [...f.tags, ing.name] }))}
+                        className={`text-xs px-2.5 py-1 border transition-colors ${active ? 'bg-wine text-cream border-wine' : 'bg-white text-ink border-parchment hover:border-wine/40'}`}>
+                        {ing.name}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
               <div className="flex gap-2 pt-1">
