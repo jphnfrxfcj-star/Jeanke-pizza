@@ -1,3 +1,5 @@
+import { Wine } from 'lucide-react'
+
 export default function Cart({ items, onAdd, onRemove, onCheckout, currency, hasSlots = true, wines = [], wineCart = [], onAddWine, onRemoveWine, wijnEnabled = false }) {
   const total = items.reduce((sum, item) => sum + item.pizza.price * item.quantity, 0)
   const wineTotal = wineCart.reduce((sum, item) => sum + item.wine.price * item.quantity, 0)
@@ -51,11 +53,12 @@ export default function Cart({ items, onAdd, onRemove, onCheckout, currency, has
 
       {/* Wine suggestions */}
       {wijnEnabled && suggestedWines.length > 0 && (
-        <div className="border-t border-parchment">
-          <div className="px-5 py-3 bg-parchment/30">
-            <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Wijn erbij?</p>
+        <div className="border-t-2 border-wine">
+          <div className="px-5 py-3 bg-wine/8 flex items-center gap-2">
+            <Wine size={14} className="text-wine" />
+            <p className="font-sans text-xs tracking-widest uppercase text-wine font-semibold">Wijn erbij?</p>
           </div>
-          <ul className="divide-y divide-parchment">
+          <ul className="divide-y divide-wine/10 bg-wine/5">
             {suggestedWines.map(wine => {
               const qty = wineQty(wine.id)
               return (
