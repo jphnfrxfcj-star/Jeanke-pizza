@@ -433,6 +433,41 @@ function Shop() {
                   ))}
                 </div>
               )}
+
+              {/* Wijnkaart */}
+              {settings?.wijnEnabled && wines.length > 0 && (
+                <>
+                  <div className="divider mt-10 mb-7">Wijnkaart</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {wines.map(wine => {
+                      const qty = wineCart.find(i => i.wine.id === wine.id)?.quantity ?? 0
+                      return (
+                        <div key={wine.id} className="border border-parchment bg-white p-4 flex flex-col gap-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="font-serif text-lg text-ink">{wine.name}</p>
+                              {wine.type && <p className="font-sans text-xs text-warm-gray uppercase tracking-widest mt-0.5">{wine.type}</p>}
+                            </div>
+                            <span className="font-serif text-lg text-wine shrink-0">{config.currency}{wine.price.toFixed(2)}</span>
+                          </div>
+                          {wine.description && <p className="font-sans text-xs text-warm-gray leading-relaxed flex-1">{wine.description}</p>}
+                          <div className="flex justify-end mt-1">
+                            {qty === 0 ? (
+                              <button onClick={() => addWine(wine)} className="btn-primary py-1.5 px-3">Toevoegen</button>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <button onClick={() => removeWine(wine)} className="w-7 h-7 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center transition-colors">−</button>
+                                <span className="font-serif text-base w-4 text-center">{qty}</span>
+                                <button onClick={() => addWine(wine)} className="w-7 h-7 bg-wine hover:bg-wine-light text-cream flex items-center justify-center transition-colors">+</button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Cart */}
