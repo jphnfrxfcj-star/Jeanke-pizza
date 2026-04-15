@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { Trash2 } from 'lucide-react'
 import PizzaCard from './components/PizzaCard'
 import Cart from './components/Cart'
 import CheckoutModal from './components/CheckoutModal'
@@ -453,8 +454,8 @@ function Shop() {
             </button>
             {cartCount > 0 && (
               <button onClick={clearCart}
-                className="px-5 border-l border-parchment font-sans text-xs text-warm-gray hover:text-wine transition-colors">
-                Leegmaken
+                className="px-5 border-l border-parchment text-warm-gray hover:text-wine transition-colors">
+                <Trash2 size={16} />
               </button>
             )}
           </div>
