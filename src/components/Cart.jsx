@@ -1,4 +1,4 @@
-export default function Cart({ items, onAdd, onRemove, onCheckout, currency, hasSlots = true }) {
+export default function Cart({ items, onAdd, onRemove, onClear, onCheckout, currency, hasSlots = true }) {
   const total = items.reduce((sum, item) => sum + item.pizza.price * item.quantity, 0)
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
 
@@ -17,9 +17,14 @@ export default function Cart({ items, onAdd, onRemove, onCheckout, currency, has
       {/* Header */}
       <div className="px-5 py-4 border-b border-parchment flex items-center justify-between">
         <h2 className="font-serif text-lg text-ink">Uw bestelling</h2>
-        <span className="font-sans text-xs bg-wine text-cream px-2 py-0.5 tracking-widest">
-          {itemCount} {itemCount === 1 ? 'stuk' : 'stuks'}
-        </span>
+        <div className="flex items-center gap-3">
+          <button onClick={onClear} className="font-sans text-xs text-warm-gray hover:text-wine transition-colors">
+            Leegmaken
+          </button>
+          <span className="font-sans text-xs bg-wine text-cream px-2 py-0.5 tracking-widest">
+            {itemCount} {itemCount === 1 ? 'stuk' : 'stuks'}
+          </span>
+        </div>
       </div>
 
       {/* Items */}

@@ -97,6 +97,7 @@ function Shop() {
   }
   function getQuantity(id) { return cart.find(i => i.pizza.id === id)?.quantity ?? 0 }
   function handleSuccess(order) { setSuccessOrder(order); setShowCheckout(false); setCart([]) }
+  function clearCart() { setCart([]) }
 
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0)
 
@@ -423,6 +424,7 @@ function Shop() {
                   items={cart}
                   onAdd={addToCart}
                   onRemove={removeFromCart}
+                  onClear={clearCart}
                   onCheckout={() => setShowCheckout(true)}
                   currency={config.currency}
                   hasSlots={slots.length > 0}
