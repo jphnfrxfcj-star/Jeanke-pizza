@@ -833,7 +833,7 @@ function OpeningTab({ password }) {
   const [newLabel, setNewLabel] = useState('')
   const [regDate, setRegDate] = useState('')
   const [savingCfg, setSavingCfg] = useState(false)
-  const [siteSettings, setSiteSettings] = useState({ openingHour: 17, closingHour: 22, pizzasPerSlot: 3 })
+  const [siteSettings, setSiteSettings] = useState({ openingHour: 17, closingHour: 22, pizzasPerSlot: 3, wijnEnabled: false })
   const [savingSettings, setSavingSettings] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -953,6 +953,16 @@ function OpeningTab({ password }) {
           <p className="font-sans text-xs text-warm-gray italic">
             Vanaf {siteSettings.pizzasPerSlot + 1} pizza's worden automatisch {2} tijdslots gereserveerd.
           </p>
+          <label className="flex items-center justify-between gap-4 pt-2">
+            <div>
+              <p className="font-sans text-sm text-ink">Wijnsectie tonen</p>
+              <p className="font-sans text-xs text-warm-gray mt-0.5">Wijn­aanbevelingen zichtbaar in het winkelmandje</p>
+            </div>
+            <button type="button" onClick={() => setSiteSettings(s => ({ ...s, wijnEnabled: !s.wijnEnabled }))}
+              className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${siteSettings.wijnEnabled ? 'bg-wine' : 'bg-parchment'}`}>
+              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${siteSettings.wijnEnabled ? 'left-7' : 'left-1'}`} />
+            </button>
+          </label>
           <button type="submit" disabled={savingSettings} className="btn-primary w-full">
             {savingSettings ? 'Bezig...' : 'Opslaan'}
           </button>
