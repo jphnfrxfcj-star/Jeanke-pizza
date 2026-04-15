@@ -886,23 +886,23 @@ function WijnenTab({ password }) {
       {wines.length === 0 && <Empty icon="🍷" text="Nog geen wijnen toegevoegd" />}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {wines.map(wine => (
-          <div key={wine.id} className="bg-white border border-parchment flex items-start gap-3 p-4">
-            <div className="flex-1 min-w-0">
+          <div key={wine.id} className="bg-white border border-parchment flex items-center gap-3 overflow-hidden">
+            <div className="flex-1 min-w-0 p-4">
               <div className="flex items-center gap-2 flex-wrap">
                 <p className="font-serif text-ink">{wine.name}</p>
                 <span className={`font-sans text-[10px] tracking-widest uppercase px-2 py-0.5 ${TYPE_STYLE[wine.type] || ''}`}>{wine.type}</span>
               </div>
               {wine.description && <p className="font-sans text-xs text-warm-gray mt-0.5">{wine.description}</p>}
+              <p className="font-sans text-xs text-wine mt-0.5">€{wine.price.toFixed(2)}</p>
               {wine.tags?.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {wine.tags.map(tag => <span key={tag} className="font-sans text-[10px] bg-parchment text-warm-gray px-1.5 py-0.5">{tag}</span>)}
                 </div>
               )}
             </div>
-            <div className="flex flex-col items-end gap-1 shrink-0">
-              <p className="font-serif text-wine">€{wine.price.toFixed(2)}</p>
-              <button onClick={() => startEdit(wine)} className="font-sans text-xs text-ink bg-parchment px-3 py-1 hover:bg-gold/20 transition-colors">Bewerk</button>
-              <button onClick={() => deleteWine(wine.id)} className="font-sans text-xs text-wine bg-wine/5 px-3 py-1 hover:bg-wine/10 transition-colors">Verwijder</button>
+            <div className="flex flex-col gap-1 p-3 shrink-0">
+              <button onClick={() => startEdit(wine)} className="font-sans text-xs text-ink bg-parchment px-3 py-1.5 hover:bg-gold/20 transition-colors">Bewerk</button>
+              <button onClick={() => deleteWine(wine.id)} className="font-sans text-xs text-wine bg-wine/5 px-3 py-1.5 hover:bg-wine/10 transition-colors">Verwijder</button>
             </div>
           </div>
         ))}
