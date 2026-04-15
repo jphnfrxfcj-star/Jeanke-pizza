@@ -462,12 +462,14 @@ function Shop() {
         </div>
       )}
 
-      {showCheckout && (
+      {showCheckout && cart.length > 0 && (
         <CheckoutModal
           items={cart}
           slots={slots}
           onClose={() => setShowCheckout(false)}
           onSuccess={handleSuccess}
+          onAdd={addToCart}
+          onRemove={removeFromCart}
           currency={config.currency}
           settings={settings}
         />

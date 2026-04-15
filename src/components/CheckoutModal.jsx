@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-export default function CheckoutModal({ items, slots, onClose, onSuccess, currency, settings }) {
+export default function CheckoutModal({ items, slots, onClose, onSuccess, onAdd, onRemove, currency, settings }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [selectedDate, setSelectedDate] = useState(slots[0]?.date ?? '')
@@ -107,9 +107,14 @@ export default function CheckoutModal({ items, slots, onClose, onSuccess, curren
             </div>
             <ul className="divide-y divide-parchment">
               {items.map(({ pizza, quantity }) => (
-                <li key={pizza.id} className="px-4 py-2 flex justify-between text-sm">
-                  <span className="text-ink">{quantity}× {pizza.name}</span>
-                  <span className="text-wine">{currency}{(pizza.price * quantity).toFixed(2)}</span>
+                <li key={pizza.id} className="px-4 py-2 flex items-center gap-3">
+                  <span className="flex-1 text-sm text-ink">{pizza.name}</span>
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => onRemove(pizza)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
+                    <span className="font-sans text-sm w-4 text-center">{quantity}</span>
+                    <button type="button" onClick={() => onAdd(pizza)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xs transition-colors">+</button>
+                  </div>
+                  <span className="text-sm text-wine w-14 text-right">{currency}{(pizza.price * quantity).toFixed(2)}</span>
                 </li>
               ))}
             </ul>
