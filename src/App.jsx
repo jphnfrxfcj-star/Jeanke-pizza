@@ -489,6 +489,10 @@ function Shop() {
         <CheckoutModal
           items={cart}
           wineCart={wineCart}
+          wines={wines}
+          wijnEnabled={!!settings?.wijnEnabled}
+          onAddWine={addWine}
+          onRemoveWine={removeWine}
           slots={slots}
           onClose={() => setShowCheckout(false)}
           onSuccess={handleSuccess}

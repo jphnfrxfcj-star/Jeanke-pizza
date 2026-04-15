@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
+import { Wine } from 'lucide-react'
 
-export default function CheckoutModal({ items, wineCart = [], slots, onClose, onSuccess, onAdd, onRemove, currency, settings }) {
+export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEnabled = false, onAddWine, onRemoveWine, slots, onClose, onSuccess, onAdd, onRemove, currency, settings }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [selectedDate, setSelectedDate] = useState(slots[0]?.date ?? '')
@@ -23,6 +24,14 @@ export default function CheckoutModal({ items, wineCart = [], slots, onClose, on
   const pizzaTotal = items.reduce((sum, i) => sum + i.pizza.price * i.quantity, 0)
   const wineTotal  = wineCart.reduce((sum, i) => sum + i.wine.price * i.quantity, 0)
   const total = pizzaTotal + wineTotal
+
+  const cartIngredients = items.flatMap(i => Array.isArray(i.pizza.ingredients) ? i.pizza.ingredients : [])
+  const suggestedWines = wijnEnabled && cartIngredients.length > 0
+    ? wines.filter(w => w.tags?.some(tag =>
+        cartIngredients.some(ing => ing.toLowerCase().includes(tag.toLowerCase()) || tag.toLowerCase().includes(ing.toLowerCase()))
+      ))
+    : []
+  function wineQty(id) { return wineCart.find(i => i.wine.id === id)?.quantity ?? 0 }
   const availableDates = [...new Set(slots.map(s => s.date))]
   const slotsForDate = slots.filter(s => s.date === selectedDate)
   const orderText = [
@@ -125,11 +134,51 @@ export default function CheckoutModal({ items, wineCart = [], slots, onClose, on
               {wineCart.map(({ wine, quantity }) => (
                 <li key={`w-${wine.id}`} className="px-4 py-2 flex items-center gap-3">
                   <span className="flex-1 text-sm text-ink">{wine.name}</span>
-                  <span className="font-sans text-xs text-warm-gray">{quantity}×</span>
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => onRemoveWine?.(wine)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
+                    <span className="font-sans text-sm w-4 text-center">{quantity}</span>
+                    <button type="button" onClick={() => onAddWine?.(wine)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xs transition-colors">+</button>
+                  </div>
                   <span className="text-sm text-wine w-14 text-right">{currency}{(wine.price * quantity).toFixed(2)}</span>
                 </li>
               ))}
             </ul>
+            {suggestedWines.length > 0 && (
+              <div className="border-t-2 border-wine">
+                <div className="px-4 py-2.5 bg-wine/5 flex items-center gap-2">
+                  <Wine size={13} className="text-wine" />
+                  <p className="font-sans text-xs tracking-widest uppercase text-wine font-semibold">Wijn erbij?</p>
+                </div>
+                <ul className="divide-y divide-wine/10 bg-wine/5">
+                  {suggestedWines.map(wine => {
+                    const qty = wineQty(wine.id)
+                    return (
+                      <li key={wine.id} className="px-4 py-2 flex items-center gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-sans text-sm text-ink">{wine.name}</p>
+                          {wine.description && <p className="font-sans text-xs text-warm-gray truncate">{wine.description}</p>}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {qty === 0 ? (
+                            <button type="button" onClick={() => onAddWine?.(wine)}
+                              className="font-sans text-xs border border-wine text-wine px-3 py-1 hover:bg-wine hover:text-cream transition-colors">
+                              {currency}{wine.price.toFixed(2)}
+                            </button>
+                          ) : (
+                            <>
+                              <button type="button" onClick={() => onRemoveWine?.(wine)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
+                              <span className="font-sans text-sm w-4 text-center">{qty}</span>
+                              <button type="button" onClick={() => onAddWine?.(wine)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xs transition-colors">+</button>
+                              <span className="font-sans text-xs text-wine w-14 text-right">{currency}{(wine.price * qty).toFixed(2)}</span>
+                            </>
+                          )}
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            )}
             <div className="px-4 py-3 border-t border-parchment flex justify-between">
               <span className="font-sans text-xs tracking-widest uppercase text-warm-gray">Totaal</span>
               <span className="font-serif text-lg text-wine">{currency}{total.toFixed(2)}</span>
