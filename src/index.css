@@ -54,3 +54,8 @@ input, select, textarea {
     @apply flex-1 border-t border-gold/30;
   }
 }
+
+@keyframes slide {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
