@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Trash2, Wine, MapPin, Phone, Mail, Instagram, Clock } from 'lucide-react'
+import { Trash2, Wine, MapPin, Phone, Mail, Clock } from 'lucide-react'
 import PizzaCard from './components/PizzaCard'
 import Cart from './components/Cart'
 import CheckoutModal from './components/CheckoutModal'
@@ -426,7 +426,7 @@ function Shop() {
       {/* ═══════ Footer ═══════ */}
       <footer className="relative bg-cream border-t border-parchment">
         <PaperTexture />
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-14">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-14 lg:pb-14 pb-28">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10">
             <div className="col-span-2 md:col-span-1">
               <p className="font-serif italic text-2xl text-ink">Jeanke's</p>
@@ -449,7 +449,14 @@ function Shop() {
               <ul className="space-y-2 font-sans text-xs text-warm-gray">
                 <li className="flex items-start gap-2"><Phone size={12} className="mt-0.5 text-wine shrink-0" /><span>Via e-mail</span></li>
                 <li className="flex items-start gap-2"><Mail size={12} className="mt-0.5 text-wine shrink-0" /><a href="mailto:info@jeankespizza.be" className="hover:text-wine transition-colors">info@jeankespizza.be</a></li>
-                <li className="flex items-start gap-2"><Instagram size={12} className="mt-0.5 text-wine shrink-0" /><span>@jeankespizza</span></li>
+                <li className="flex items-start gap-2">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 text-wine shrink-0" aria-hidden="true">
+                    <rect x="3" y="3" width="18" height="18" rx="5" ry="5" />
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                  </svg>
+                  <span>@jeankespizza</span>
+                </li>
               </ul>
             </div>
 
@@ -476,7 +483,45 @@ function Shop() {
       </footer>
 
       {/* ═══════ MobileCartBar ═══════ */}
-      {/* PLACEHOLDER: MobileCartBar */}
+      {!showRegistration && !successOrder && slots.length > 0 && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20">
+          <div className="flex items-stretch bg-ink text-cream border-t border-ink shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.5)]">
+            <button
+              onClick={() => setShowCheckout(true)}
+              disabled={cartCount === 0}
+              className={`flex-1 flex items-center justify-between px-5 py-4 transition-colors ${cartCount > 0 ? 'hover:bg-wine' : 'cursor-default'}`}
+            >
+              <span className="flex items-center gap-3">
+                <span className="font-sans text-[10px] tracking-[0.28em] uppercase text-cream/70">Il Conto</span>
+                <span className="font-serif text-base italic">
+                  {cartCount > 0
+                    ? `${cartCount} ${cartCount === 1 ? 'pizza' : "pizza's"}`
+                    : 'Leeg mandje'}
+                </span>
+              </span>
+              {cartCount > 0 ? (
+                <span className="flex items-center gap-2">
+                  <span className="font-serif text-lg text-gold tabular-nums">
+                    {config.currency}{cart.reduce((s, i) => s + i.pizza.price * i.quantity, 0).toFixed(2)}
+                  </span>
+                  <span className="font-sans text-[10px] tracking-[0.24em] uppercase text-gold/80">→</span>
+                </span>
+              ) : (
+                <span className="font-serif italic text-xs text-cream/50">Kies een pizza</span>
+              )}
+            </button>
+            {cartCount > 0 && (
+              <button
+                onClick={clearCart}
+                aria-label="Mandje leegmaken"
+                className="px-5 border-l border-cream/10 text-cream/70 hover:text-gold transition-colors"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {showCheckout && cart.length > 0 && (
         <CheckoutModal
