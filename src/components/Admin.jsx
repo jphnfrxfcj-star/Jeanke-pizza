@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Clock, ClipboardList, ShoppingBasket, ChefHat, TrendingUp, Settings, Menu, Wine } from 'lucide-react'
 import config from '../data/config.json'
 import staticPizzas from '../data/pizzas.json'
+import PaperTexture from './PaperTexture'
 
 const INPUT = "w-full border border-parchment bg-cream px-4 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors"
 
@@ -60,24 +61,43 @@ export default function Admin() {
 
   if (authChecking) return (
     <div className="min-h-screen bg-cream flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+      <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin motion-reduce:animate-none" />
     </div>
   )
 
   if (!authed) return (
-    <div className="min-h-screen bg-cream flex items-center justify-center px-4">
-      <div className="bg-white border border-parchment p-8 w-full max-w-sm">
-        <div className="text-center mb-6">
-          <p className="font-sans text-xs tracking-[0.3em] uppercase text-gold/70 mb-2">Jeanke's Pizza</p>
-          <h1 className="font-serif text-2xl italic text-ink">Beheer</h1>
+    <div className="relative min-h-screen bg-cream flex items-center justify-center px-4 overflow-hidden">
+      <PaperTexture />
+      <div className="relative w-full max-w-sm">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 font-sans text-[10px] tracking-[0.32em] uppercase text-gold mb-4">
+            <span className="h-px w-6 bg-gold/40" />
+            <span className="font-serif italic text-wine tracking-normal text-sm leading-none">N° ✦</span>
+            <span>·</span>
+            <span>Beheer</span>
+            <span className="h-px w-6 bg-gold/40" />
+          </div>
+          <p className="font-serif italic text-4xl text-ink leading-none">Jeanke<span className="text-wine">'</span>s</p>
+          <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mt-2">Pizzeria · Beheerportaal</p>
         </div>
-        <form onSubmit={handleLogin} className="space-y-4">
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-            placeholder="Wachtwoord" className={INPUT} autoFocus />
-          <button type="submit" disabled={loginLoading} className="btn-primary w-full">
-            {loginLoading ? 'Even geduld...' : 'Inloggen'}
-          </button>
-        </form>
+        <div className="bg-white border border-parchment">
+          <div className="px-6 py-5 border-b border-dashed border-parchment text-center">
+            <p className="font-serif italic text-warm-gray text-sm">Alleen voor personeel</p>
+          </div>
+          <form onSubmit={handleLogin} className="p-6 space-y-4">
+            <div>
+              <label className="block font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray mb-2">Wachtwoord</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••" className={INPUT} autoFocus />
+            </div>
+            <button type="submit" disabled={loginLoading} className="btn-primary w-full">
+              {loginLoading ? 'Even geduld...' : 'Inloggen'}
+            </button>
+          </form>
+        </div>
+        <p className="text-center font-serif italic text-xs text-warm-gray-light mt-6">
+          <a href="/" className="hover:text-wine transition-colors">← Terug naar de winkel</a>
+        </p>
       </div>
     </div>
   )
@@ -96,25 +116,37 @@ export default function Admin() {
 
   function navigate(key) { setTab(key); setMenuOpen(false) }
 
+  const currentTab = tabs.find(t => t.key === tab)
+  const tabIndex = tabs.findIndex(t => t.key === tab)
+  const tabNumeral = ['I','II','III','IV','V','VI','VII'][tabIndex] ?? '·'
+
   return (
     <div className="min-h-screen bg-cream flex">
 
       {/* ── Desktop sidebar (lg+) ── */}
-      <aside className="hidden lg:flex flex-col w-60 shrink-0 bg-white border-r border-parchment sticky top-0 h-screen">
-        <div className="bg-olive px-5 py-6">
-          <p className="font-sans text-xs text-cream/50 tracking-widest uppercase">Beheer</p>
-          <h1 className="font-serif text-xl italic text-cream mt-0.5">{config.storeName}</h1>
+      <aside className="hidden lg:flex flex-col w-64 shrink-0 bg-cream border-r border-parchment sticky top-0 h-screen">
+        <div className="px-6 py-7 border-b border-dashed border-parchment">
+          <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-gold mb-1">N° ✦ · Beheer</p>
+          <h1 className="font-serif italic text-2xl text-ink leading-tight">Jeanke<span className="text-wine">'</span>s</h1>
+          <p className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mt-1">Pizzeria · Beheer</p>
         </div>
-        <nav className="flex-1 py-2 overflow-y-auto">
-          {tabs.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-sans transition-colors text-left cursor-pointer ${tab === t.key ? 'text-olive bg-olive/5 border-l-2 border-olive' : 'text-ink hover:bg-parchment/50 border-l-2 border-transparent'}`}>
-              <t.Icon size={16} className="shrink-0" />{t.label}
-            </button>
-          ))}
+        <nav className="flex-1 py-4 overflow-y-auto">
+          {tabs.map((t, i) => {
+            const active = tab === t.key
+            const num = ['I','II','III','IV','V','VI','VII'][i]
+            return (
+              <button key={t.key} onClick={() => setTab(t.key)}
+                className={`w-full flex items-center gap-3 px-6 py-2.5 text-sm font-sans text-left cursor-pointer transition-colors group ${active ? 'text-wine' : 'text-ink hover:text-wine'}`}>
+                <span className={`font-serif italic text-[11px] w-5 leading-none shrink-0 ${active ? 'text-wine' : 'text-warm-gray-light group-hover:text-wine'}`}>{num}</span>
+                <t.Icon size={15} className="shrink-0" />
+                <span className={active ? 'tracking-wide' : ''}>{t.label}</span>
+                {active && <span className="ml-auto text-wine">·</span>}
+              </button>
+            )
+          })}
         </nav>
-        <div className="border-t border-parchment px-5 py-4">
-          <a href="/" className="font-sans text-sm text-warm-gray hover:text-ink transition-colors">← Terug naar shop</a>
+        <div className="border-t border-dashed border-parchment px-6 py-4">
+          <a href="/" className="font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray hover:text-wine transition-colors">← Terug naar shop</a>
         </div>
       </aside>
 
@@ -122,47 +154,59 @@ export default function Admin() {
       <div className="flex-1 flex flex-col min-w-0">
 
         {/* Mobile header */}
-        <header className="lg:hidden bg-olive text-cream sticky top-0 z-30">
-          <div className="px-4 py-4 flex items-center justify-between">
-            <button onClick={() => setMenuOpen(true)} className="p-1 -ml-1 cursor-pointer">
-              <Menu size={20} className="text-cream/80" />
+        <header className="lg:hidden sticky top-0 z-30 bg-cream/85 backdrop-blur-md border-b border-parchment">
+          <div className="px-4 h-14 flex items-center justify-between">
+            <button onClick={() => setMenuOpen(true)} aria-label="Menu openen" className="p-2 -ml-2 text-ink hover:text-wine transition-colors cursor-pointer">
+              <Menu size={18} />
             </button>
             <div className="text-center">
-              <h1 className="font-serif text-lg italic leading-none">{config.storeName}</h1>
-              <p className="font-sans text-[10px] text-cream/50 tracking-widest uppercase mt-0.5">{tabs.find(t => t.key === tab)?.label}</p>
+              <p className="font-serif italic text-base text-ink leading-none">Jeanke<span className="text-wine">'</span>s</p>
+              <p className="font-sans text-[9px] text-gold tracking-[0.28em] uppercase mt-1">{currentTab?.label}</p>
             </div>
-            <a href="/" className="font-sans text-xs text-cream/60 hover:text-cream tracking-widest uppercase transition-colors">← Shop</a>
+            <a href="/" className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray hover:text-wine transition-colors">← Shop</a>
           </div>
         </header>
 
         {/* Desktop page title bar */}
-        <div className="hidden lg:flex items-center justify-between px-8 py-5 border-b border-parchment bg-white">
-          <div>
-            <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Beheer</p>
-            <h2 className="font-serif text-2xl italic text-ink mt-0.5">{tabs.find(t => t.key === tab)?.label}</h2>
+        <div className="hidden lg:flex items-center justify-between px-10 py-8 border-b border-parchment bg-cream">
+          <div className="flex items-center gap-4">
+            <span className="font-serif italic text-wine text-sm leading-none">N° {tabNumeral}</span>
+            <span className="h-px w-10 bg-gold/40" />
+            <div>
+              <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-gold">Beheer</p>
+              <h2 className="font-serif text-3xl italic text-ink leading-tight mt-0.5">{currentTab?.label}</h2>
+            </div>
           </div>
-          <a href="/" className="font-sans text-xs text-warm-gray hover:text-ink tracking-widest uppercase transition-colors">← Terug naar shop</a>
+          <a href="/" className="font-sans text-[11px] text-warm-gray hover:text-wine tracking-[0.24em] uppercase transition-colors">← Terug naar shop</a>
         </div>
 
         {/* Mobile drawer overlay */}
         {menuOpen && (
           <div className="fixed inset-0 z-40 flex lg:hidden">
             <div className="absolute inset-0 bg-ink/50" onClick={() => setMenuOpen(false)} />
-            <div className="relative w-64 max-w-[80vw] bg-white h-full flex flex-col shadow-xl">
-              <div className="bg-olive px-5 py-5">
-                <p className="font-sans text-xs text-cream/50 tracking-widest uppercase">Beheer</p>
-                <h2 className="font-serif text-xl italic text-cream mt-0.5">{config.storeName}</h2>
+            <div className="relative w-72 max-w-[82vw] bg-cream h-full flex flex-col shadow-xl">
+              <div className="px-6 py-6 border-b border-dashed border-parchment">
+                <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-gold mb-1">N° ✦ · Beheer</p>
+                <h2 className="font-serif italic text-2xl text-ink leading-tight">Jeanke<span className="text-wine">'</span>s</h2>
+                <p className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mt-1">Pizzeria · Beheer</p>
               </div>
-              <nav className="flex-1 py-2">
-                {tabs.map(t => (
-                  <button key={t.key} onClick={() => navigate(t.key)}
-                    className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-sans transition-colors text-left cursor-pointer ${tab === t.key ? 'text-olive bg-olive/5 border-l-2 border-olive' : 'text-ink hover:bg-parchment/50 border-l-2 border-transparent'}`}>
-                    <t.Icon size={17} className="shrink-0" />{t.label}
-                  </button>
-                ))}
+              <nav className="flex-1 py-4 overflow-y-auto">
+                {tabs.map((t, i) => {
+                  const active = tab === t.key
+                  const num = ['I','II','III','IV','V','VI','VII'][i]
+                  return (
+                    <button key={t.key} onClick={() => navigate(t.key)}
+                      className={`w-full flex items-center gap-3 px-6 py-3 text-sm font-sans text-left cursor-pointer transition-colors ${active ? 'text-wine' : 'text-ink hover:text-wine'}`}>
+                      <span className={`font-serif italic text-[11px] w-5 leading-none shrink-0 ${active ? 'text-wine' : 'text-warm-gray-light'}`}>{num}</span>
+                      <t.Icon size={16} className="shrink-0" />
+                      {t.label}
+                      {active && <span className="ml-auto text-wine">·</span>}
+                    </button>
+                  )
+                })}
               </nav>
-              <div className="border-t border-parchment px-5 py-4">
-                <a href="/" className="font-sans text-sm text-warm-gray hover:text-ink transition-colors">← Terug naar shop</a>
+              <div className="border-t border-dashed border-parchment px-6 py-4">
+                <a href="/" className="font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray hover:text-wine transition-colors">← Terug naar shop</a>
               </div>
             </div>
           </div>
