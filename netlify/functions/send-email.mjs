@@ -5,6 +5,15 @@ const GMAIL_PASSWORD = process.env.GMAIL_APP_PASSWORD
 const OWNER_EMAIL    = process.env.OWNER_EMAIL || GMAIL_USER
 const SITE_URL       = process.env.URL || 'https://jeanke-pizza.netlify.app'
 
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+}
+
 function createTransport() {
   return nodemailer.createTransport({
     service: 'gmail',
@@ -41,12 +50,15 @@ function emailHeader(title) {
 }
 
 function confirmationHtml({ name, order, date, timeslot, total, cancelToken }) {
-  const cancelUrl = `${SITE_URL}/annuleer?token=${cancelToken}`
+  const cancelUrl = `${SITE_URL}/annuleer?token=${escapeHtml(cancelToken)}`
   const dateFormatted = new Date(date).toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long' })
+  const safeName = escapeHtml(name)
+  const safeTimeslot = escapeHtml(timeslot)
+  const safeTotal = escapeHtml(total)
   return emailWrapper(`
     ${emailHeader('Bestelling bevestigd')}
     <tr><td style="padding:32px;">
-      <p style="color:#1C1410;font-size:15px;margin:0 0 16px;font-family:Georgia,serif;">Ciao <strong>${name}</strong>,</p>
+      <p style="color:#1C1410;font-size:15px;margin:0 0 16px;font-family:Georgia,serif;">Ciao <strong>${safeName}</strong>,</p>
       <p style="color:#8A7E72;font-size:14px;line-height:1.6;margin:0 0 24px;font-family:Georgia,serif;">Uw bestelling is goed ontvangen. Tot dan!</p>
 
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F7F3EC;border:1px solid #EDE5D8;margin-bottom:24px;">
@@ -58,14 +70,14 @@ function confirmationHtml({ name, order, date, timeslot, total, cancelToken }) {
             </tr>
             <tr>
               <td style="color:#8A7E72;font-size:11px;letter-spacing:1px;text-transform:uppercase;">Tijdslot</td>
-              <td align="right" style="color:#1C1410;font-weight:bold;">${timeslot}</td>
+              <td align="right" style="color:#1C1410;font-weight:bold;">${safeTimeslot}</td>
             </tr>
             <tr><td colspan="2" style="padding:8px 0 0;border-top:1px solid #EDE5D8;font-size:1px;">&nbsp;</td></tr>
-            ${order.split(', ').map(item => `<tr><td colspan="2" style="color:#1C1410;padding:3px 0;font-size:13px;">${item}</td></tr>`).join('')}
+            ${order.split(', ').map(item => `<tr><td colspan="2" style="color:#1C1410;padding:3px 0;font-size:13px;">${escapeHtml(item)}</td></tr>`).join('')}
             <tr><td colspan="2" style="padding:8px 0 0;border-top:1px solid #EDE5D8;font-size:1px;">&nbsp;</td></tr>
             <tr>
               <td style="color:#8A7E72;font-size:11px;letter-spacing:1px;text-transform:uppercase;">Totaal</td>
-              <td align="right" style="color:#722F37;font-size:18px;font-weight:bold;">${total}</td>
+              <td align="right" style="color:#722F37;font-size:18px;font-weight:bold;">${safeTotal}</td>
             </tr>
           </table>
         </td></tr>
@@ -88,12 +100,12 @@ function ownerHtml({ name, email, order, date, timeslot, total }) {
     ${emailHeader('Nieuwe bestelling')}
     <tr><td style="padding:28px 32px;">
       <table width="100%" cellpadding="6" cellspacing="0" border="0" style="font-size:14px;font-family:Georgia,serif;">
-        <tr><td style="color:#8A7E72;width:100px;">Naam</td><td><strong>${name}</strong></td></tr>
-        <tr><td style="color:#8A7E72;">E-mail</td><td>${email}</td></tr>
+        <tr><td style="color:#8A7E72;width:100px;">Naam</td><td><strong>${escapeHtml(name)}</strong></td></tr>
+        <tr><td style="color:#8A7E72;">E-mail</td><td>${escapeHtml(email)}</td></tr>
         <tr><td style="color:#8A7E72;">Datum</td><td>${dateFormatted}</td></tr>
-        <tr><td style="color:#8A7E72;">Tijdslot</td><td><strong>${timeslot}</strong></td></tr>
-        <tr><td style="color:#8A7E72;">Bestelling</td><td>${order}</td></tr>
-        <tr><td style="color:#8A7E72;">Totaal</td><td><strong style="color:#722F37;">${total}</strong></td></tr>
+        <tr><td style="color:#8A7E72;">Tijdslot</td><td><strong>${escapeHtml(timeslot)}</strong></td></tr>
+        <tr><td style="color:#8A7E72;">Bestelling</td><td>${escapeHtml(order)}</td></tr>
+        <tr><td style="color:#8A7E72;">Totaal</td><td><strong style="color:#722F37;">${escapeHtml(total)}</strong></td></tr>
       </table>
     </td></tr>
   `)
@@ -140,9 +152,9 @@ export default async (req) => {
         html: emailWrapper(`
           ${emailHeader('Inschrijving bevestigd')}
           <tr><td style="padding:32px;">
-            <p style="color:#1C1410;font-size:15px;margin:0 0 16px;font-family:Georgia,serif;">Ciao <strong>${name}</strong>,</p>
+            <p style="color:#1C1410;font-size:15px;margin:0 0 16px;font-family:Georgia,serif;">Ciao <strong>${escapeHtml(name)}</strong>,</p>
             <p style="color:#8A7E72;font-size:14px;line-height:1.6;margin:0 0 24px;font-family:Georgia,serif;">
-              We hebben je inschrijving goed ontvangen voor <strong>${pizzas} pizza${pizzas > 1 ? "'s" : ''}</strong>${dateStr ? ` op <strong>${dateStr}</strong>` : ''}.
+              We hebben je inschrijving goed ontvangen voor <strong>${escapeHtml(pizzas)} pizza${pizzas > 1 ? "'s" : ''}</strong>${dateStr ? ` op <strong>${escapeHtml(dateStr)}</strong>` : ''}.
               Je krijgt een bericht zodra de bestellingen opengaan.
             </p>
             <p style="color:#C5BAB0;font-size:11px;text-align:center;font-style:italic;margin:0;font-family:Georgia,serif;">Jeanke's Pizza</p>

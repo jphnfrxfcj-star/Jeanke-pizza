@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Wine } from 'lucide-react'
 
 export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEnabled = false, onAddWine, onRemoveWine, slots, onClose, onSuccess, onAdd, onRemove, currency, settings }) {
@@ -10,6 +10,15 @@ export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEn
   const [slotsLoading, setSlotsLoading] = useState(true)
   const [error, setError] = useState('')
   const [bookedSlots, setBookedSlots] = useState([])
+  const dialogRef = useRef(null)
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    dialogRef.current?.querySelector('button')?.focus()
+    function onKeyDown(e) { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKeyDown)
+    return () => { document.body.style.overflow = ''; document.removeEventListener('keydown', onKeyDown) }
+  }, [onClose])
 
   useEffect(() => {
     fetch('/api/slots')
@@ -103,14 +112,16 @@ export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEn
   }
 
   return (
-    <div className="fixed inset-0 bg-ink/60 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-      <div className="bg-cream w-full sm:max-w-xl md:max-w-2xl max-h-[95vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-ink/60 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4"
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="checkout-title"
+        className="bg-cream w-full sm:max-w-xl md:max-w-2xl max-h-[95vh] overflow-y-auto">
         <div className="bg-olive px-6 py-5 flex items-start justify-between">
           <div>
             <p className="font-sans text-xs tracking-widest uppercase text-gold/70 mb-1">Bevestig</p>
-            <h2 className="font-serif text-2xl text-cream italic">Uw bestelling</h2>
+            <h2 id="checkout-title" className="font-serif text-2xl text-cream italic">Uw bestelling</h2>
           </div>
-          <button onClick={onClose} className="text-cream/50 hover:text-cream text-2xl leading-none mt-1">×</button>
+          <button onClick={onClose} aria-label="Sluiten" className="text-cream/50 hover:text-cream text-2xl leading-none mt-1">×</button>
         </div>
 
         <div className="p-6 space-y-6">
@@ -124,9 +135,9 @@ export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEn
                 <li key={pizza.id} className="px-4 py-2 flex items-center gap-3">
                   <span className="flex-1 text-sm text-ink">{pizza.name}</span>
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => onRemove(pizza)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
-                    <span className="font-sans text-sm w-4 text-center">{quantity}</span>
-                    <button type="button" onClick={() => onAdd(pizza)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xs transition-colors">+</button>
+                    <button type="button" aria-label={`Minder ${pizza.name}`} onClick={() => onRemove(pizza)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
+                    <span className="font-sans text-sm w-4 text-center" aria-label={`${quantity} stuks`}>{quantity}</span>
+                    <button type="button" aria-label={`Meer ${pizza.name}`} onClick={() => onAdd(pizza)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xs transition-colors">+</button>
                   </div>
                   <span className="text-sm text-wine w-14 text-right">{currency}{(pizza.price * quantity).toFixed(2)}</span>
                 </li>
