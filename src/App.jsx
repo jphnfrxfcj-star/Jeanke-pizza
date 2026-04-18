@@ -263,9 +263,56 @@ function Shop() {
         ) : (
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-14 grid grid-cols-1 lg:grid-cols-3 gap-10">
             {/* Menu column */}
-            <div className="lg:col-span-2 space-y-14">
-              {/* PLACEHOLDER: Suggestions */}
-              {/* PLACEHOLDER: Menu */}
+            <div className="lg:col-span-2 space-y-16">
+              {/* Suggestions */}
+              {(() => {
+                const suggestions = pizzas.filter(p => p.suggestion)
+                if (!suggestions.length) return null
+                return (
+                  <section className="relative -mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 lg:px-8 py-10 bg-parchment/50 border-y lg:border border-parchment overflow-hidden">
+                    <PaperTexture />
+                    <div className="relative">
+                      <SectionLabel n="I" title="Suggesties" caption="Onze keuze deze week" />
+                      <div className={`mt-8 grid gap-4 ${suggestions.length >= 2 ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
+                        {suggestions.map(pizza => (
+                          <PizzaCard
+                            key={pizza.id}
+                            pizza={pizza}
+                            quantity={getQuantity(pizza.id)}
+                            onAdd={addToCart}
+                            onRemove={removeFromCart}
+                            currency={config.currency}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+                )
+              })()}
+
+              {/* Menu */}
+              <section id="menu" className="scroll-mt-24">
+                <SectionLabel n="II" title="Il Menù" caption="Tien pizza's, vers uit de houtoven" />
+                {pizzas.length === 0 ? (
+                  <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[1,2,3,4].map(i => <div key={i} className="h-64 bg-parchment animate-pulse" />)}
+                  </div>
+                ) : (
+                  <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {pizzas.filter(p => !p.suggestion).map(pizza => (
+                      <PizzaCard
+                        key={pizza.id}
+                        pizza={pizza}
+                        quantity={getQuantity(pizza.id)}
+                        onAdd={addToCart}
+                        onRemove={removeFromCart}
+                        currency={config.currency}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+
               {/* PLACEHOLDER: WineRow */}
             </div>
 
