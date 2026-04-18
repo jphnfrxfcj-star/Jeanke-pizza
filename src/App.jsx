@@ -55,7 +55,7 @@ function Shop() {
   useEffect(() => {
     fetch('/api/pizzas')
       .then(r => r.json())
-      .then(data => setPizzas(data.length ? data : staticPizzas))
+      .then(data => setPizzas(Array.isArray(data) && data.length ? data : staticPizzas))
       .catch(() => setPizzas(staticPizzas))
   }, [])
 
@@ -71,7 +71,7 @@ function Shop() {
     fetch('/api/register')
       .then(r => r.json())
       .then(setRegistration)
-      .catch(() => {})
+      .catch(() => setRegistration({ registrationOpen: false }))
     fetch('/api/settings')
       .then(r => r.json())
       .then(s => { setSettings(s); if (s.wijnEnabled) fetch('/api/wines').then(r => r.json()).then(d => setWines(Array.isArray(d) ? d : [])).catch(() => {}) })

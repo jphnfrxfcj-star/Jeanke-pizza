@@ -3,7 +3,5 @@
   "slotIntervalMinutes": 15,
   "openingHour": 17,
   "closingHour": 22,
-  "currency": "€",
-  "daysAhead": 1,
-  "adminPassword": "jeanke2024"
+  "currency": "€"
 }

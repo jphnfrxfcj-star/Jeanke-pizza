@@ -23,16 +23,46 @@ const ALLERGENS = [
 ]
 
 export default function Admin() {
-  const [authed, setAuthed] = useState(() => sessionStorage.getItem('adminPw') === config.adminPassword)
+  const [authed, setAuthed] = useState(false)
+  const [authChecking, setAuthChecking] = useState(true)
   const [password, setPassword] = useState('')
+  const [loginLoading, setLoginLoading] = useState(false)
   const [tab, setTab] = useState('orders')
   const [menuOpen, setMenuOpen] = useState(false)
 
-  function handleLogin(e) {
+  useEffect(() => {
+    const stored = sessionStorage.getItem('adminPw')
+    if (!stored) { setAuthChecking(false); return }
+    fetch('/api/admin-verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: stored }),
+    })
+      .then(r => { if (r.ok) setAuthed(true) })
+      .catch(() => {})
+      .finally(() => setAuthChecking(false))
+  }, [])
+
+  async function handleLogin(e) {
     e.preventDefault()
-    if (password === config.adminPassword) { sessionStorage.setItem('adminPw', password); setAuthed(true) }
-    else alert('Verkeerd wachtwoord')
+    setLoginLoading(true)
+    try {
+      const res = await fetch('/api/admin-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
+      if (res.ok) { sessionStorage.setItem('adminPw', password); setAuthed(true) }
+      else alert('Verkeerd wachtwoord')
+    } catch { alert('Verbindingsfout. Probeer opnieuw.') }
+    finally { setLoginLoading(false) }
   }
+
+  if (authChecking) return (
+    <div className="min-h-screen bg-cream flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+    </div>
+  )
 
   if (!authed) return (
     <div className="min-h-screen bg-cream flex items-center justify-center px-4">
@@ -44,13 +74,15 @@ export default function Admin() {
         <form onSubmit={handleLogin} className="space-y-4">
           <input type="password" value={password} onChange={e => setPassword(e.target.value)}
             placeholder="Wachtwoord" className={INPUT} autoFocus />
-          <button type="submit" className="btn-primary w-full">Inloggen</button>
+          <button type="submit" disabled={loginLoading} className="btn-primary w-full">
+            {loginLoading ? 'Even geduld...' : 'Inloggen'}
+          </button>
         </form>
       </div>
     </div>
   )
 
-  const pw = config.adminPassword
+  const pw = sessionStorage.getItem('adminPw')
 
   const tabs = [
     { key: 'dag',          label: 'Dag',           Icon: Clock },

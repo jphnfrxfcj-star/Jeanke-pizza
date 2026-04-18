@@ -1,9 +1,9 @@
 import { getStore } from "@netlify/blobs"
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'jeanke2024'
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
 
 function checkAuth(req) {
-  return req.headers.get("x-admin-password") === ADMIN_PASSWORD
+  return !!ADMIN_PASSWORD && req.headers.get("x-admin-password") === ADMIN_PASSWORD
 }
 
 export default async (req) => {

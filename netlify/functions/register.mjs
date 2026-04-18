@@ -1,6 +1,6 @@
 import { getStore } from "@netlify/blobs"
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'jeanke2024'
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
 const DEFAULT_MAX = 20
 const DEFAULT_OPEN_FROM = 16
 
@@ -36,11 +36,18 @@ export default async (req) => {
 
     if (req.method === "POST") {
       const { name, email, pizzas = 1 } = await req.json()
+      if (!name || typeof name !== 'string' || name.trim().length < 1 || name.length > 100)
+        return Response.json({ error: 'Invalid name' }, { status: 400 })
+      if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254)
+        return Response.json({ error: 'Invalid email' }, { status: 400 })
+      const pizzaCount = Number(pizzas)
+      if (!Number.isInteger(pizzaCount) || pizzaCount < 1 || pizzaCount > 20)
+        return Response.json({ error: 'Invalid pizza count' }, { status: 400 })
       const existing = await store.get("list", { type: "json" }).catch(() => []) || []
       if (existing.some(r => r.email.toLowerCase() === email.toLowerCase())) {
         return Response.json({ error: "already_registered" }, { status: 409 })
       }
-      const updated = [...existing, { name, email, pizzas: Number(pizzas), registeredAt: new Date().toISOString() }]
+      const updated = [...existing, { name: name.trim(), email: email.trim().toLowerCase(), pizzas: pizzaCount, registeredAt: new Date().toISOString() }]
       await store.set("list", JSON.stringify(updated))
       const cfg = await store.get("config", { type: "json" }).catch(() => null)
       const max = cfg?.max ?? DEFAULT_MAX

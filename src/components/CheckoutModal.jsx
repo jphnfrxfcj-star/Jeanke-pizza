@@ -208,7 +208,7 @@ export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEn
                 <label className="font-sans text-xs tracking-widest uppercase text-warm-gray">Tijdslot</label>
                 {slotsNeeded > 1 && (
                   <span className="font-sans text-xs text-warm-gray italic">
-                    {totalPizzas} pizza's · {slotsNeeded} slots ({slotsNeeded * 15} min)
+                    {totalPizzas} pizza's · {slotsNeeded} slots ({slotsNeeded * (settings?.slotIntervalMinutes ?? 15)} min)
                   </span>
                 )}
               </div>

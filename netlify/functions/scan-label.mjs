@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'jeanke2024'
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
 
 export default async (req) => {
   if (req.method !== 'POST') return Response.json({ error: 'Method not allowed' }, { status: 405 })

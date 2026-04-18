@@ -1,6 +1,6 @@
 import { getStore } from "@netlify/blobs"
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'jeanke2024'
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
 
 export default async (req) => {
   try {

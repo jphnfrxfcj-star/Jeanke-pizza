@@ -1,6 +1,6 @@
 import { getStore } from "@netlify/blobs"
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'jeanke2024'
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
 
 const DEFAULTS = { openingHour: 17, closingHour: 22, pizzasPerSlot: 3 }
 
