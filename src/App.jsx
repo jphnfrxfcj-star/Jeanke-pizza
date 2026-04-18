@@ -388,10 +388,92 @@ function Shop() {
       </main>
 
       {/* ═══════ Story (Il Racconto) ═══════ */}
-      {/* PLACEHOLDER: Story */}
+      <section id="racconto" className="relative bg-ink text-cream overflow-hidden scroll-mt-24">
+        <svg aria-hidden="true" className="absolute inset-0 w-full h-full opacity-[0.08]" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="racconto-dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+              <circle cx="1" cy="1" r="1" fill="#BFA06A" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#racconto-dots)" />
+        </svg>
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-10 py-20 sm:py-28 text-center">
+          <div className="flex items-center justify-center gap-3 font-sans text-[10px] tracking-[0.32em] uppercase text-gold mb-6">
+            <span className="h-px w-6 bg-gold/40" />
+            <span className="font-serif italic text-gold-light tracking-normal text-sm">N° IV</span>
+            <span>·</span>
+            <span>Il Racconto</span>
+            <span className="h-px w-6 bg-gold/40" />
+          </div>
+          <h2 className="font-serif text-3xl sm:text-4xl leading-tight mb-6">
+            Een pizza is nooit <span className="italic text-gold">zomaar</span> een pizza.
+          </h2>
+          <p className="font-serif italic text-cream/70 text-lg leading-relaxed mb-4">
+            In ons kleine atelier kneden we dagelijks vers deeg, kiezen we onze ingrediënten met zorg
+            en bakken we elke pizza in de houtoven tot ze precies goed is — krokant van onder, zacht van boven.
+          </p>
+          <p className="font-sans text-sm text-cream/60 leading-relaxed">
+            Geen keten. Geen haast. Gewoon goede pizza, gemaakt door Jeanke en zijn familie — voor u en de uwen.
+          </p>
+          <div className="mt-10 flex items-center justify-center gap-4 text-gold/70">
+            <span className="h-px w-12 bg-gold/30" />
+            <span>✦</span>
+            <span className="h-px w-12 bg-gold/30" />
+          </div>
+        </div>
+      </section>
 
       {/* ═══════ Footer ═══════ */}
-      {/* PLACEHOLDER: Footer */}
+      <footer className="relative bg-cream border-t border-parchment">
+        <PaperTexture />
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-14">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10">
+            <div className="col-span-2 md:col-span-1">
+              <p className="font-serif italic text-2xl text-ink">Jeanke's</p>
+              <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mt-1">Pizzeria artigianale</p>
+              <p className="font-serif italic text-warm-gray text-sm mt-4 leading-relaxed max-w-xs">
+                Vers deeg, houtoven, en een portie Italiaanse <em>allegria</em>.
+              </p>
+            </div>
+
+            <div>
+              <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold mb-3">Bezoek</p>
+              <ul className="space-y-2 font-sans text-xs text-warm-gray">
+                <li className="flex items-start gap-2"><MapPin size={12} className="mt-0.5 text-wine shrink-0" /><span>Dorpstraat · België</span></li>
+                <li className="flex items-start gap-2"><Clock size={12} className="mt-0.5 text-wine shrink-0" /><span>{config.openingHour}:00 – {config.closingHour}:00 op besteldagen</span></li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold mb-3">Contact</p>
+              <ul className="space-y-2 font-sans text-xs text-warm-gray">
+                <li className="flex items-start gap-2"><Phone size={12} className="mt-0.5 text-wine shrink-0" /><span>Via e-mail</span></li>
+                <li className="flex items-start gap-2"><Mail size={12} className="mt-0.5 text-wine shrink-0" /><a href="mailto:info@jeankespizza.be" className="hover:text-wine transition-colors">info@jeankespizza.be</a></li>
+                <li className="flex items-start gap-2"><Instagram size={12} className="mt-0.5 text-wine shrink-0" /><span>@jeankespizza</span></li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold mb-3">Navigatie</p>
+              <ul className="space-y-2 font-sans text-xs text-warm-gray">
+                <li><a href="#menu" className="hover:text-wine transition-colors">Il Menù</a></li>
+                <li><a href="#wijn" className="hover:text-wine transition-colors">La Cantina</a></li>
+                <li><a href="#racconto" className="hover:text-wine transition-colors">Il Racconto</a></li>
+                <li><a href="/annuleer" className="hover:text-wine transition-colors">Bestelling annuleren</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="mt-12 pt-6 border-t border-dashed border-parchment flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray-light">
+              © {new Date().getFullYear()} Jeanke's Pizza
+            </p>
+            <p className="font-serif italic text-xs text-warm-gray-light">
+              Con amore, uit de houtoven.
+            </p>
+          </div>
+        </div>
+      </footer>
 
       {/* ═══════ MobileCartBar ═══════ */}
       {/* PLACEHOLDER: MobileCartBar */}
