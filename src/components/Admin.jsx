@@ -1150,11 +1150,16 @@ function OpeningTab({ password }) {
 
       {/* Modus schakelaar */}
       <div className="bg-white border border-parchment px-5 py-4 flex items-center justify-between gap-4">
-        <div>
-          <p className="font-sans text-sm font-medium text-ink">
-            {regs.registrationOpen ? 'Registratiemodus actief' : 'Bestelmodus actief'}
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
+            <span className="h-px w-5 bg-gold/40" />
+            <span className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">Modus</span>
+          </div>
+          <p className="font-serif text-ink text-lg leading-tight">
+            {regs.registrationOpen ? 'Registratiemodus' : 'Bestelmodus'}
           </p>
-          <p className="font-sans text-xs text-warm-gray mt-0.5">
+          <p className="font-sans text-xs italic text-warm-gray mt-0.5">
             {regs.registrationOpen ? 'Bezoekers zien de inschrijvingspagina' : 'Bezoekers zien het menu en kunnen bestellen'}
           </p>
         </div>
@@ -1166,8 +1171,10 @@ function OpeningTab({ password }) {
 
       {/* Openingsuren en capaciteit */}
       <div className="bg-white border border-parchment">
-        <div className="px-5 py-4 border-b border-parchment">
-          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Openingsuren & capaciteit</p>
+        <div className="px-5 py-4 border-b border-dashed border-warm-gray-light/50 flex items-center gap-3">
+          <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
+          <span className="h-px w-5 bg-gold/40" />
+          <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">Openingsuren & capaciteit</p>
         </div>
         <form onSubmit={saveSettings} className="px-5 py-4 space-y-4">
           <div className="grid grid-cols-3 gap-2">
@@ -1225,8 +1232,10 @@ function OpeningTab({ password }) {
 
       {/* Registratie configuratie */}
       <div className="bg-white border border-parchment">
-        <div className="px-5 py-4 border-b border-parchment">
-          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Registratie voor openingsdag</p>
+        <div className="px-5 py-4 border-b border-dashed border-warm-gray-light/50 flex items-center gap-3">
+          <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
+          <span className="h-px w-5 bg-gold/40" />
+          <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">Registratie voor openingsdag</p>
         </div>
         <form onSubmit={saveRegConfig} className="px-5 py-4 space-y-3">
           <p className="font-sans text-xs text-warm-gray italic">Kies de openingsdag waarvoor mensen kunnen inschrijven. Deze datum staat duidelijk vermeld op de registratiepagina.</p>
@@ -1252,9 +1261,13 @@ function OpeningTab({ password }) {
 
       {/* Registraties teller */}
       <div className="bg-white border border-parchment">
-        <div className="px-5 py-4 border-b border-parchment flex items-center justify-between">
-          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Gereserveerde pizza's</p>
-          <span className={`font-serif text-lg ${regs.count >= regs.openFrom ? 'text-olive' : 'text-wine'}`}>
+        <div className="px-5 py-4 border-b border-dashed border-warm-gray-light/50 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
+            <span className="h-px w-5 bg-gold/40" />
+            <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">Gereserveerde pizza's</p>
+          </div>
+          <span className={`font-serif text-lg tabular-nums shrink-0 ${regs.count >= regs.openFrom ? 'text-olive' : 'text-wine'}`}>
             {regs.count} / {regs.max}
           </span>
         </div>
@@ -1276,17 +1289,19 @@ function OpeningTab({ password }) {
       {/* Registratielijst */}
       {regList.length > 0 && (
         <div className="bg-white border border-parchment">
-          <div className="px-5 py-4 border-b border-parchment">
-            <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Ingeschreven ({regList.length})</p>
+          <div className="px-5 py-4 border-b border-dashed border-warm-gray-light/50 flex items-center gap-3">
+            <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
+            <span className="h-px w-5 bg-gold/40" />
+            <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">Ingeschreven ({regList.length})</p>
           </div>
-          <ul className="divide-y divide-parchment">
+          <ul>
             {regList.map((r, i) => (
-              <li key={i} className="px-5 py-3 flex items-center gap-3">
+              <li key={i} className="px-5 py-3 flex items-center gap-3 border-b border-dotted border-warm-gray-light/40 last:border-b-0">
                 <div className="min-w-0 flex-1">
-                  <p className="font-sans text-sm text-ink">{r.name}</p>
-                  <p className="font-sans text-xs text-warm-gray truncate">{r.email}</p>
+                  <p className="font-serif text-ink">{r.name}</p>
+                  <p className="font-sans text-xs italic text-warm-gray truncate">{r.email}</p>
                 </div>
-                <span className="font-serif text-wine shrink-0">{r.pizzas || 1}×</span>
+                <span className="font-serif text-wine shrink-0 tabular-nums">{r.pizzas || 1}×</span>
                 <button onClick={() => deleteRegistration(r.email)} className="text-warm-gray-light hover:text-wine transition-colors shrink-0 p-1">✕</button>
               </li>
             ))}
@@ -1296,25 +1311,27 @@ function OpeningTab({ password }) {
 
       {/* Openingsdagen */}
       <div className="bg-white border border-parchment">
-        <div className="px-5 py-4 border-b border-parchment">
-          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Openingsdagen</p>
+        <div className="px-5 py-4 border-b border-dashed border-warm-gray-light/50 flex items-center gap-3">
+          <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
+          <span className="h-px w-5 bg-gold/40" />
+          <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">Openingsdagen</p>
         </div>
         {days.length === 0
-          ? <p className="px-5 py-4 font-sans text-sm text-warm-gray italic">Nog geen openingsdagen gepland.</p>
-          : <ul className="divide-y divide-parchment">
+          ? <p className="px-5 py-4 font-serif italic text-sm text-warm-gray">Nog geen openingsdagen gepland.</p>
+          : <ul>
               {days.map(d => (
-                <li key={d.date} className="px-5 py-3 flex items-center justify-between gap-3">
+                <li key={d.date} className="px-5 py-3 flex items-center justify-between gap-3 border-b border-dotted border-warm-gray-light/40 last:border-b-0">
                   <div className="min-w-0">
-                    <p className="font-serif text-sm text-ink">{formatLongDate(d.date)}</p>
-                    {d.label && <p className="font-sans text-xs text-warm-gray">{d.label}</p>}
+                    <p className="font-serif text-ink">{formatLongDate(d.date)}</p>
+                    {d.label && <p className="font-sans text-xs italic text-warm-gray">{d.label}</p>}
                   </div>
                   <button onClick={() => removeDay(d.date)} className="text-warm-gray-light hover:text-wine transition-colors shrink-0 p-1">✕</button>
                 </li>
               ))}
             </ul>
         }
-        <form onSubmit={addDay} className="px-5 py-4 border-t border-parchment space-y-2">
-          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Dag toevoegen</p>
+        <form onSubmit={addDay} className="px-5 py-4 border-t border-dashed border-warm-gray-light/50 space-y-2">
+          <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray mb-2">Dag toevoegen</p>
           <input type="date" required value={newDate} onChange={e=>setNewDate(e.target.value)} className={INPUT} />
           <input type="text" value={newLabel} onChange={e=>setNewLabel(e.target.value)} placeholder="Optionele notitie (bv. 'Zomer editie')" className={INPUT} />
           <button type="submit" className="btn-primary w-full">Dag toevoegen</button>
@@ -1432,37 +1449,41 @@ function WinstTab({ password }) {
               return (
                 <div key={day.date} className="bg-white border border-parchment mb-3">
                   {/* Header */}
-                  <div className="px-4 py-3 border-b border-parchment flex items-start justify-between gap-2">
+                  <div className="px-4 py-3 border-b border-dashed border-warm-gray-light/50 flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-serif text-sm text-ink break-words">{formatLongDate(day.date)}</p>
-                      {day.label && <p className="font-sans text-xs text-warm-gray">{day.label}</p>}
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="font-serif italic text-wine text-xs leading-none">N° ·</span>
+                        <span className="h-px w-4 bg-gold/40" />
+                      </div>
+                      <p className="font-serif text-ink break-words">{formatLongDate(day.date)}</p>
+                      {day.label && <p className="font-sans text-xs italic text-warm-gray">{day.label}</p>}
                     </div>
-                    <span className={`font-serif text-lg shrink-0 ${result >= 0 ? 'text-olive' : 'text-wine'}`}>
+                    <span className={`font-serif text-xl shrink-0 tabular-nums ${result >= 0 ? 'text-olive' : 'text-wine'}`}>
                       {result >= 0 ? '+' : ''}€{result.toFixed(2)}
                     </span>
                   </div>
                   {/* Samenvatting */}
-                  <div className="px-4 py-3 space-y-1 border-b border-parchment">
+                  <div className="px-4 py-3 space-y-1 border-b border-dashed border-warm-gray-light/50">
                     <div className="flex justify-between text-sm">
                       <span className="font-sans text-warm-gray">Omzet</span>
-                      <span className="font-serif text-ink">
+                      <span className="font-serif text-ink tabular-nums">
                         €{revenue.toFixed(2)}
-                        <span className="font-sans text-xs text-warm-gray ml-1">({dayOrders.length} best.)</span>
+                        <span className="font-sans text-xs italic text-warm-gray ml-1">({dayOrders.length} best.)</span>
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="font-sans text-warm-gray">Uitgaven</span>
-                      <span className="font-serif text-ink">−€{totalExp.toFixed(2)}</span>
+                      <span className="font-serif text-ink tabular-nums">−€{totalExp.toFixed(2)}</span>
                     </div>
                   </div>
                   {/* Uitgavenlijst */}
                   {dayExp.length > 0 && (
-                    <ul className="divide-y divide-parchment border-b border-parchment">
+                    <ul className="border-b border-dashed border-warm-gray-light/50">
                       {dayExp.map(exp => (
-                        <li key={exp.id} className="px-4 py-2 flex items-center justify-between gap-2">
+                        <li key={exp.id} className="px-4 py-2 flex items-center justify-between gap-2 border-b border-dotted border-warm-gray-light/40 last:border-b-0">
                           <span className="font-sans text-xs text-ink min-w-0 truncate">{exp.description}</span>
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="font-sans text-xs text-warm-gray">€{parseFloat(exp.amount).toFixed(2)}</span>
+                            <span className="font-sans text-xs text-warm-gray tabular-nums">€{parseFloat(exp.amount).toFixed(2)}</span>
                             <button onClick={() => deleteExpense(exp.id)} className="text-warm-gray-light hover:text-wine leading-none">✕</button>
                           </div>
                         </li>
@@ -1490,7 +1511,7 @@ function WinstTab({ password }) {
                   ) : (
                     <div className="px-4 py-2">
                       <button onClick={() => { setAddingFor(day.date); setExpForm({ description: '', amount: '' }) }}
-                        className="font-sans text-xs text-warm-gray hover:text-olive transition-colors">
+                        className="font-serif italic text-sm text-warm-gray hover:text-wine transition-colors">
                         + Uitgave toevoegen
                       </button>
                     </div>
@@ -1515,42 +1536,46 @@ function WinstTab({ password }) {
             const pct    = pizza.price > 0 ? (margin / pizza.price) * 100 : 0
             return (
               <div key={pizza.id} className="bg-white border border-parchment p-3">
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-2 pb-2 border-b border-dotted border-warm-gray-light/40">
                   <span className="text-lg shrink-0">{pizza.emoji}</span>
                   <span className="font-serif text-ink flex-1 min-w-0 truncate">{pizza.name}</span>
-                  <span className={`font-sans text-xs px-2 py-0.5 shrink-0 ${pct >= 40 ? 'bg-olive/10 text-olive' : 'bg-wine/10 text-wine'}`}>{pct.toFixed(0)}%</span>
+                  <span className={`font-sans text-[10px] tracking-[0.2em] uppercase px-2 py-0.5 shrink-0 tabular-nums ${pct >= 40 ? 'bg-olive/10 text-olive' : 'bg-wine/10 text-wine'}`}>{pct.toFixed(0)}%</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="bg-parchment/50 p-2">
-                    <div className="font-sans text-[10px] text-warm-gray uppercase tracking-wide mb-0.5">Geschat</div>
-                    <div className="font-serif text-base text-ink">€{est.toFixed(2)}</div>
+                    <div className="font-sans text-[9px] text-warm-gray uppercase tracking-[0.2em] mb-0.5">Geschat</div>
+                    <div className="font-serif text-base text-ink tabular-nums">€{est.toFixed(2)}</div>
                   </div>
                   <div className="bg-parchment/50 p-2">
-                    <div className="font-sans text-[10px] text-warm-gray uppercase tracking-wide mb-0.5">Prijs</div>
-                    <div className="font-serif text-base text-ink">€{pizza.price.toFixed(2)}</div>
+                    <div className="font-sans text-[9px] text-warm-gray uppercase tracking-[0.2em] mb-0.5">Prijs</div>
+                    <div className="font-serif text-base text-ink tabular-nums">€{pizza.price.toFixed(2)}</div>
                   </div>
                   <div className={`p-2 ${margin >= 0 ? 'bg-olive/10' : 'bg-wine/10'}`}>
-                    <div className="font-sans text-[10px] text-warm-gray uppercase tracking-wide mb-0.5">Winst</div>
-                    <div className={`font-serif text-base ${margin >= 0 ? 'text-olive' : 'text-wine'}`}>€{margin.toFixed(2)}</div>
+                    <div className="font-sans text-[9px] text-warm-gray uppercase tracking-[0.2em] mb-0.5">Winst</div>
+                    <div className={`font-serif text-base tabular-nums ${margin >= 0 ? 'text-olive' : 'text-wine'}`}>€{margin.toFixed(2)}</div>
                   </div>
                 </div>
               </div>
             )
           })}
         </div>
-        <p className="font-sans text-xs text-warm-gray mt-2 italic">Geschatte kostprijs = basiskosten + som ingrediëntkosten. Verkoopprijs stel je zelf in bij Pizza's.</p>
+        <p className="font-serif italic text-xs text-warm-gray mt-3">Geschatte kostprijs = basiskosten + som ingrediëntkosten. Verkoopprijs stel je zelf in bij Pizza's.</p>
       </div>
 
       {/* ── Kostprijs ingrediënten ── */}
       <div className="bg-white border border-parchment">
-        <div className="px-5 py-4 border-b border-parchment">
-          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Kostprijs ingrediënten</p>
-          <p className="font-sans text-xs text-warm-gray mt-1 italic">Kostprijs per portie/stuk. Wijzigingen worden automatisch opgeslagen.</p>
-          <p className="font-sans text-xs text-wine mt-1 italic">Let op: ingrediënten die al in de basiskosten zitten (bv. kaas/mozzarella, saus/tomatensaus) hier op €0 laten om dubbeltelling te vermijden.</p>
+        <div className="px-5 py-4 border-b border-dashed border-warm-gray-light/50">
+          <div className="flex items-center gap-3">
+            <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
+            <span className="h-px w-5 bg-gold/40" />
+            <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">Kostprijs ingrediënten</p>
+          </div>
+          <p className="font-serif italic text-xs text-warm-gray mt-2">Kostprijs per portie/stuk. Wijzigingen worden automatisch opgeslagen.</p>
+          <p className="font-serif italic text-xs text-wine mt-1">Let op: ingrediënten die al in de basiskosten zitten (bv. kaas/mozzarella, saus/tomatensaus) hier op €0 laten om dubbeltelling te vermijden.</p>
         </div>
-        <div className="divide-y divide-parchment">
+        <div>
           {ingredients.map(ing => (
-            <div key={ing.name} className="flex items-center gap-3 px-4 py-2">
+            <div key={ing.name} className="flex items-center gap-3 px-4 py-2 border-b border-dotted border-warm-gray-light/40 last:border-b-0">
               <span className="flex-1 font-sans text-sm text-ink capitalize">{ing.name}</span>
               <div className="flex items-center border border-parchment w-24 shrink-0">
                 <span className="px-2 py-2 bg-parchment/50 text-warm-gray text-xs">€</span>
@@ -1559,7 +1584,7 @@ function WinstTab({ password }) {
                   onChange={e => setIngredients(prev => prev.map(i => i.name === ing.name ? { ...i, cost: e.target.value } : i))}
                   onBlur={e => saveIngCost(ing.name, e.target.value)}
                   placeholder="0.00"
-                  className="w-full py-2 px-2 text-sm text-right focus:outline-none bg-white" />
+                  className="w-full py-2 px-2 text-sm text-right focus:outline-none bg-white tabular-nums" />
               </div>
             </div>
           ))}
@@ -1567,10 +1592,16 @@ function WinstTab({ password }) {
       </div>
 
       {/* ── Basiskosten ── */}
-      <div className="bg-white border border-parchment p-5">
-        <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-1">Basiskosten per pizza</p>
-        <p className="font-sans text-xs text-warm-gray mb-4 italic">Vaste kosten die voor elke pizza gelden (deeg, saus, oven).</p>
-        <form onSubmit={saveBaseCosts} className="space-y-3">
+      <div className="bg-white border border-parchment">
+        <div className="px-5 py-4 border-b border-dashed border-warm-gray-light/50">
+          <div className="flex items-center gap-3">
+            <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
+            <span className="h-px w-5 bg-gold/40" />
+            <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">Basiskosten per pizza</p>
+          </div>
+          <p className="font-serif italic text-xs text-warm-gray mt-2">Vaste kosten die voor elke pizza gelden (deeg, saus, oven).</p>
+        </div>
+        <form onSubmit={saveBaseCosts} className="p-5 space-y-3">
           {Object.entries(COST_LABELS).map(([key, { label, icon }]) => (
             <div key={key} className="flex items-center gap-3">
               <span className="text-xl w-7">{icon}</span>
@@ -1579,13 +1610,13 @@ function WinstTab({ password }) {
                 <span className="px-2 py-2 bg-parchment/50 text-warm-gray text-xs">€</span>
                 <input type="number" step="0.05" min="0" value={baseCosts[key]}
                   onChange={e => setBaseCosts(c => ({ ...c, [key]: e.target.value }))}
-                  className="w-full py-2 px-2 text-sm text-right focus:outline-none bg-white" />
+                  className="w-full py-2 px-2 text-sm text-right focus:outline-none bg-white tabular-nums" />
               </div>
             </div>
           ))}
-          <div className="flex justify-between pt-2 border-t border-parchment">
-            <span className="font-sans text-xs text-warm-gray uppercase tracking-wide">Totaal basis</span>
-            <span className="font-serif text-ink">€{baseCostTotal.toFixed(2)}</span>
+          <div className="flex justify-between pt-2 border-t border-dashed border-warm-gray-light/50">
+            <span className="font-sans text-[10px] text-warm-gray uppercase tracking-[0.2em]">Totaal basis</span>
+            <span className="font-serif text-ink tabular-nums">€{baseCostTotal.toFixed(2)}</span>
           </div>
           <button type="submit" disabled={savingBase} className="btn-primary w-full">
             {savedBase ? '✓ Opgeslagen' : savingBase ? 'Bezig...' : 'Opslaan'}
