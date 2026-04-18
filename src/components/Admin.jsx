@@ -280,9 +280,13 @@ function DagTab({ password }) {
   if (loading) return <LoadingCards />
 
   if (!todayOrders.length) return (
-    <div className="text-center py-16">
-      <p className="font-sans text-sm text-warm-gray">Geen bestellingen voor vandaag.</p>
-      <p className="font-sans text-xs text-warm-gray-light mt-1">{formatLongDate(today)}</p>
+    <div className="text-center py-20">
+      <svg width="48" height="48" viewBox="0 0 48 48" className="mx-auto text-gold/40" aria-hidden="true">
+        <circle cx="24" cy="24" r="16" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" />
+        <circle cx="24" cy="24" r="3" fill="currentColor" opacity="0.3" />
+      </svg>
+      <p className="font-serif italic text-warm-gray mt-4 text-sm">Geen bestellingen voor vandaag.</p>
+      <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-warm-gray-light mt-2">{formatLongDate(today)}</p>
     </div>
   )
 
@@ -291,12 +295,12 @@ function DagTab({ password }) {
   const doneCount = allItems.filter(it => isChecked(it.key, it.name, it.idx)).length
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-3">
       {/* Progress bar */}
-      <div className="bg-white border border-parchment p-4 mb-4">
-        <div className="flex justify-between text-xs font-sans text-warm-gray mb-2">
-          <span>{formatLongDate(today)}</span>
-          <span>{doneCount} / {allItems.length} klaar</span>
+      <div className="bg-white border border-parchment px-5 py-4">
+        <div className="flex justify-between items-baseline mb-3">
+          <span className="font-serif italic text-sm text-ink">{formatLongDate(today)}</span>
+          <span className="font-sans text-[11px] tracking-[0.2em] uppercase text-warm-gray tabular-nums">{doneCount} / {allItems.length} klaar</span>
         </div>
         <div className="w-full bg-parchment h-1.5">
           <div className="bg-olive h-1.5 transition-all duration-300"
@@ -311,14 +315,16 @@ function DagTab({ password }) {
         const allDone = slotDone === slotItems.length
 
         return (
-          <div key={time} className={`bg-white border transition-colors ${allDone ? 'border-olive/40 opacity-60' : 'border-parchment'}`}>
+          <div key={time} className={`bg-white border transition-opacity ${allDone ? 'border-olive/40 opacity-60' : 'border-parchment'}`}>
             {/* Slot header */}
-            <div className={`px-4 py-3 flex items-center justify-between border-b ${allDone ? 'border-olive/20 bg-olive/5' : 'border-parchment'}`}>
-              <div className="flex items-center gap-3">
-                <span className={`font-serif text-xl ${allDone ? 'text-olive' : 'text-ink'}`}>{time}</span>
-                <span className="font-sans text-xs text-warm-gray">{slotOrders.length} best. · {slotItems.length} pizza's</span>
+            <div className={`px-5 py-3 flex items-center justify-between border-b border-dashed ${allDone ? 'border-olive/20' : 'border-parchment'}`}>
+              <div className="flex items-baseline gap-3">
+                <span className={`font-serif text-2xl leading-none ${allDone ? 'text-olive' : 'text-wine'}`}>{time}</span>
+                <span className="font-sans text-[11px] tracking-[0.2em] uppercase text-warm-gray">
+                  {slotOrders.length} best. · {slotItems.length} pizza's
+                </span>
               </div>
-              {allDone && <span className="font-sans text-xs text-olive tracking-wide uppercase">Klaar</span>}
+              {allDone && <span className="font-sans text-[10px] text-olive tracking-[0.24em] uppercase">Klaar</span>}
             </div>
 
             {/* Orders in this slot */}
@@ -326,11 +332,11 @@ function DagTab({ password }) {
               const items = parseItems(order.order)
               const orderDone = items.every(it => isChecked(order.key, it.name, it.idx))
               return (
-                <div key={order.key} className={`border-b border-parchment last:border-0 ${orderDone ? 'bg-parchment/20' : ''}`}>
-                  <div className="px-4 pt-3 pb-1">
+                <div key={order.key} className={`border-b border-dotted border-parchment last:border-0 ${orderDone ? 'bg-parchment/20' : ''}`}>
+                  <div className="px-5 pt-3 pb-1">
                     <p className={`font-serif text-base ${orderDone ? 'text-warm-gray line-through' : 'text-ink'}`}>{order.name}</p>
                   </div>
-                  <div className="px-4 pb-3 space-y-1">
+                  <div className="px-5 pb-3 space-y-1">
                     {items.map((it, i) => {
                       const done = isChecked(order.key, it.name, it.idx)
                       return (
@@ -352,8 +358,13 @@ function DagTab({ password }) {
       })}
 
       {doneCount === allItems.length && allItems.length > 0 && (
-        <div className="text-center py-6">
-          <p className="font-serif text-xl italic text-olive">Alle pizza's klaar!</p>
+        <div className="text-center py-8">
+          <div className="flex items-center justify-center gap-4 text-gold/70 mb-3">
+            <span className="h-px w-12 bg-gold/30" />
+            <span>✦</span>
+            <span className="h-px w-12 bg-gold/30" />
+          </div>
+          <p className="font-serif italic text-2xl text-olive">Alle pizza's klaar!</p>
         </div>
       )}
     </div>
@@ -1572,11 +1583,26 @@ function WinstTab({ password }) {
 function LoadingCards() {
   return <div className="space-y-3">{[1,2,3].map(i=><div key={i} className="bg-white border border-parchment h-20 animate-pulse motion-reduce:animate-none"/>)}</div>
 }
-function Empty({ icon, text }) {
-  return <div className="text-center py-16"><div className="text-5xl mb-3 opacity-40">{icon}</div><p className="font-sans text-sm text-warm-gray">{text}</p></div>
+function Empty({ text }) {
+  return (
+    <div className="text-center py-20">
+      <svg width="48" height="48" viewBox="0 0 48 48" className="mx-auto text-gold/40" aria-hidden="true">
+        <circle cx="24" cy="24" r="16" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" />
+        <circle cx="24" cy="24" r="3" fill="currentColor" opacity="0.3" />
+      </svg>
+      <p className="font-serif italic text-warm-gray mt-4 text-sm">{text}</p>
+    </div>
+  )
 }
 function SectionLabel({ children }) {
-  return <p className="font-sans text-xs tracking-widest uppercase text-warm-gray mb-3">{children}</p>
+  return (
+    <div className="flex items-center gap-3 font-sans text-[10px] tracking-[0.32em] uppercase text-gold mb-4">
+      <span className="font-serif italic text-wine tracking-normal text-sm leading-none">N° ·</span>
+      <span className="h-px w-5 bg-gold/40" />
+      <span className="text-warm-gray">{children}</span>
+      <span className="h-px flex-1 bg-gold/20" />
+    </div>
+  )
 }
 function formatShortDate(d) { return new Date(d).toLocaleDateString('nl-BE',{day:'numeric',month:'short'}) }
 function formatLongDate(d)  { return new Date(d).toLocaleDateString('nl-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) }
