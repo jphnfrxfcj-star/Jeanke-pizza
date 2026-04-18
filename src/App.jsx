@@ -313,7 +313,56 @@ function Shop() {
                 )}
               </section>
 
-              {/* PLACEHOLDER: WineRow */}
+              {/* WineRow */}
+              {settings?.wijnEnabled && wines.length > 0 && (
+                <section id="wijn" className="scroll-mt-24">
+                  <SectionLabel n="III" title="La Cantina" caption="Zorgvuldig gekozen wijnen bij onze pizza's" />
+                  <ul className="mt-8 divide-y divide-dotted divide-parchment border-y border-parchment">
+                    {wines.map(wine => {
+                      const qty = wineCart.find(i => i.wine.id === wine.id)?.quantity ?? 0
+                      return (
+                        <li key={wine.id} className="group py-5 px-2 flex items-start gap-4 sm:gap-6 hover:bg-parchment/30 transition-colors">
+                          <Wine size={20} className="text-wine mt-1 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                              <h3 className="font-serif text-lg text-ink leading-tight">{wine.name}</h3>
+                              {wine.type && (
+                                <span className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray">
+                                  {wine.type}
+                                </span>
+                              )}
+                            </div>
+                            {wine.description && (
+                              <p className="font-sans text-xs italic text-warm-gray leading-relaxed mt-1">
+                                {wine.description}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="font-serif text-lg text-wine tabular-nums whitespace-nowrap">
+                              {config.currency}{wine.price.toFixed(2)}
+                            </span>
+                            {qty === 0 ? (
+                              <button
+                                onClick={() => addWine(wine)}
+                                className="font-sans text-[10px] tracking-[0.2em] uppercase border border-warm-gray-light text-ink px-3 py-2 hover:bg-wine hover:text-cream hover:border-wine transition-colors whitespace-nowrap"
+                              >
+                                Toevoegen
+                              </button>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <button onClick={() => removeWine(wine)} className="w-7 h-7 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center transition-colors">−</button>
+                                <span className="font-serif text-base w-4 text-center">{qty}</span>
+                                <button onClick={() => addWine(wine)} className="w-7 h-7 bg-wine hover:bg-wine-light text-cream flex items-center justify-center transition-colors">+</button>
+                              </div>
+                            )}
+                          </div>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </section>
+              )}
             </div>
 
             {/* Cart column */}
