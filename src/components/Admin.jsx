@@ -796,27 +796,27 @@ function PizzasTab({ password }) {
   if (loading) return <LoadingCards />
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-5">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
       {pizzas.map(pizza => (
-        <div key={pizza.id} className="bg-white border border-parchment flex items-center gap-3 overflow-hidden">
+        <div key={pizza.id} className="bg-white border border-parchment flex items-stretch gap-3 overflow-hidden">
           {pizza.imageUrl
-            ? <img src={pizza.imageUrl} alt={pizza.name} className="w-16 h-16 object-cover shrink-0" />
-            : <div className="w-16 h-16 bg-parchment flex items-center justify-center text-3xl shrink-0">{pizza.emoji}</div>
+            ? <img src={pizza.imageUrl} alt={pizza.name} className="w-20 h-auto object-cover shrink-0" />
+            : <div className="w-20 bg-parchment flex items-center justify-center text-3xl shrink-0 border-r border-dashed border-warm-gray-light/50">{pizza.emoji}</div>
           }
           <div className="flex-1 min-w-0 py-3 pr-0">
             <div className="flex items-center gap-2 flex-wrap">
               <p className="font-serif text-ink">{pizza.name}</p>
-              {pizza.suggestion && <span className="font-sans text-[10px] tracking-widest uppercase bg-wine/10 text-wine px-2 py-0.5">Suggestie</span>}
+              {pizza.suggestion && <span className="font-sans text-[9px] tracking-[0.2em] uppercase bg-wine/10 text-wine px-2 py-0.5">Suggestie</span>}
             </div>
-            <p className="font-sans text-xs text-warm-gray truncate">
-              {Array.isArray(pizza.ingredients) ? pizza.ingredients.join(', ') : pizza.description}
+            <p className="font-sans text-xs italic text-warm-gray truncate mt-0.5">
+              {Array.isArray(pizza.ingredients) ? pizza.ingredients.join(' · ') : pizza.description}
             </p>
-            <p className="font-sans text-xs text-wine mt-0.5">€{pizza.price.toFixed(2)}</p>
+            <p className="font-serif text-wine mt-1 tabular-nums">€{pizza.price.toFixed(2)}</p>
           </div>
-          <div className="flex flex-col gap-1 p-3 shrink-0">
-            <button onClick={() => startEdit(pizza)} className="font-sans text-xs text-ink bg-parchment px-3 py-1.5 hover:bg-gold/20 transition-colors">Bewerk</button>
-            <button onClick={() => deletePizza(pizza.id)} className="font-sans text-xs text-wine bg-wine/5 px-3 py-1.5 hover:bg-wine/10 transition-colors">Verwijder</button>
+          <div className="flex flex-col gap-1 p-3 shrink-0 border-l border-dashed border-warm-gray-light/50">
+            <button onClick={() => startEdit(pizza)} className="font-sans text-[10px] tracking-[0.2em] uppercase text-ink bg-parchment px-3 py-1.5 hover:bg-gold/20 transition-colors">Bewerk</button>
+            <button onClick={() => deletePizza(pizza.id)} className="font-sans text-[10px] tracking-[0.2em] uppercase text-wine bg-wine/5 px-3 py-1.5 hover:bg-wine/10 transition-colors">Verwijder</button>
           </div>
         </div>
       ))}
@@ -826,8 +826,10 @@ function PizzasTab({ password }) {
 
       {/* Globale ingrediëntenlijst beheren */}
       <div className="bg-white border border-parchment">
-        <div className="px-5 py-4 border-b border-parchment">
-          <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Ingrediëntenlijst</p>
+        <div className="px-5 py-4 border-b border-dashed border-warm-gray-light/50 flex items-center gap-3">
+          <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
+          <span className="h-px w-5 bg-gold/40" />
+          <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">Ingrediëntenlijst</p>
         </div>
         <div className="px-5 py-4">
           <div className="flex flex-wrap gap-1 mb-3">
@@ -850,9 +852,13 @@ function PizzasTab({ password }) {
       {editing !== null && (
         <div className="fixed inset-0 bg-ink/60 flex items-end sm:items-center justify-center z-50">
           <div className="bg-cream w-full sm:max-w-sm max-h-[92vh] overflow-y-auto">
-            <div className="bg-olive px-5 py-4 flex justify-between items-center">
-              <h3 className="font-serif italic text-cream text-lg">{editing==='new' ? 'Nieuwe pizza' : 'Bewerken'}</h3>
-              <button onClick={()=>setEditing(null)} className="text-cream/50 hover:text-cream text-2xl">×</button>
+            <div className="px-5 py-4 border-b border-dashed border-warm-gray-light/60 flex justify-between items-center bg-cream">
+              <div className="flex items-center gap-3">
+                <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
+                <span className="h-px w-5 bg-gold/40" />
+                <h3 className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">{editing==='new' ? 'Nieuwe pizza' : 'Bewerken'}</h3>
+              </div>
+              <button onClick={()=>setEditing(null)} className="text-warm-gray hover:text-wine text-2xl leading-none">×</button>
             </div>
             <form onSubmit={saveEdit} className="p-5 space-y-3">
               <div className="flex gap-2">
@@ -976,27 +982,27 @@ function WijnenTab({ password }) {
   if (loading) return <LoadingCards />
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-5">
       {wines.length === 0 && <Empty icon="🍷" text="Nog geen wijnen toegevoegd" />}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {wines.map(wine => (
-          <div key={wine.id} className="bg-white border border-parchment flex items-center gap-3 overflow-hidden">
+          <div key={wine.id} className="bg-white border border-parchment flex items-stretch gap-3 overflow-hidden">
             <div className="flex-1 min-w-0 p-4">
               <div className="flex items-center gap-2 flex-wrap">
                 <p className="font-serif text-ink">{wine.name}</p>
-                <span className={`font-sans text-[10px] tracking-widest uppercase px-2 py-0.5 ${TYPE_STYLE[wine.type] || ''}`}>{wine.type}</span>
+                <span className={`font-sans text-[9px] tracking-[0.2em] uppercase px-2 py-0.5 ${TYPE_STYLE[wine.type] || ''}`}>{wine.type}</span>
               </div>
-              {wine.description && <p className="font-sans text-xs text-warm-gray mt-0.5">{wine.description}</p>}
-              <p className="font-sans text-xs text-wine mt-0.5">€{wine.price.toFixed(2)}</p>
+              {wine.description && <p className="font-sans text-xs italic text-warm-gray mt-0.5">{wine.description}</p>}
+              <p className="font-serif text-wine mt-1 tabular-nums">€{wine.price.toFixed(2)}</p>
               {wine.tags?.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-1.5">
+                <div className="flex flex-wrap gap-1 mt-2">
                   {wine.tags.map(tag => <span key={tag} className="font-sans text-[10px] bg-parchment text-warm-gray px-1.5 py-0.5">{tag}</span>)}
                 </div>
               )}
             </div>
-            <div className="flex flex-col gap-1 p-3 shrink-0">
-              <button onClick={() => startEdit(wine)} className="font-sans text-xs text-ink bg-parchment px-3 py-1.5 hover:bg-gold/20 transition-colors">Bewerk</button>
-              <button onClick={() => deleteWine(wine.id)} className="font-sans text-xs text-wine bg-wine/5 px-3 py-1.5 hover:bg-wine/10 transition-colors">Verwijder</button>
+            <div className="flex flex-col gap-1 p-3 shrink-0 border-l border-dashed border-warm-gray-light/50">
+              <button onClick={() => startEdit(wine)} className="font-sans text-[10px] tracking-[0.2em] uppercase text-ink bg-parchment px-3 py-1.5 hover:bg-gold/20 transition-colors">Bewerk</button>
+              <button onClick={() => deleteWine(wine.id)} className="font-sans text-[10px] tracking-[0.2em] uppercase text-wine bg-wine/5 px-3 py-1.5 hover:bg-wine/10 transition-colors">Verwijder</button>
             </div>
           </div>
         ))}
@@ -1006,9 +1012,13 @@ function WijnenTab({ password }) {
       {editing !== null && (
         <div className="fixed inset-0 bg-ink/60 flex items-end sm:items-center justify-center z-50">
           <div className="bg-cream w-full sm:max-w-sm max-h-[92vh] overflow-y-auto">
-            <div className="bg-olive px-5 py-4 flex justify-between items-center">
-              <h3 className="font-serif italic text-cream text-lg">{editing === 'new' ? 'Nieuwe wijn' : 'Bewerken'}</h3>
-              <button onClick={() => setEditing(null)} className="text-cream/50 hover:text-cream text-2xl">×</button>
+            <div className="px-5 py-4 border-b border-dashed border-warm-gray-light/60 flex justify-between items-center bg-cream">
+              <div className="flex items-center gap-3">
+                <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
+                <span className="h-px w-5 bg-gold/40" />
+                <h3 className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">{editing === 'new' ? 'Nieuwe wijn' : 'Bewerken'}</h3>
+              </div>
+              <button onClick={() => setEditing(null)} className="text-warm-gray hover:text-wine text-2xl leading-none">×</button>
             </div>
             <form onSubmit={saveEdit} className="p-5 space-y-3">
               <div>
