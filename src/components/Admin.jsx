@@ -415,7 +415,7 @@ function OrdersTab({ password }) {
   const past     = [...orders].filter(o => o.date <  today).sort((a,b) => b.date.localeCompare(a.date)||b.time.localeCompare(a.time))
 
   if (loading) return <LoadingCards />
-  if (!orders.length) return <Empty icon="📭" text="Nog geen bestellingen" />
+  if (!orders.length) return <Empty text="Nog geen bestellingen" />
 
   // Group upcoming by date
   const upcomingByDate = upcoming.reduce((acc, o) => {
@@ -425,13 +425,18 @@ function OrdersTab({ password }) {
   }, {})
 
   return (
-    <div className="space-y-6">
-      {upcoming.length > 0 && <section className="space-y-5">
+    <div className="space-y-8">
+      {upcoming.length > 0 && <section className="space-y-8">
         {Object.entries(upcomingByDate).map(([date, dayOrders]) => (
           <div key={date}>
-            <div className="flex items-center justify-between mb-2">
-              <SectionLabel>{formatLongDate(date)}</SectionLabel>
-              <span className="font-sans text-xs text-warm-gray mb-3">{dayOrders.length} best.</span>
+            <div className="flex items-baseline justify-between gap-3 mb-4">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <span className="font-serif italic text-wine text-sm leading-none shrink-0">N° ·</span>
+                <span className="h-px w-5 bg-gold/40 shrink-0" />
+                <span className="font-sans text-[11px] tracking-[0.28em] uppercase text-warm-gray truncate">{formatLongDate(date)}</span>
+                <span className="h-px flex-1 bg-gold/20" />
+              </div>
+              <span className="font-sans text-[11px] tracking-[0.2em] uppercase text-warm-gray shrink-0 tabular-nums">{dayOrders.length} best.</span>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">{dayOrders.map(o => <OrderCard key={o.key} order={o} onCancel={cancelOrder} onEdit={startEdit} />)}</div>
           </div>
@@ -440,9 +445,9 @@ function OrdersTab({ password }) {
       {past.length > 0 && (
         <section>
           <button onClick={() => setPastOpen(v => !v)}
-            className="w-full flex items-center justify-between mb-3 group">
-            <span className="font-sans text-xs tracking-widest uppercase text-warm-gray">Voorbij ({past.length})</span>
-            <span className="font-sans text-xs text-warm-gray-light group-hover:text-warm-gray transition-colors">{pastOpen ? '▲ Inklappen' : '▼ Uitklappen'}</span>
+            className="w-full flex items-center justify-between mb-4 group">
+            <span className="font-sans text-[11px] tracking-[0.28em] uppercase text-warm-gray">Voorbij ({past.length})</span>
+            <span className="font-serif italic text-sm text-warm-gray-light group-hover:text-wine transition-colors">{pastOpen ? '▲ Inklappen' : '▼ Uitklappen'}</span>
           </button>
           {pastOpen && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 opacity-60">
@@ -453,34 +458,35 @@ function OrdersTab({ password }) {
       )}
 
       {editing && (
-        <div className="fixed inset-0 bg-ink/60 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-cream w-full sm:max-w-sm max-h-[92vh] overflow-y-auto">
-            <div className="bg-olive px-5 py-4 flex justify-between items-center">
+        <div className="fixed inset-0 bg-ink/60 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-cream w-full sm:max-w-sm max-h-[92vh] overflow-y-auto border border-parchment">
+            <div className="px-5 py-5 border-b border-dashed border-parchment flex justify-between items-start gap-3">
               <div>
-                <h3 className="font-serif italic text-cream text-lg">Bestelling wijzigen</h3>
-                <p className="font-sans text-xs text-cream/60 mt-0.5">{editing.time} · {formatShortDate(editing.date)}</p>
+                <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-gold mb-1">N° · Bewerken</p>
+                <h3 className="font-serif italic text-2xl text-ink leading-tight">Bestelling wijzigen</h3>
+                <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-warm-gray mt-1">{editing.time} · {formatShortDate(editing.date)}</p>
               </div>
-              <button onClick={() => setEditing(null)} className="text-cream/50 hover:text-cream text-2xl leading-none">×</button>
+              <button onClick={() => setEditing(null)} aria-label="Sluiten" className="text-warm-gray-light hover:text-wine text-2xl leading-none -mt-1">×</button>
             </div>
             <form onSubmit={saveEdit} className="p-5 space-y-3">
               <div>
-                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Naam</label>
+                <label className="font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray block mb-2">Naam</label>
                 <input required value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} className={INPUT} />
               </div>
               <div>
-                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">E-mail</label>
+                <label className="font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray block mb-2">E-mail</label>
                 <input type="email" required value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} className={INPUT} />
               </div>
               <div>
-                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Bestelling</label>
+                <label className="font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray block mb-2">Bestelling</label>
                 <textarea required rows={3} value={editForm.order} onChange={e => setEditForm(f => ({ ...f, order: e.target.value }))}
                   className={INPUT + ' resize-none'} />
               </div>
               <div>
-                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Totaal</label>
+                <label className="font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray block mb-2">Totaal</label>
                 <input required value={editForm.total} onChange={e => setEditForm(f => ({ ...f, total: e.target.value }))} className={INPUT} />
               </div>
-              <div className="flex gap-2 pt-1">
+              <div className="flex gap-2 pt-2">
                 <button type="submit" className="btn-primary flex-1">Opslaan</button>
                 <button type="button" onClick={() => setEditing(null)} className="btn-secondary flex-1">Annuleren</button>
               </div>
@@ -558,7 +564,7 @@ function BoodschappenTab({ password }) {
   }
 
   if (loading) return <LoadingCards />
-  if (!upcomingDates.length) return <Empty icon="🛒" text="Geen aankomende bestellingen" />
+  if (!upcomingDates.length) return <Empty text="Geen aankomende bestellingen" />
 
   return <ShoppingList dates={upcomingDates} ingredientsForDate={ingredientsForDate} pizzasForDate={pizzasForDate} />
 }
@@ -600,16 +606,20 @@ function ShoppingList({ dates, ingredientsForDate, pizzasForDate }) {
 
   return (
     <div className="bg-white border border-parchment">
-      <div className="px-4 py-3 border-b border-parchment flex items-center justify-between gap-2">
-        <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Boodschappenlijst</p>
-        <span className="font-sans text-xs text-warm-gray">{doneCount}/{ingredients.length} afgevinkt</span>
+      <div className="px-5 py-4 border-b border-dashed border-parchment flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
+          <span className="h-px w-5 bg-gold/40" />
+          <p className="font-sans text-[11px] tracking-[0.28em] uppercase text-warm-gray">Boodschappenlijst</p>
+        </div>
+        <span className="font-sans text-[11px] tracking-[0.2em] uppercase text-warm-gray tabular-nums">{doneCount}/{ingredients.length}</span>
       </div>
 
       {dates.length > 1 && (
         <div className="flex border-b border-parchment overflow-x-auto">
           {dates.map(date => (
             <button key={date} onClick={() => selectDate(date)}
-              className={`flex-1 px-3 py-2.5 font-sans text-xs whitespace-nowrap transition-colors ${selectedDate === date ? 'bg-olive text-cream' : 'text-warm-gray hover:bg-parchment/50'}`}>
+              className={`flex-1 px-3 py-3 font-sans text-[11px] tracking-[0.2em] uppercase whitespace-nowrap transition-colors ${selectedDate === date ? 'bg-wine text-cream' : 'text-warm-gray hover:bg-parchment/50'}`}>
               {formatShortDate(date)}
             </button>
           ))}
@@ -617,53 +627,53 @@ function ShoppingList({ dates, ingredientsForDate, pizzasForDate }) {
       )}
 
       {ingredients.length === 0 ? (
-        <p className="px-4 py-4 font-sans text-sm text-warm-gray italic">Geen ingrediënten gevonden. Controleer of de pizza's ingrediënten hebben ingesteld.</p>
+        <p className="px-5 py-6 font-serif italic text-sm text-warm-gray text-center">Geen ingrediënten gevonden. Controleer of de pizza's ingrediënten hebben ingesteld.</p>
       ) : (
-        <div className="divide-y divide-parchment">
+        <div className="divide-y divide-dotted divide-parchment">
           {ingredients.map(([name, qty]) => {
             const done = !!checked[name]
             return (
               <button key={name} onClick={() => toggle(name)}
-                className={`w-full flex items-center gap-4 px-4 py-4 text-left transition-colors active:bg-parchment/40 ${done ? 'bg-parchment/30' : ''}`}>
+                className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors active:bg-parchment/40 ${done ? 'bg-parchment/30' : ''}`}>
                 <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${done ? 'bg-olive border-olive' : 'border-warm-gray-light'}`}>
                   {done && <span className="text-cream text-xs leading-none">✓</span>}
                 </span>
-                <span className={`font-sans text-base flex-1 transition-colors ${done ? 'line-through text-warm-gray-light' : 'text-ink'}`}>{name}</span>
-                <span className={`font-serif text-xl shrink-0 transition-colors ${done ? 'text-warm-gray-light' : 'text-olive'}`}>{qty}×</span>
+                <span className={`font-sans text-base flex-1 capitalize transition-colors ${done ? 'line-through text-warm-gray-light' : 'text-ink'}`}>{name}</span>
+                <span className={`font-serif text-xl shrink-0 tabular-nums transition-colors ${done ? 'text-warm-gray-light' : 'text-wine'}`}>{qty}×</span>
               </button>
             )
           })}
         </div>
       )}
 
-      <div className="px-4 py-3 border-t border-parchment space-y-2">
+      <div className="px-5 py-4 border-t border-dashed border-parchment space-y-3">
         {/* Pizza breakdown toggle */}
         <button onClick={() => setShowPizzas(v => !v)}
-          className="w-full flex items-center justify-between font-sans text-xs text-warm-gray hover:text-ink transition-colors">
+          className="w-full flex items-center justify-between font-sans text-[11px] tracking-[0.2em] uppercase text-warm-gray hover:text-wine transition-colors">
           <span>{totalPizzas} pizza's · {pizzas.length} soorten</span>
-          <span>{showPizzas ? '▲' : '▼'}</span>
+          <span className="font-serif italic tracking-normal text-sm normal-case">{showPizzas ? '▲' : '▼'}</span>
         </button>
         {showPizzas && (
-          <div className="space-y-1 pt-1">
+          <ul className="space-y-1 pt-1">
             {pizzas.map(([name, qty]) => (
-              <div key={name} className="flex justify-between font-sans text-xs text-warm-gray">
-                <span>{name}</span><span>{qty}×</span>
-              </div>
+              <li key={name} className="flex justify-between font-sans text-xs text-warm-gray">
+                <span>{name}</span><span className="tabular-nums">{qty}×</span>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
         {/* Unmatched pizza names — naam in bestelling ≠ naam in database */}
         {unmatched.length > 0 && (
-          <div className="pt-1 border-t border-parchment">
-            <p className="font-sans text-xs text-wine mb-1">Ingrediënten onbekend voor:</p>
+          <div className="pt-3 border-t border-dotted border-parchment">
+            <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-wine mb-2">Ingrediënten onbekend voor</p>
             {unmatched.map(name => (
-              <p key={name} className="font-sans text-xs text-warm-gray">· {name}</p>
+              <p key={name} className="font-serif italic text-xs text-warm-gray">· {name}</p>
             ))}
-            <p className="font-sans text-[10px] text-warm-gray-light mt-1">Controleer of de naam in de Pizza's-tab exact overeenkomt.</p>
+            <p className="font-sans text-[10px] text-warm-gray-light mt-2">Controleer of de naam in de Pizza's-tab exact overeenkomt.</p>
           </div>
         )}
         {doneCount > 0 && (
-          <button onClick={reset} className="font-sans text-xs text-wine hover:text-wine-light transition-colors">
+          <button onClick={reset} className="font-sans text-[11px] tracking-[0.24em] uppercase text-wine hover:text-wine-light transition-colors">
             Reset afvinklijst
           </button>
         )}
@@ -674,25 +684,25 @@ function ShoppingList({ dates, ingredientsForDate, pizzasForDate }) {
 
 function OrderCard({ order, onCancel, onEdit }) {
   return (
-    <div className="bg-white border border-parchment p-4">
-      <div className="flex items-start gap-3">
-        <div className="bg-olive text-cream px-3 py-2 text-center shrink-0 min-w-[64px]">
-          <div className="font-serif text-lg leading-none">{order.time}</div>
-          <div className="font-sans text-xs text-cream/60 mt-0.5">{formatShortDate(order.date)}</div>
+    <div className="bg-white border border-parchment hover:border-gold/40 transition-colors">
+      <div className="flex items-stretch">
+        <div className="px-4 py-3 text-center shrink-0 min-w-[72px] border-r border-dashed border-parchment flex flex-col items-center justify-center">
+          <div className="font-serif text-2xl text-wine leading-none tabular-nums">{order.time}</div>
+          <div className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mt-1.5">{formatShortDate(order.date)}</div>
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 p-4">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="font-serif text-base text-ink">{order.name}</p>
-              <p className="font-sans text-xs text-warm-gray truncate">{order.email}</p>
+              <p className="font-serif text-base text-ink leading-tight">{order.name}</p>
+              <p className="font-sans text-xs text-warm-gray truncate mt-0.5">{order.email}</p>
             </div>
             <div className="flex gap-1 shrink-0">
-              <button onClick={() => onEdit(order)} className="text-warm-gray-light hover:text-olive transition-colors p-1" title="Wijzigen">✎</button>
-              <button onClick={() => onCancel(order.key)} className="text-warm-gray-light hover:text-wine transition-colors p-1" title="Annuleren">✕</button>
+              <button onClick={() => onEdit(order)} aria-label="Wijzigen" className="text-warm-gray-light hover:text-wine transition-colors p-1">✎</button>
+              <button onClick={() => onCancel(order.key)} aria-label="Annuleren" className="text-warm-gray-light hover:text-wine transition-colors p-1">✕</button>
             </div>
           </div>
-          <p className="font-sans text-sm text-warm-gray mt-2 leading-relaxed break-words">{order.order}</p>
-          <p className="font-serif text-base text-wine mt-1">{order.total}</p>
+          <p className="font-sans text-xs italic text-warm-gray mt-2 leading-relaxed break-words">{order.order}</p>
+          <p className="font-serif text-base text-wine mt-1.5 tabular-nums">{order.total}</p>
         </div>
       </div>
     </div>
