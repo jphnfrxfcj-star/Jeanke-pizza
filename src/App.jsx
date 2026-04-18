@@ -158,13 +158,88 @@ function Shop() {
     <div className="min-h-screen bg-cream text-ink relative overflow-x-hidden">
 
       {/* ═══════ TopNav ═══════ */}
-      {/* PLACEHOLDER: TopNav */}
+      <nav className="sticky top-0 z-30 bg-cream/80 backdrop-blur-md border-b border-parchment">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 h-14 flex items-center justify-between">
+          <a href="#top" className="flex items-baseline gap-2 group">
+            <span className="font-serif italic text-xl text-ink group-hover:text-wine transition-colors">Jeanke's</span>
+            <span className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray hidden sm:inline">Pizzeria</span>
+          </a>
+          <div className="flex items-center gap-6">
+            <a href="#menu" className="hidden sm:inline font-sans text-xs tracking-[0.24em] uppercase text-ink hover:text-wine transition-colors">Menù</a>
+            <a href="#wijn" className="hidden sm:inline font-sans text-xs tracking-[0.24em] uppercase text-ink hover:text-wine transition-colors">Wijn</a>
+            <a href="#racconto" className="hidden md:inline font-sans text-xs tracking-[0.24em] uppercase text-ink hover:text-wine transition-colors">Verhaal</a>
+            <div className="flex items-center gap-2">
+              <span className={`relative flex h-2 w-2 ${slots.length > 0 ? '' : 'opacity-40'}`}>
+                {slots.length > 0 && <span className="absolute inline-flex h-full w-full rounded-full bg-olive opacity-60 animate-ping motion-reduce:animate-none" />}
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${slots.length > 0 ? 'bg-olive' : 'bg-warm-gray-light'}`} />
+              </span>
+              <span className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray hidden sm:inline">
+                {slots.length > 0 ? 'Open' : 'Gesloten'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </nav>
 
       {/* ═══════ AnnouncementBar (ticker) ═══════ */}
-      {/* PLACEHOLDER: AnnouncementBar */}
+      {!showRegistration && openingDays && openingDays.length > 0 && (
+        <div className="bg-wine text-cream overflow-hidden">
+          <div className="flex whitespace-nowrap animate-[slide_50s_linear_infinite] motion-reduce:animate-none">
+            {[0, 1].map(copy => (
+              <div key={copy} className="flex items-center gap-8 py-2.5 px-4 shrink-0" aria-hidden={copy === 1}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <span key={i} className="flex items-center gap-8">
+                    <span className="font-sans text-[11px] tracking-[0.28em] uppercase">
+                      Volgende besteldag · {new Date(openingDays[0].date + 'T12:00:00').toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long' })}
+                      {openingDays[0].label ? ` · ${openingDays[0].label}` : ''}
+                    </span>
+                    <span className="text-gold">✦</span>
+                    <span className="font-sans text-[11px] tracking-[0.28em] uppercase">
+                      Ophaaluren {settings?.openingHour ?? config.openingHour}:00 – {settings?.closingHour ?? config.closingHour}:00
+                    </span>
+                    <span className="text-gold">✦</span>
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ═══════ Hero ═══════ */}
-      {/* PLACEHOLDER: Hero */}
+      <header id="top" className="relative bg-cream overflow-hidden">
+        <PaperTexture />
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-16 sm:py-24 lg:py-28">
+          <div className="flex flex-col items-center text-center">
+            <p className="font-sans text-[11px] tracking-[0.32em] uppercase text-gold mb-4">
+              Piccola pizzeria artigianale
+            </p>
+            <div className="flex items-center justify-center gap-6 mb-4">
+              <span className="h-px w-10 bg-gold/40" />
+              <HeroSeal />
+              <span className="h-px w-10 bg-gold/40" />
+            </div>
+            <h1 className="font-serif text-[clamp(3rem,9vw,6.5rem)] leading-[0.95] tracking-tight text-ink">
+              Jeanke<span className="italic text-wine">'</span>s
+            </h1>
+            <p className="font-serif italic text-xl sm:text-2xl text-warm-gray mt-2">
+              Pizza <span className="text-gold">·</span> Forno <span className="text-gold">·</span> Famiglia
+            </p>
+            {!showRegistration && openingDays && openingDays.length > 0 && (
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-warm-gray">
+                <span className="font-sans text-[11px] tracking-[0.24em] uppercase flex items-center gap-2">
+                  <Clock size={12} className="text-wine" />
+                  Ophalen {settings?.openingHour ?? config.openingHour}:00 – {settings?.closingHour ?? config.closingHour}:00
+                </span>
+                <span className="text-gold/60">✦</span>
+                <span className="font-sans text-[11px] tracking-[0.24em] uppercase">
+                  Tijdslot per {config.slotIntervalMinutes} min
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
 
       {/* ═══════ Main content ═══════ */}
       <main className="relative">
@@ -336,6 +411,30 @@ function RegistrationView({ registration, pizzas, regName, setRegName, regEmail,
           : pizzas.map(pizza => (
               <PizzaCard key={pizza.id} pizza={pizza} quantity={0} onAdd={() => {}} onRemove={() => {}} currency={currency} showOrder={false} />
             ))}
+      </div>
+    </div>
+  )
+}
+
+function HeroSeal() {
+  return (
+    <div className="relative w-[140px] h-[140px] sm:w-[180px] sm:h-[180px]">
+      <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full animate-[spin_60s_linear_infinite] motion-reduce:animate-none" aria-hidden="true">
+        <defs>
+          <path id="seal-arc" d="M 100,100 m -78,0 a 78,78 0 1,1 156,0 a 78,78 0 1,1 -156,0" />
+        </defs>
+        <text style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '10px', letterSpacing: '6px', fill: '#BFA06A' }}>
+          <textPath href="#seal-arc" startOffset="0">
+            {`· JEANKE'S PIZZERIA · ARTIGIANALE · `.repeat(2)}
+          </textPath>
+        </text>
+      </svg>
+      <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full" aria-hidden="true">
+        <circle cx="100" cy="100" r="62" fill="none" stroke="#BFA06A" strokeOpacity="0.35" strokeWidth="0.8" />
+        <circle cx="100" cy="100" r="50" fill="none" stroke="#BFA06A" strokeOpacity="0.25" strokeWidth="0.6" strokeDasharray="2 3" />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="font-serif italic text-5xl sm:text-6xl text-wine select-none">J</span>
       </div>
     </div>
   )
