@@ -639,7 +639,7 @@ function HeroSeal() {
 }
 
 function SuccessView({ order, onReset }) {
-  useEffect(() => { window.scrollTo(0, 0) }, [])
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [])
   return (
     <div className="max-w-md mx-auto text-center px-4 py-24">
       <div className="text-5xl mb-5">🎉</div>
