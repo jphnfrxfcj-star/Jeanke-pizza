@@ -101,7 +101,7 @@ function Shop() {
     })
   }
   function getQuantity(id) { return cart.find(i => i.pizza.id === id)?.quantity ?? 0 }
-  function handleSuccess(order) { setSuccessOrder(order); setShowCheckout(false); setCart([]); setWineCart([]); window.scrollTo({ top: 0, behavior: 'smooth' }) }
+  function handleSuccess(order) { setSuccessOrder(order); setShowCheckout(false); setCart([]); setWineCart([]) }
   function clearCart() { setCart([]); setWineCart([]) }
 
   function addWine(wine) {
@@ -639,6 +639,7 @@ function HeroSeal() {
 }
 
 function SuccessView({ order, onReset }) {
+  useEffect(() => { window.scrollTo(0, 0) }, [])
   return (
     <div className="max-w-md mx-auto text-center px-4 py-24">
       <div className="text-5xl mb-5">🎉</div>
