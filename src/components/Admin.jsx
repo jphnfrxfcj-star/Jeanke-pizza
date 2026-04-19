@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Clock, ClipboardList, ShoppingBasket, ChefHat, TrendingUp, Settings, Menu, Wine, LayoutDashboard, LogOut } from 'lucide-react'
+import { Clock, ClipboardList, ShoppingBasket, ChefHat, TrendingUp, Settings, Menu, Wine, LayoutDashboard, LogOut, Search, X } from 'lucide-react'
 import config from '../data/config.json'
 import staticPizzas from '../data/pizzas.json'
 import PaperTexture from './PaperTexture'
@@ -578,6 +578,7 @@ function OrdersTab({ password }) {
   const [editing, setEditing] = useState(null)
   const [editForm, setEditForm] = useState({ name: '', email: '', order: '', total: '' })
   const [pastOpen, setPastOpen] = useState(false)
+  const [query, setQuery] = useState('')
 
   function load() {
     setLoading(true)
@@ -610,8 +611,28 @@ function OrdersTab({ password }) {
   }
 
   const today = new Date().toISOString().split('T')[0]
-  const upcoming = [...orders].filter(o => o.date >= today).sort((a,b) => a.date.localeCompare(b.date)||a.time.localeCompare(b.time))
-  const past     = [...orders].filter(o => o.date <  today).sort((a,b) => b.date.localeCompare(a.date)||b.time.localeCompare(a.time))
+
+  function matchesQuery(o) {
+    if (!query.trim()) return true
+    const q = query.toLowerCase().trim()
+    return (
+      (o.name || '').toLowerCase().includes(q) ||
+      (o.email || '').toLowerCase().includes(q) ||
+      (o.order || '').toLowerCase().includes(q) ||
+      (o.date || '').includes(q) ||
+      (o.time || '').includes(q)
+    )
+  }
+
+  const filtered = orders.filter(matchesQuery)
+  const upcoming = [...filtered].filter(o => o.date >= today).sort((a,b) => a.date.localeCompare(b.date)||a.time.localeCompare(b.time))
+  const past     = [...filtered].filter(o => o.date <  today).sort((a,b) => b.date.localeCompare(a.date)||b.time.localeCompare(a.time))
+
+  // KPI strip based on all orders (not filtered)
+  const todayOrders = orders.filter(o => o.date === today)
+  const upcomingAll = orders.filter(o => o.date >= today)
+  const revenueUpcoming = upcomingAll.reduce((s, o) => s + parseTotal(o.total), 0)
+  const pizzasUpcoming = upcomingAll.reduce((s, o) => s + parseQty(o.order), 0)
 
   if (loading) return <LoadingCards />
   if (!orders.length) return <Empty text="Nog geen bestellingen" />
@@ -624,7 +645,39 @@ function OrdersTab({ password }) {
   }, {})
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <KpiTile label="Vandaag" value={todayOrders.length} hint={todayOrders.length === 1 ? 'bestelling' : 'bestellingen'} />
+        <KpiTile label="Komend" value={upcomingAll.length} hint="incl. vandaag" />
+        <KpiTile label="Pizza's" value={pizzasUpcoming} hint="komend" />
+        <KpiTile label="Omzet" value={`€${revenueUpcoming.toFixed(2)}`} hint="komend" />
+      </div>
+
+      {/* Search bar */}
+      <div className="relative">
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-warm-gray-light pointer-events-none" />
+        <input
+          type="search"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Zoek op naam, e-mail, pizza, datum…"
+          className="w-full bg-white border border-parchment pl-9 pr-9 py-2.5 text-sm text-ink focus:outline-none focus:border-olive transition-colors font-sans"
+        />
+        {query && (
+          <button onClick={() => setQuery('')} aria-label="Wissen"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-warm-gray-light hover:text-wine p-1">
+            <X size={14} />
+          </button>
+        )}
+      </div>
+
+      {query && filtered.length === 0 && (
+        <div className="text-center py-12">
+          <p className="font-serif italic text-warm-gray text-sm">Geen bestellingen gevonden voor "{query}"</p>
+        </div>
+      )}
+
       {upcoming.length > 0 && <section className="space-y-8">
         {Object.entries(upcomingByDate).map(([date, dayOrders]) => (
           <div key={date}>
