@@ -81,24 +81,54 @@ export default function Cart({
       </div>
 
       {/* Pizza items */}
-      <ul className="divide-y divide-dotted divide-parchment">
-        {items.map(({ pizza, quantity }) => (
-          <li key={pizza.id} className="px-5 py-3 flex items-center gap-3">
-            <Pizza size={14} className="text-warm-gray shrink-0" />
-            <span className="flex-1 font-sans text-sm text-ink truncate">{pizza.name}</span>
-            <div className="flex items-center gap-1.5">
-              <button onClick={() => onRemove(pizza)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
-              <span className="font-sans text-sm w-4 text-center">{quantity}</span>
-              <button onClick={() => onAdd(pizza)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xs transition-colors">+</button>
-            </div>
-            <span className="font-serif text-sm text-ink w-16 text-right tabular-nums whitespace-nowrap">
-              {currency}{(pizza.price * quantity).toFixed(2)}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <div className="border-b border-dashed border-parchment">
+        <div className="px-5 py-2 flex items-center gap-2">
+          <Pizza size={12} className="text-warm-gray" />
+          <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray">Pizza's</p>
+        </div>
+        <ul className="divide-y divide-dotted divide-parchment">
+          {items.map(({ pizza, quantity }) => (
+            <li key={pizza.id} className="px-5 py-3 flex items-center gap-3">
+              <span className="flex-1 font-sans text-sm text-ink truncate">{pizza.name}</span>
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => onRemove(pizza)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
+                <span className="font-sans text-sm w-4 text-center">{quantity}</span>
+                <button onClick={() => onAdd(pizza)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xs transition-colors">+</button>
+              </div>
+              <span className="font-serif text-sm text-ink w-16 text-right tabular-nums whitespace-nowrap">
+                {currency}{(pizza.price * quantity).toFixed(2)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-      {/* Wine suggestions */}
+      {/* Wines already in cart */}
+      {wineCart.length > 0 && (
+        <div className="border-b border-dashed border-parchment">
+          <div className="px-5 py-2 bg-wine/[0.06] flex items-center gap-2">
+            <Wine size={12} className="text-wine" />
+            <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-wine">Wijn</p>
+          </div>
+          <ul className="divide-y divide-dotted divide-wine/10 bg-wine/[0.03]">
+            {wineCart.map(({ wine, quantity }) => (
+              <li key={wine.id} className="px-5 py-3 flex items-center gap-3">
+                <span className="flex-1 font-sans text-sm italic text-ink truncate">{wine.name}</span>
+                <div className="flex items-center gap-1.5">
+                  <button onClick={() => onRemoveWine(wine)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
+                  <span className="font-sans text-sm w-4 text-center">{quantity}</span>
+                  <button onClick={() => onAddWine(wine)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xs transition-colors">+</button>
+                </div>
+                <span className="font-serif text-sm text-wine w-16 text-right tabular-nums whitespace-nowrap">
+                  {currency}{(wine.price * quantity).toFixed(2)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Wine suggestions (not yet in cart) */}
       {wijnEnabled && suggestedWines.length > 0 && (
         <div className="border-t-2 border-wine">
           <div className="px-5 py-3 bg-wine/[0.08] flex items-center gap-2">
@@ -133,30 +163,6 @@ export default function Cart({
                 </li>
               )
             })}
-          </ul>
-        </div>
-      )}
-
-      {/* Wines already added that aren't in suggestions */}
-      {wineCart.length > 0 && (
-        <div className="border-t border-parchment">
-          <ul className="divide-y divide-dotted divide-parchment">
-            {wineCart
-              .filter(({ wine }) => !suggestedWines.some(w => w.id === wine.id))
-              .map(({ wine, quantity }) => (
-                <li key={wine.id} className="px-5 py-3 flex items-center gap-3">
-                  <Wine size={14} className="text-wine shrink-0" />
-                  <span className="flex-1 font-sans text-sm italic text-ink truncate">{wine.name}</span>
-                  <div className="flex items-center gap-1.5">
-                    <button onClick={() => onRemoveWine(wine)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
-                    <span className="font-sans text-sm w-4 text-center">{quantity}</span>
-                    <button onClick={() => onAddWine(wine)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xs transition-colors">+</button>
-                  </div>
-                  <span className="font-serif text-sm text-ink w-16 text-right tabular-nums whitespace-nowrap">
-                    {currency}{(wine.price * quantity).toFixed(2)}
-                  </span>
-                </li>
-              ))}
           </ul>
         </div>
       )}
