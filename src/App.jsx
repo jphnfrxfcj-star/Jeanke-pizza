@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Trash2, Wine, MapPin, Phone, Mail, Clock } from 'lucide-react'
+import { Trash2, Wine } from 'lucide-react'
 import PizzaCard from './components/PizzaCard'
 import Cart from './components/Cart'
 import CheckoutModal from './components/CheckoutModal'
@@ -427,37 +427,13 @@ function Shop() {
       <footer className="relative bg-cream border-t border-parchment">
         <PaperTexture />
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-14 lg:pb-14 pb-28">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 sm:gap-10">
             <div className="col-span-2 md:col-span-1">
               <p className="font-serif italic text-2xl text-ink">Jeanke's</p>
               <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mt-1">Pizzeria artigianale</p>
               <p className="font-serif italic text-warm-gray text-sm mt-4 leading-relaxed max-w-xs">
                 Vers deeg, houtoven, en een portie Italiaanse <em>allegria</em>.
               </p>
-            </div>
-
-            <div>
-              <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold mb-3">Bezoek</p>
-              <ul className="space-y-2 font-sans text-xs text-warm-gray">
-                <li className="flex items-start gap-2"><MapPin size={12} className="mt-0.5 text-wine shrink-0" /><span>Dorpstraat · België</span></li>
-                <li className="flex items-start gap-2"><Clock size={12} className="mt-0.5 text-wine shrink-0" /><span>{config.openingHour}:00 – {config.closingHour}:00 op besteldagen</span></li>
-              </ul>
-            </div>
-
-            <div>
-              <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold mb-3">Contact</p>
-              <ul className="space-y-2 font-sans text-xs text-warm-gray">
-                <li className="flex items-start gap-2"><Phone size={12} className="mt-0.5 text-wine shrink-0" /><span>Via e-mail</span></li>
-                <li className="flex items-start gap-2"><Mail size={12} className="mt-0.5 text-wine shrink-0" /><a href="mailto:info@jeankespizza.be" className="hover:text-wine transition-colors">info@jeankespizza.be</a></li>
-                <li className="flex items-start gap-2">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 text-wine shrink-0" aria-hidden="true">
-                    <rect x="3" y="3" width="18" height="18" rx="5" ry="5" />
-                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-                  </svg>
-                  <span>@jeankespizza</span>
-                </li>
-              </ul>
             </div>
 
             <div>
