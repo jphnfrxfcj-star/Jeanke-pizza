@@ -117,8 +117,6 @@ export default function Admin() {
   function navigate(key) { setTab(key); setMenuOpen(false) }
 
   const currentTab = tabs.find(t => t.key === tab)
-  const tabIndex = tabs.findIndex(t => t.key === tab)
-  const tabNumeral = ['I','II','III','IV','V','VI','VII'][tabIndex] ?? '·'
 
   return (
     <div className="min-h-screen bg-cream flex">
@@ -131,13 +129,11 @@ export default function Admin() {
           <p className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mt-1">Pizzeria · Beheer</p>
         </div>
         <nav className="flex-1 py-4 overflow-y-auto">
-          {tabs.map((t, i) => {
+          {tabs.map(t => {
             const active = tab === t.key
-            const num = ['I','II','III','IV','V','VI','VII'][i]
             return (
               <button key={t.key} onClick={() => setTab(t.key)}
                 className={`w-full flex items-center gap-3 px-6 py-2.5 text-sm font-sans text-left cursor-pointer transition-colors group ${active ? 'text-wine' : 'text-ink hover:text-wine'}`}>
-                <span className={`font-serif italic text-[11px] w-5 leading-none shrink-0 ${active ? 'text-wine' : 'text-warm-gray-light group-hover:text-wine'}`}>{num}</span>
                 <t.Icon size={15} className="shrink-0" />
                 <span className={active ? 'tracking-wide' : ''}>{t.label}</span>
                 {active && <span className="ml-auto text-wine">·</span>}
@@ -170,8 +166,6 @@ export default function Admin() {
         {/* Desktop page title bar */}
         <div className="hidden lg:flex items-center justify-between px-10 py-8 border-b border-parchment bg-cream">
           <div className="flex items-center gap-4">
-            <span className="font-serif italic text-wine text-sm leading-none">N° {tabNumeral}</span>
-            <span className="h-px w-10 bg-gold/40" />
             <div>
               <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-gold">Beheer</p>
               <h2 className="font-serif text-3xl italic text-ink leading-tight mt-0.5">{currentTab?.label}</h2>
@@ -191,13 +185,11 @@ export default function Admin() {
                 <p className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mt-1">Pizzeria · Beheer</p>
               </div>
               <nav className="flex-1 py-4 overflow-y-auto">
-                {tabs.map((t, i) => {
+                {tabs.map(t => {
                   const active = tab === t.key
-                  const num = ['I','II','III','IV','V','VI','VII'][i]
                   return (
                     <button key={t.key} onClick={() => navigate(t.key)}
                       className={`w-full flex items-center gap-3 px-6 py-3 text-sm font-sans text-left cursor-pointer transition-colors ${active ? 'text-wine' : 'text-ink hover:text-wine'}`}>
-                      <span className={`font-serif italic text-[11px] w-5 leading-none shrink-0 ${active ? 'text-wine' : 'text-warm-gray-light'}`}>{num}</span>
                       <t.Icon size={16} className="shrink-0" />
                       {t.label}
                       {active && <span className="ml-auto text-wine">·</span>}
