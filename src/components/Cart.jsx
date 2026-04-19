@@ -1,4 +1,4 @@
-import { Wine } from 'lucide-react'
+import { Wine, Pizza } from 'lucide-react'
 
 /**
  * Cart — restyled (receipt feel)
@@ -83,6 +83,7 @@ export default function Cart({
       <ul className="divide-y divide-dotted divide-parchment">
         {items.map(({ pizza, quantity }) => (
           <li key={pizza.id} className="px-5 py-3 flex items-center gap-3">
+            <Pizza size={14} className="text-warm-gray shrink-0" />
             <span className="flex-1 font-sans text-sm text-ink truncate">{pizza.name}</span>
             <div className="flex items-center gap-1.5">
               <button onClick={() => onRemove(pizza)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
