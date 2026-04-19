@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { Trash2, Wine, Clock } from 'lucide-react'
 import PizzaCard from './components/PizzaCard'
 import Cart from './components/Cart'
@@ -639,9 +639,10 @@ function HeroSeal() {
 }
 
 function SuccessView({ order, onReset }) {
-  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [])
+  const ref = useRef(null)
+  useEffect(() => { ref.current?.scrollIntoView({ behavior: 'instant', block: 'start' }) }, [])
   return (
-    <div className="max-w-md mx-auto text-center px-4 py-24">
+    <div ref={ref} className="max-w-md mx-auto text-center px-4 py-24 scroll-mt-20">
       <div className="text-5xl mb-5">🎉</div>
       <SectionLabel n="✓" title="Grazie mille" />
       <h2 className="font-serif text-3xl italic mt-5 mb-3">Bestelling geplaatst!</h2>
