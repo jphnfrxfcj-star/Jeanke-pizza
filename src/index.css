@@ -59,3 +59,8 @@ input, select, textarea {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
 }
+
+@keyframes slideIn {
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}

@@ -246,6 +246,50 @@ export default function Admin() {
         </div>
 
       </div>
+      <ToastHost />
+    </div>
+  )
+}
+
+// ─── Toast ─────────────────────────────────────────────────────────────────
+
+function toast(message, type = 'success') {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent('admin-toast', { detail: { message, type, id: Date.now() + Math.random() } }))
+}
+
+function ToastHost() {
+  const [items, setItems] = useState([])
+
+  useEffect(() => {
+    function onToast(e) {
+      const t = e.detail
+      setItems(prev => [...prev, t])
+      setTimeout(() => setItems(prev => prev.filter(i => i.id !== t.id)), 3200)
+    }
+    window.addEventListener('admin-toast', onToast)
+    return () => window.removeEventListener('admin-toast', onToast)
+  }, [])
+
+  if (items.length === 0) return null
+  return (
+    <div className="fixed bottom-4 right-4 z-[60] flex flex-col gap-2 pointer-events-none">
+      {items.map(t => {
+        const color = t.type === 'error' ? 'border-wine bg-wine text-cream'
+          : t.type === 'info' ? 'border-ink bg-ink text-cream'
+          : 'border-olive bg-olive text-cream'
+        return (
+          <div key={t.id}
+            className={`pointer-events-auto border ${color} px-4 py-3 font-sans text-sm shadow-lg min-w-[220px] max-w-xs animate-[slideIn_0.2s_ease-out]`}>
+            <div className="flex items-center gap-3">
+              <span className="font-serif italic text-base leading-none opacity-80">
+                {t.type === 'error' ? '!' : t.type === 'info' ? 'i' : '✓'}
+              </span>
+              <span className="flex-1">{t.message}</span>
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -1456,39 +1500,61 @@ function OpeningTab({ password }) {
 
   async function saveSettings(e) {
     e.preventDefault(); setSavingSettings(true)
-    await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify(siteSettings) })
-    setSavingSettings(false)
+    try {
+      const r = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify(siteSettings) })
+      if (r.ok) toast('Instellingen opgeslagen')
+      else toast('Opslaan mislukt', 'error')
+    } catch { toast('Verbindingsfout', 'error') }
+    finally { setSavingSettings(false) }
   }
 
   async function saveRegConfig(e) {
     e.preventDefault(); setSavingCfg(true)
-    await fetch('/api/register', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ registrationDate: regDate, max: regs.max, openFrom: regs.openFrom, registrationOpen: regs.registrationOpen }) })
-    setSavingCfg(false); load()
+    try {
+      const r = await fetch('/api/register', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ registrationDate: regDate, max: regs.max, openFrom: regs.openFrom, registrationOpen: regs.registrationOpen }) })
+      if (r.ok) { toast('Registratie bijgewerkt'); load() }
+      else toast('Opslaan mislukt', 'error')
+    } catch { toast('Verbindingsfout', 'error') }
+    finally { setSavingCfg(false) }
   }
 
   async function toggleRegistrationOpen() {
     const newVal = !regs.registrationOpen
-    await fetch('/api/register', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ registrationOpen: newVal }) })
-    setRegs(r => ({ ...r, registrationOpen: newVal }))
+    try {
+      const r = await fetch('/api/register', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ registrationOpen: newVal }) })
+      if (r.ok) {
+        setRegs(r => ({ ...r, registrationOpen: newVal }))
+        toast(newVal ? 'Registratiemodus aan' : 'Bestelmodus aan', 'info')
+      } else toast('Wijziging mislukt', 'error')
+    } catch { toast('Verbindingsfout', 'error') }
   }
 
   async function deleteRegistration(email) {
     if (!confirm(`Inschrijving van ${email} verwijderen?`)) return
-    await fetch('/api/register', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ email }) })
-    load()
+    try {
+      const r = await fetch('/api/register', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ email }) })
+      if (r.ok) { toast('Inschrijving verwijderd'); load() }
+      else toast('Verwijderen mislukt', 'error')
+    } catch { toast('Verbindingsfout', 'error') }
   }
 
   async function addDay(e) {
     e.preventDefault()
     if (!newDate) return
-    const res = await fetch('/api/opening-days', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ date: newDate, label: newLabel }) })
-    if (res.ok) { setNewDate(''); setNewLabel(''); load() }
+    try {
+      const res = await fetch('/api/opening-days', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ date: newDate, label: newLabel }) })
+      if (res.ok) { setNewDate(''); setNewLabel(''); toast('Openingsdag toegevoegd'); load() }
+      else toast('Toevoegen mislukt', 'error')
+    } catch { toast('Verbindingsfout', 'error') }
   }
 
   async function removeDay(date) {
     if (!confirm('Openingsdag verwijderen?')) return
-    await fetch('/api/opening-days', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ date }) })
-    load()
+    try {
+      const r = await fetch('/api/opening-days', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ date }) })
+      if (r.ok) { toast('Openingsdag verwijderd'); load() }
+      else toast('Verwijderen mislukt', 'error')
+    } catch { toast('Verbindingsfout', 'error') }
   }
 
   if (loading) return <LoadingCards />
