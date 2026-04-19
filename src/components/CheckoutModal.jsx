@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Wine } from 'lucide-react'
+import { Wine, Pizza } from 'lucide-react'
 
 export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEnabled = false, onAddWine, onRemoveWine, slots, onClose, onSuccess, onAdd, onRemove, currency, settings }) {
   const [name, setName] = useState('')
@@ -139,30 +139,49 @@ export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEn
               <span className="h-px w-4 bg-gold/40" />
               <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">Overzicht</p>
             </div>
-            <ul>
-              {items.map(({ pizza, quantity }) => (
-                <li key={pizza.id} className="px-4 py-2.5 flex items-center gap-3 border-b border-dotted border-warm-gray-light/40 last:border-b-0">
-                  <span className="flex-1 font-serif text-sm text-ink">{pizza.name}</span>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button type="button" aria-label={`Minder ${pizza.name}`} onClick={() => onRemove(pizza)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
-                    <span className="font-sans text-sm w-4 text-center tabular-nums" aria-label={`${quantity} stuks`}>{quantity}</span>
-                    <button type="button" aria-label={`Meer ${pizza.name}`} onClick={() => onAdd(pizza)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xs transition-colors">+</button>
-                  </div>
-                  <span className="font-serif text-sm text-wine w-16 text-right tabular-nums shrink-0">{currency}{(pizza.price * quantity).toFixed(2)}</span>
-                </li>
-              ))}
-              {wineCart.map(({ wine, quantity }) => (
-                <li key={`w-${wine.id}`} className="px-4 py-2.5 flex items-center gap-3 border-b border-dotted border-warm-gray-light/40 last:border-b-0">
-                  <span className="flex-1 font-serif text-sm text-ink">{wine.name}</span>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button type="button" onClick={() => onRemoveWine?.(wine)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
-                    <span className="font-sans text-sm w-4 text-center tabular-nums">{quantity}</span>
-                    <button type="button" onClick={() => onAddWine?.(wine)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xs transition-colors">+</button>
-                  </div>
-                  <span className="font-serif text-sm text-wine w-16 text-right tabular-nums shrink-0">{currency}{(wine.price * quantity).toFixed(2)}</span>
-                </li>
-              ))}
-            </ul>
+            {/* Pizza section */}
+            <div className="border-b border-dashed border-warm-gray-light/50">
+              <div className="px-4 py-2 flex items-center gap-2">
+                <Pizza size={12} className="text-warm-gray" />
+                <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray">Pizza's</p>
+              </div>
+              <ul>
+                {items.map(({ pizza, quantity }) => (
+                  <li key={pizza.id} className="px-4 py-2.5 flex items-center gap-3 border-t border-dotted border-warm-gray-light/40">
+                    <span className="flex-1 font-serif text-sm text-ink">{pizza.name}</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button type="button" aria-label={`Minder ${pizza.name}`} onClick={() => onRemove(pizza)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
+                      <span className="font-sans text-sm w-4 text-center tabular-nums" aria-label={`${quantity} stuks`}>{quantity}</span>
+                      <button type="button" aria-label={`Meer ${pizza.name}`} onClick={() => onAdd(pizza)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xs transition-colors">+</button>
+                    </div>
+                    <span className="font-serif text-sm text-wine w-16 text-right tabular-nums shrink-0">{currency}{(pizza.price * quantity).toFixed(2)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Wine section */}
+            {wineCart.length > 0 && (
+              <div className="border-b border-dashed border-warm-gray-light/50">
+                <div className="px-4 py-2 bg-wine/[0.06] flex items-center gap-2">
+                  <Wine size={12} className="text-wine" />
+                  <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-wine">Wijn</p>
+                </div>
+                <ul className="bg-wine/[0.03]">
+                  {wineCart.map(({ wine, quantity }) => (
+                    <li key={`w-${wine.id}`} className="px-4 py-2.5 flex items-center gap-3 border-t border-dotted border-wine/20">
+                      <span className="flex-1 font-serif text-sm italic text-ink">{wine.name}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button type="button" onClick={() => onRemoveWine?.(wine)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
+                        <span className="font-sans text-sm w-4 text-center tabular-nums">{quantity}</span>
+                        <button type="button" onClick={() => onAddWine?.(wine)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xs transition-colors">+</button>
+                      </div>
+                      <span className="font-serif text-sm text-wine w-16 text-right tabular-nums shrink-0">{currency}{(wine.price * quantity).toFixed(2)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Wine suggestions */}
             {suggestedWines.length > 0 && (
