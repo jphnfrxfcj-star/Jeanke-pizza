@@ -765,7 +765,32 @@ function parsePizzaCounts(orderStr) {
   return counts
 }
 
-function normName(s) { return s.toLowerCase().replace(/\s+/g, ' ').trim() }
+function normName(s) {
+  return (s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')   // strip accents (é → e, ï → i, …)
+    .replace(/['’`´]/g, '')             // strip apostrophes
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+// Loose categorisation for the shopping list. Keyword-based so it also works
+// for onbekende/vrij ingetikte ingrediënten. First match wins.
+const SHOP_CATEGORIES = [
+  { key: 'vlees',    label: 'Vlees & vis',      keywords: ['ham', 'salami', 'spek', 'prosciutto', 'pancetta', 'worst', 'chorizo', 'kip', 'tonijn', 'zalm', 'ansjovis', 'vis', 'gehakt', 'bacon', 'speck', 'kalkoen', 'vlees'] },
+  { key: 'kaas',     label: 'Kaas & zuivel',    keywords: ['kaas', 'mozzarella', 'parmezaan', 'parmigiano', 'gorgonzola', 'ricotta', 'feta', 'pecorino', 'burrata', 'gruyere', 'cheddar', 'mascarpone', 'room', 'boter', 'melk', 'yoghurt'] },
+  { key: 'groente',  label: 'Groenten & fruit', keywords: ['tomaat', 'ui', 'knoflook', 'look', 'paprika', 'champignon', 'olijf', 'aubergine', 'courgette', 'spinazie', 'rucola', 'artisjok', 'kappertjes', 'prei', 'peper', 'basilicum', 'oregano', 'tijm', 'rozemarijn', 'peterselie', 'kruid', 'ananas', 'vijg', 'peer'] },
+  { key: 'basis',    label: 'Basis & saus',     keywords: ['bloem', 'deeg', 'saus', 'tomatensaus', 'passata', 'olie', 'olijfolie', 'zout', 'suiker', 'gist', 'pesto', 'balsamico', 'azijn'] },
+]
+
+function categoryFor(name) {
+  const n = normName(name)
+  for (const c of SHOP_CATEGORIES) {
+    if (c.keywords.some(k => n.includes(k))) return c
+  }
+  return { key: 'overig', label: 'Overig', keywords: [] }
+}
 
 function BoodschappenTab({ password }) {
   const [orders, setOrders] = useState([])
@@ -881,21 +906,46 @@ function ShoppingList({ dates, ingredientsForDate, pizzasForDate }) {
       {ingredients.length === 0 ? (
         <p className="px-5 py-6 font-serif italic text-sm text-warm-gray text-center">Geen ingrediënten gevonden. Controleer of de pizza's ingrediënten hebben ingesteld.</p>
       ) : (
-        <div className="divide-y divide-dotted divide-parchment">
-          {ingredients.map(([name, qty]) => {
-            const done = !!checked[name]
-            return (
-              <button key={name} onClick={() => toggle(name)}
-                className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors active:bg-parchment/40 ${done ? 'bg-parchment/30' : ''}`}>
-                <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${done ? 'bg-olive border-olive' : 'border-warm-gray-light'}`}>
-                  {done && <span className="text-cream text-xs leading-none">✓</span>}
-                </span>
-                <span className={`font-sans text-base flex-1 capitalize transition-colors ${done ? 'line-through text-warm-gray-light' : 'text-ink'}`}>{name}</span>
-                <span className={`font-serif text-xl shrink-0 tabular-nums transition-colors ${done ? 'text-warm-gray-light' : 'text-wine'}`}>{qty}×</span>
-              </button>
-            )
-          })}
-        </div>
+        (() => {
+          const grouped = ingredients.reduce((acc, [name, qty]) => {
+            const cat = categoryFor(name)
+            if (!acc[cat.key]) acc[cat.key] = { label: cat.label, items: [] }
+            acc[cat.key].items.push([name, qty])
+            return acc
+          }, {})
+          const catOrder = ['vlees', 'kaas', 'groente', 'basis', 'overig']
+          return (
+            <div>
+              {catOrder.filter(k => grouped[k]).map(k => {
+                const group = grouped[k]
+                const groupDone = group.items.filter(([n]) => checked[n]).length
+                return (
+                  <div key={k}>
+                    <div className="px-5 py-2 bg-parchment/40 flex items-center justify-between border-t border-dotted border-parchment first:border-t-0">
+                      <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray">{group.label}</p>
+                      <span className="font-sans text-[10px] tabular-nums text-warm-gray-light">{groupDone}/{group.items.length}</span>
+                    </div>
+                    <div className="divide-y divide-dotted divide-parchment">
+                      {group.items.map(([name, qty]) => {
+                        const done = !!checked[name]
+                        return (
+                          <button key={name} onClick={() => toggle(name)}
+                            className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors active:bg-parchment/40 ${done ? 'bg-parchment/30' : ''}`}>
+                            <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${done ? 'bg-olive border-olive' : 'border-warm-gray-light'}`}>
+                              {done && <span className="text-cream text-xs leading-none">✓</span>}
+                            </span>
+                            <span className={`font-sans text-base flex-1 capitalize transition-colors ${done ? 'line-through text-warm-gray-light' : 'text-ink'}`}>{name}</span>
+                            <span className={`font-serif text-xl shrink-0 tabular-nums transition-colors ${done ? 'text-warm-gray-light' : 'text-wine'}`}>{qty}×</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })()
       )}
 
       <div className="px-5 py-4 border-t border-dashed border-parchment space-y-3">
