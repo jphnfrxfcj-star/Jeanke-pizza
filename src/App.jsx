@@ -442,7 +442,6 @@ function Shop() {
                 <li><a href="#menu" className="hover:text-wine transition-colors">Il Menù</a></li>
                 <li><a href="#wijn" className="hover:text-wine transition-colors">La Cantina</a></li>
                 <li><a href="#racconto" className="hover:text-wine transition-colors">Il Racconto</a></li>
-                <li><a href="/annuleer" className="hover:text-wine transition-colors">Bestelling annuleren</a></li>
               </ul>
             </div>
           </div>
