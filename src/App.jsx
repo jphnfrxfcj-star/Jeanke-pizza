@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Trash2, Wine } from 'lucide-react'
+import { Trash2, Wine, Clock } from 'lucide-react'
 import PizzaCard from './components/PizzaCard'
 import Cart from './components/Cart'
 import CheckoutModal from './components/CheckoutModal'
