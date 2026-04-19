@@ -51,10 +51,15 @@ function Shop() {
   useEffect(() => { localStorage.setItem('jeanke_wine_cart', JSON.stringify(wineCart)) }, [wineCart])
   const [showCheckout, setShowCheckout] = useState(false)
   const [successOrder, setSuccessOrder] = useState(null)
-  const [pizzas, setPizzas] = useState([])
+  const [pizzas, setPizzas] = useState(staticPizzas)
   const [wines, setWines] = useState([])
-  const [openingDays, setOpeningDays] = useState(null) // null = loading
-  const [registration, setRegistration] = useState(null)
+  const [openingDays, setOpeningDays] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('jeanke_opening_days') || 'null') } catch { return null }
+  })
+  const [registration, setRegistration] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('jeanke_registration') || 'null') } catch { return null }
+  })
+  const [slotsLoading, setSlotsLoading] = useState(() => !sessionStorage.getItem('jeanke_opening_days'))
   const [settings, setSettings] = useState(null)
   const [regName, setRegName] = useState('')
   const [regEmail, setRegEmail] = useState('')
@@ -64,8 +69,8 @@ function Shop() {
   useEffect(() => {
     fetch('/api/pizzas')
       .then(r => r.json())
-      .then(data => setPizzas(Array.isArray(data) && data.length ? data : staticPizzas))
-      .catch(() => setPizzas(staticPizzas))
+      .then(data => { if (Array.isArray(data) && data.length) setPizzas(data) })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -75,11 +80,16 @@ function Shop() {
         const now = new Date()
         const future = days.filter(d => new Date(d.date + 'T23:59:59') >= now)
         setOpeningDays(future)
+        setSlotsLoading(false)
+        sessionStorage.setItem('jeanke_opening_days', JSON.stringify(future))
       })
-      .catch(() => setOpeningDays([]))
+      .catch(() => { setOpeningDays([]); setSlotsLoading(false) })
     fetch('/api/register')
       .then(r => r.json())
-      .then(setRegistration)
+      .then(data => {
+        setRegistration(data)
+        sessionStorage.setItem('jeanke_registration', JSON.stringify(data))
+      })
       .catch(() => setRegistration({ registrationOpen: false }))
     fetch('/api/settings')
       .then(r => r.json())
@@ -166,7 +176,6 @@ function Shop() {
   }
 
   const showRegistration = registration?.registrationOpen === true
-  const loading = openingDays === null || registration === null
 
   return (
     <div className="min-h-screen bg-cream text-ink relative overflow-x-hidden">
@@ -257,11 +266,7 @@ function Shop() {
 
       {/* ═══════ Main content ═══════ */}
       <main className="relative">
-        {loading ? (
-          <div className="flex justify-center py-32">
-            <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin motion-reduce:animate-none" />
-          </div>
-        ) : showRegistration ? (
+        {showRegistration ? (
           <RegistrationView
             registration={registration}
             pizzas={pizzas}
@@ -389,6 +394,7 @@ function Shop() {
                   onCheckout={() => setShowCheckout(true)}
                   currency={config.currency}
                   hasSlots={slots.length > 0}
+                  slotsLoading={slotsLoading}
                   wines={wines}
                   wineCart={wineCart}
                   onAddWine={addWine}

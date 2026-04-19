@@ -21,6 +21,7 @@ export default function Cart({
   onCheckout,
   currency,
   hasSlots = true,
+  slotsLoading = false,
   wines = [],
   wineCart = [],
   onAddWine,
@@ -186,6 +187,11 @@ export default function Cart({
             <button onClick={onCheckout} className="btn-primary w-full mt-5">Bestelling plaatsen →</button>
             <p className="text-center mt-3 font-sans italic text-[11px] text-warm-gray">Afrekenen aan de deur</p>
           </>
+        ) : slotsLoading ? (
+          <button disabled className="btn-primary w-full mt-5 opacity-50 cursor-not-allowed flex items-center justify-center gap-2">
+            <span className="w-3 h-3 border border-cream/60 border-t-cream rounded-full animate-spin" />
+            Beschikbaarheid laden…
+          </button>
         ) : (
           <div className="text-center mt-5">
             <p className="font-sans text-xs text-wine italic">Geen tijdsloten beschikbaar.</p>
