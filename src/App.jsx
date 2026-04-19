@@ -40,6 +40,7 @@ export default function App() {
 }
 
 function Shop() {
+  useEffect(() => { history.scrollRestoration = 'manual' }, [])
   const [cart, setCart] = useState([])
   const [wineCart, setWineCart] = useState([])
   const [showCheckout, setShowCheckout] = useState(false)
@@ -101,7 +102,11 @@ function Shop() {
     })
   }
   function getQuantity(id) { return cart.find(i => i.pizza.id === id)?.quantity ?? 0 }
-  function handleSuccess(order) { setSuccessOrder(order); setShowCheckout(false); setCart([]); setWineCart([]); window.scrollTo({ top: 0, behavior: 'instant' }) }
+  function handleSuccess(order) {
+    setSuccessOrder(order); setShowCheckout(false); setCart([]); setWineCart([])
+    // timeout laat de modal-cleanup (overflow restore) eerst afronden
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 50)
+  }
   function clearCart() { setCart([]); setWineCart([]) }
 
   function addWine(wine) {
@@ -207,7 +212,7 @@ function Shop() {
       )}
 
       {/* ═══════ Hero ═══════ */}
-      {!successOrder && <header id="top" className="relative bg-cream overflow-hidden">
+      <header id="top" className="relative bg-cream overflow-hidden">
         <PaperTexture />
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-16 sm:py-24 lg:py-28">
           <div className="flex flex-col items-center text-center">
@@ -239,7 +244,7 @@ function Shop() {
             )}
           </div>
         </div>
-      </header>}
+      </header>
 
       {/* ═══════ Main content ═══════ */}
       <main className="relative">
