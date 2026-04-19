@@ -1237,7 +1237,7 @@ function WijnenTab({ password }) {
   const [allIngredients, setAllIngredients] = useState([])
   const [loading, setLoading]       = useState(true)
   const [editing, setEditing]       = useState(null)
-  const [form, setForm]             = useState({ name: '', type: 'rood', price: '', description: '', tags: [] })
+  const [form, setForm]             = useState({ name: '', type: 'rood', price: '', costPrice: '', description: '', tags: [] })
 
   useEffect(() => {
     Promise.all([
@@ -1257,13 +1257,17 @@ function WijnenTab({ password }) {
 
   function startEdit(w) {
     setEditing(w.id)
-    setForm({ name: w.name, type: w.type, price: String(w.price), description: w.description || '', tags: w.tags || [] })
+    setForm({ name: w.name, type: w.type, price: String(w.price), costPrice: w.costPrice != null ? String(w.costPrice) : '', description: w.description || '', tags: w.tags || [] })
   }
-  function startNew() { setEditing('new'); setForm({ name: '', type: 'rood', price: '', description: '', tags: [] }) }
+  function startNew() { setEditing('new'); setForm({ name: '', type: 'rood', price: '', costPrice: '', description: '', tags: [] }) }
 
   async function saveEdit(e) {
     e.preventDefault()
-    const updated = { ...form, price: parseFloat(form.price) }
+    const updated = {
+      ...form,
+      price: parseFloat(form.price),
+      costPrice: form.costPrice === '' ? null : parseFloat(form.costPrice),
+    }
     let newList
     if (editing === 'new') { const maxId = wines.reduce((m, w) => Math.max(m, w.id), 0); newList = [...wines, { id: maxId + 1, ...updated }] }
     else newList = wines.map(w => w.id === editing ? { ...w, ...updated } : w)
@@ -1295,7 +1299,15 @@ function WijnenTab({ password }) {
                 <span className={`font-sans text-[9px] tracking-[0.2em] uppercase px-2 py-0.5 ${TYPE_STYLE[wine.type] || ''}`}>{wine.type}</span>
               </div>
               {wine.description && <p className="font-sans text-xs italic text-warm-gray mt-0.5">{wine.description}</p>}
-              <p className="font-serif text-wine mt-1 tabular-nums">€{wine.price.toFixed(2)}</p>
+              <div className="flex items-baseline gap-2 mt-1">
+                <p className="font-serif text-wine tabular-nums">€{wine.price.toFixed(2)}</p>
+                {wine.costPrice != null && wine.costPrice > 0 && (
+                  <p className="font-sans text-[10px] text-warm-gray tabular-nums">
+                    aankoop €{wine.costPrice.toFixed(2)}
+                    <span className="text-olive ml-1">· +€{(wine.price - wine.costPrice).toFixed(2)}</span>
+                  </p>
+                )}
+              </div>
               {wine.tags?.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
                   {wine.tags.map(tag => <span key={tag} className="font-sans text-[10px] bg-parchment text-warm-gray px-1.5 py-0.5">{tag}</span>)}
@@ -1342,10 +1354,23 @@ function WijnenTab({ password }) {
                 <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Omschrijving</label>
                 <input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Droge Italiaanse rode wijn" className={INPUT} />
               </div>
-              <div>
-                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Prijs</label>
-                <input required type="number" step="0.50" min="0" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} placeholder="€" className={INPUT} />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Verkoop</label>
+                  <input required type="number" step="0.50" min="0" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} placeholder="€" className={INPUT} />
+                </div>
+                <div>
+                  <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-1">Aankoop</label>
+                  <input type="number" step="0.01" min="0" value={form.costPrice} onChange={e => setForm(f => ({ ...f, costPrice: e.target.value }))} placeholder="€ optioneel" className={INPUT} />
+                </div>
               </div>
+              {form.price && form.costPrice && parseFloat(form.price) > 0 && parseFloat(form.costPrice) > 0 && (
+                <p className="font-serif italic text-xs text-warm-gray -mt-1">
+                  Marge per fles: €{(parseFloat(form.price) - parseFloat(form.costPrice)).toFixed(2)}
+                  {' · '}
+                  {(((parseFloat(form.price) - parseFloat(form.costPrice)) / parseFloat(form.price)) * 100).toFixed(0)}%
+                </p>
+              )}
               <div>
                 <label className="font-sans text-xs tracking-widest uppercase text-warm-gray block mb-2">Past bij</label>
                 <p className="font-sans text-xs text-warm-gray italic mb-2">Selecteer ingrediënten waarmee deze wijn past</p>
