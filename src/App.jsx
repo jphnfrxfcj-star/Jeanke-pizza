@@ -658,11 +658,11 @@ function SuccessView({ order, onReset }) {
           {order.timeslots?.length > 1 ? order.timeslots[order.timeslots.length - 1] : order.timeslot}
         </strong>.
       </p>
-      <p className="font-sans text-warm-gray-light text-xs mt-3 mb-1">
-        Bevestiging verstuurd naar {order.email}
+      <p className="font-sans text-warm-gray text-xs mt-3 mb-4">
+        Bevestiging verstuurd naar <span className="text-ink">{order.email}</span>
       </p>
-      <p className="font-sans text-warm-gray-light text-xs mb-8">
-        Niet ontvangen? Controleer uw spam-map.
+      <p className="font-sans text-warm-gray text-xs border border-dashed border-warm-gray-light/60 px-4 py-2.5 mb-8 leading-relaxed">
+        Geen mail ontvangen? Controleer ook uw <strong className="text-ink">spammap</strong> — bevestigingen belanden er soms in.
       </p>
       <button onClick={onReset} className="btn-primary">Nieuwe bestelling</button>
     </div>
