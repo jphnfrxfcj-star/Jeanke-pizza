@@ -1681,6 +1681,7 @@ const COST_LABELS = {
 
 function WinstTab({ password }) {
   const [pizzas, setPizzas]         = useState([])
+  const [wines, setWines]           = useState([])
   const [ingredients, setIngredients] = useState([])
   const [baseCosts, setBaseCosts]   = useState({ hout: 0.50, bloem: 0.30, saus: 0.40, kaas: 1.20 })
   const [openingDays, setOpeningDays] = useState([])
@@ -1695,13 +1696,15 @@ function WinstTab({ password }) {
   useEffect(() => {
     Promise.all([
       fetch('/api/pizzas').then(r => r.json()),
+      fetch('/api/wines').then(r => r.json()),
       fetch('/api/ingredients').then(r => r.json()),
       fetch('/api/costs').then(r => r.json()),
       fetch('/api/opening-days').then(r => r.json()),
       fetch('/api/orders', { headers: { 'x-admin-password': password } }).then(r => r.json()),
       fetch('/api/expenses', { headers: { 'x-admin-password': password } }).then(r => r.json()),
-    ]).then(([p, ings, c, days, ord, exp]) => {
+    ]).then(([p, w, ings, c, days, ord, exp]) => {
       setPizzas(p.length ? p : staticPizzas)
+      setWines(Array.isArray(w) ? w : [])
       setIngredients(Array.isArray(ings) ? ings : [])
       setBaseCosts(c)
       setOpeningDays(days)
@@ -1713,6 +1716,7 @@ function WinstTab({ password }) {
 
   const baseCostTotal = Object.values(baseCosts).reduce((s, v) => s + (parseFloat(v) || 0), 0)
   const ingMap = Object.fromEntries(ingredients.map(i => [i.name, parseFloat(i.cost) || 0]))
+  const wineMap = Object.fromEntries(wines.map(w => [normName(w.name), w]))
 
   function estimatedCost(pizza) {
     const ingCost = (Array.isArray(pizza.ingredients) ? pizza.ingredients : [])
@@ -1722,6 +1726,40 @@ function WinstTab({ password }) {
 
   function parseTotal(str) {
     return parseFloat((str || '').replace(/[^0-9.,]/g, '').replace(',', '.')) || 0
+  }
+
+  // Split order string into pizzas and wines (by name match against wines list)
+  function splitOrderItems(orderStr) {
+    const pizzas = {}
+    const winesOut = {}
+    if (!orderStr) return { pizzas, wines: winesOut }
+    orderStr.split(', ').forEach(part => {
+      const m = part.match(/^(\d+)x (.+) \([€$£]/)
+      if (!m) return
+      const qty = parseInt(m[1], 10)
+      const name = m[2].trim()
+      if (wineMap[normName(name)]) {
+        winesOut[name] = (winesOut[name] || 0) + qty
+      } else {
+        pizzas[name] = (pizzas[name] || 0) + qty
+      }
+    })
+    return { pizzas, wines: winesOut }
+  }
+
+  function wineStatsFor(date) {
+    let revenue = 0, cost = 0, qty = 0
+    orders.filter(o => o.date === date).forEach(o => {
+      const { wines: ws } = splitOrderItems(o.order)
+      Object.entries(ws).forEach(([name, n]) => {
+        const w = wineMap[normName(name)]
+        if (!w) return
+        qty += n
+        revenue += (w.price || 0) * n
+        cost += ((w.costPrice != null ? w.costPrice : 0) || 0) * n
+      })
+    })
+    return { revenue, cost, margin: revenue - cost, qty }
   }
 
   async function saveBaseCosts(e) {
@@ -1772,6 +1810,7 @@ function WinstTab({ password }) {
               const revenue    = dayOrders.reduce((s, o) => s + parseTotal(o.total), 0)
               const dayExp     = expenses.filter(e => e.date === day.date)
               const totalExp   = dayExp.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0)
+              const wineS      = wineStatsFor(day.date)
               const result     = revenue - totalExp
               return (
                 <div key={day.date} className="bg-white border border-parchment mb-3">
@@ -1798,6 +1837,15 @@ function WinstTab({ password }) {
                         <span className="font-sans text-xs italic text-warm-gray ml-1">({dayOrders.length} best.)</span>
                       </span>
                     </div>
+                    {wineS.qty > 0 && (
+                      <div className="flex justify-between text-xs pl-3 border-l-2 border-wine/20">
+                        <span className="font-sans text-warm-gray italic">↳ wijn ({wineS.qty}×)</span>
+                        <span className="font-serif text-warm-gray tabular-nums">
+                          €{wineS.revenue.toFixed(2)}
+                          {wineS.cost > 0 && <span className="text-olive ml-1">winst €{wineS.margin.toFixed(2)}</span>}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm">
                       <span className="font-sans text-warm-gray">Uitgaven</span>
                       <span className="font-serif text-ink tabular-nums">−€{totalExp.toFixed(2)}</span>
@@ -1888,6 +1936,50 @@ function WinstTab({ password }) {
         </div>
         <p className="font-serif italic text-xs text-warm-gray mt-3">Geschatte kostprijs = basiskosten + som ingrediëntkosten. Verkoopprijs stel je zelf in bij Pizza's.</p>
       </div>
+
+      {/* ── Per wijn — marge ── */}
+      {wines.length > 0 && (
+        <div>
+          <SectionLabel>Per wijn — marge</SectionLabel>
+          <div className="space-y-2">
+            {wines.map(wine => {
+              const cost = wine.costPrice != null ? wine.costPrice : 0
+              const hasCost = cost > 0
+              const margin = wine.price - cost
+              const pct = wine.price > 0 ? (margin / wine.price) * 100 : 0
+              return (
+                <div key={wine.id} className="bg-white border border-parchment p-3">
+                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-dotted border-warm-gray-light/40">
+                    <Wine size={14} className="text-wine shrink-0" />
+                    <span className="font-serif text-ink flex-1 min-w-0 truncate">{wine.name}</span>
+                    {hasCost
+                      ? <span className={`font-sans text-[10px] tracking-[0.2em] uppercase px-2 py-0.5 shrink-0 tabular-nums ${pct >= 40 ? 'bg-olive/10 text-olive' : 'bg-wine/10 text-wine'}`}>{pct.toFixed(0)}%</span>
+                      : <span className="font-sans text-[10px] tracking-[0.2em] uppercase px-2 py-0.5 shrink-0 bg-parchment/60 text-warm-gray">geen aankoop</span>
+                    }
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="bg-parchment/50 p-2">
+                      <div className="font-sans text-[9px] text-warm-gray uppercase tracking-[0.2em] mb-0.5">Aankoop</div>
+                      <div className="font-serif text-base text-ink tabular-nums">{hasCost ? `€${cost.toFixed(2)}` : '—'}</div>
+                    </div>
+                    <div className="bg-parchment/50 p-2">
+                      <div className="font-sans text-[9px] text-warm-gray uppercase tracking-[0.2em] mb-0.5">Verkoop</div>
+                      <div className="font-serif text-base text-ink tabular-nums">€{wine.price.toFixed(2)}</div>
+                    </div>
+                    <div className={`p-2 ${!hasCost ? 'bg-parchment/30' : margin >= 0 ? 'bg-olive/10' : 'bg-wine/10'}`}>
+                      <div className="font-sans text-[9px] text-warm-gray uppercase tracking-[0.2em] mb-0.5">Winst</div>
+                      <div className={`font-serif text-base tabular-nums ${!hasCost ? 'text-warm-gray-light' : margin >= 0 ? 'text-olive' : 'text-wine'}`}>
+                        {hasCost ? `€${margin.toFixed(2)}` : '—'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <p className="font-serif italic text-xs text-warm-gray mt-3">Vul de aankoopprijs in bij Wijnen om marges te berekenen.</p>
+        </div>
+      )}
 
       {/* ── Kostprijs ingrediënten ── */}
       <div className="bg-white border border-parchment">
