@@ -148,8 +148,8 @@ function confirmationHtml({ name, order, date, timeslot, total, cancelToken }) {
     </td></tr>
 
     <!-- Cancel link -->
-    <tr><td align="center" style="padding:4px 32px 28px;">
-      <a href="${cancelUrl}" style="font-family:Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:${C.lightGray};text-decoration:underline;">Bestelling annuleren</a>
+    <tr><td align="center" style="padding:8px 32px 32px;">
+      <a href="${cancelUrl}" style="display:inline-block;font-family:Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:${C.warmGray};text-decoration:none;border:1px solid ${C.parchment};padding:12px 24px;">Bestelling annuleren</a>
     </td></tr>
   `)
 }
