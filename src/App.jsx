@@ -101,7 +101,7 @@ function Shop() {
     })
   }
   function getQuantity(id) { return cart.find(i => i.pizza.id === id)?.quantity ?? 0 }
-  function handleSuccess(order) { setSuccessOrder(order); setShowCheckout(false); setCart([]); setWineCart([]) }
+  function handleSuccess(order) { setSuccessOrder(order); setShowCheckout(false); setCart([]); setWineCart([]); window.scrollTo({ top: 0, behavior: 'instant' }) }
   function clearCart() { setCart([]); setWineCart([]) }
 
   function addWine(wine) {
@@ -207,7 +207,7 @@ function Shop() {
       )}
 
       {/* ═══════ Hero ═══════ */}
-      <header id="top" className="relative bg-cream overflow-hidden">
+      {!successOrder && <header id="top" className="relative bg-cream overflow-hidden">
         <PaperTexture />
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-16 sm:py-24 lg:py-28">
           <div className="flex flex-col items-center text-center">
@@ -239,7 +239,7 @@ function Shop() {
             )}
           </div>
         </div>
-      </header>
+      </header>}
 
       {/* ═══════ Main content ═══════ */}
       <main className="relative">
@@ -639,10 +639,8 @@ function HeroSeal() {
 }
 
 function SuccessView({ order, onReset }) {
-  const ref = useRef(null)
-  useEffect(() => { ref.current?.scrollIntoView({ behavior: 'instant', block: 'start' }) }, [])
   return (
-    <div ref={ref} className="max-w-md mx-auto text-center px-4 py-24 scroll-mt-20">
+    <div className="max-w-md mx-auto text-center px-4 py-24">
       <div className="text-5xl mb-5">🎉</div>
       <SectionLabel n="✓" title="Grazie mille" />
       <h2 className="font-serif text-3xl italic mt-5 mb-3">Bestelling geplaatst!</h2>
