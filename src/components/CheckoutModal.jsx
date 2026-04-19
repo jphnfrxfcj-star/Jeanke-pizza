@@ -35,12 +35,14 @@ export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEn
   const total = pizzaTotal + wineTotal
 
   const cartIngredients = items.flatMap(i => Array.isArray(i.pizza.ingredients) ? i.pizza.ingredients : [])
-  const suggestedWines = wijnEnabled && cartIngredients.length > 0
-    ? wines.filter(w => w.tags?.some(tag =>
-        cartIngredients.some(ing => ing.toLowerCase().includes(tag.toLowerCase()) || tag.toLowerCase().includes(ing.toLowerCase()))
-      ))
-    : []
   function wineQty(id) { return wineCart.find(i => i.wine.id === id)?.quantity ?? 0 }
+  const suggestedWines = wijnEnabled && cartIngredients.length > 0
+    ? wines.filter(w =>
+        wineQty(w.id) === 0 &&
+        w.tags?.some(tag =>
+          cartIngredients.some(ing => ing.toLowerCase().includes(tag.toLowerCase()) || tag.toLowerCase().includes(ing.toLowerCase()))
+        ))
+    : []
   const availableDates = [...new Set(slots.map(s => s.date))]
   const slotsForDate = slots.filter(s => s.date === selectedDate)
   const orderText = [
@@ -163,11 +165,11 @@ export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEn
             {/* Wine section */}
             {wineCart.length > 0 && (
               <div className="border-b border-dashed border-warm-gray-light/50">
-                <div className="px-4 py-2 bg-wine/[0.06] flex items-center gap-2">
-                  <Wine size={12} className="text-wine" />
-                  <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-wine">Wijn</p>
+                <div className="px-4 py-2 flex items-center gap-2">
+                  <Wine size={12} className="text-warm-gray" />
+                  <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray">Wijn</p>
                 </div>
-                <ul className="bg-wine/[0.03]">
+                <ul>
                   {wineCart.map(({ wine, quantity }) => (
                     <li key={`w-${wine.id}`} className="px-4 py-2.5 flex items-center gap-3 border-t border-dotted border-wine/20">
                       <span className="flex-1 font-serif text-sm italic text-ink">{wine.name}</span>

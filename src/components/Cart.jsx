@@ -33,12 +33,14 @@ export default function Cart({
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
 
   const cartIngredients = items.flatMap(i => Array.isArray(i.pizza.ingredients) ? i.pizza.ingredients : [])
-  const suggestedWines = wijnEnabled && cartIngredients.length > 0
-    ? wines.filter(w => w.tags?.some(tag =>
-        cartIngredients.some(ing => ing.toLowerCase().includes(tag.toLowerCase()) || tag.toLowerCase().includes(ing.toLowerCase()))
-      ))
-    : []
   const wineQty = (id) => wineCart.find(i => i.wine.id === id)?.quantity ?? 0
+  const suggestedWines = wijnEnabled && cartIngredients.length > 0
+    ? wines.filter(w =>
+        wineQty(w.id) === 0 &&
+        w.tags?.some(tag =>
+          cartIngredients.some(ing => ing.toLowerCase().includes(tag.toLowerCase()) || tag.toLowerCase().includes(ing.toLowerCase()))
+        ))
+    : []
 
   if (items.length === 0) {
     return (
@@ -106,11 +108,11 @@ export default function Cart({
       {/* Wines already in cart */}
       {wineCart.length > 0 && (
         <div className="border-b border-dashed border-parchment">
-          <div className="px-5 py-2 bg-wine/[0.06] flex items-center gap-2">
-            <Wine size={12} className="text-wine" />
-            <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-wine">Wijn</p>
+          <div className="px-5 py-2 flex items-center gap-2">
+            <Wine size={12} className="text-warm-gray" />
+            <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray">Wijn</p>
           </div>
-          <ul className="divide-y divide-dotted divide-wine/10 bg-wine/[0.03]">
+          <ul className="divide-y divide-dotted divide-parchment">
             {wineCart.map(({ wine, quantity }) => (
               <li key={wine.id} className="px-5 py-3 flex items-center gap-3">
                 <span className="flex-1 font-sans text-sm italic text-ink truncate">{wine.name}</span>
