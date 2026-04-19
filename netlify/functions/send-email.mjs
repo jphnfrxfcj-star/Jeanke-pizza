@@ -51,9 +51,9 @@ function emailWrapper(content) {
       <tr><td align="center" style="padding-bottom:28px;">
         <p style="margin:0 0 6px;font-family:Georgia,serif;font-size:11px;letter-spacing:5px;text-transform:uppercase;color:${C.gold};">Jeanke&rsquo;s Pizza</p>
         <table cellpadding="0" cellspacing="0" border="0" align="center"><tr>
-          <td style="width:40px;height:1px;background:${C.gold};opacity:0.4;font-size:0;">&nbsp;</td>
-          <td style="padding:0 10px;color:${C.gold};font-size:12px;">&#10022;</td>
-          <td style="width:40px;height:1px;background:${C.gold};opacity:0.4;font-size:0;">&nbsp;</td>
+          <td style="width:36px;border-top:1px solid ${C.gold};font-size:0;line-height:0;">&nbsp;</td>
+          <td style="padding:0 8px;color:${C.gold};font-size:11px;line-height:1;">&#10022;</td>
+          <td style="width:36px;border-top:1px solid ${C.gold};font-size:0;line-height:0;">&nbsp;</td>
         </tr></table>
       </td></tr>
 
