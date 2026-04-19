@@ -83,9 +83,6 @@ export default function Cart({
       <ul className="divide-y divide-dotted divide-parchment">
         {items.map(({ pizza, quantity }) => (
           <li key={pizza.id} className="px-5 py-3 flex items-center gap-3">
-            <span className="w-6 h-6 shrink-0 rounded-full border border-warm-gray-light/60 flex items-center justify-center font-serif text-[11px] text-warm-gray leading-none select-none">
-              {pizza.name.charAt(0)}
-            </span>
             <span className="flex-1 font-sans text-sm text-ink truncate">{pizza.name}</span>
             <div className="flex items-center gap-1.5">
               <button onClick={() => onRemove(pizza)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
