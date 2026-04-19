@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Clock, ClipboardList, ShoppingBasket, ChefHat, TrendingUp, Settings, Menu, Wine } from 'lucide-react'
+import { Clock, ClipboardList, ShoppingBasket, ChefHat, TrendingUp, Settings, Menu, Wine, LayoutDashboard, LogOut } from 'lucide-react'
 import config from '../data/config.json'
 import staticPizzas from '../data/pizzas.json'
 import PaperTexture from './PaperTexture'
@@ -28,7 +28,7 @@ export default function Admin() {
   const [authChecking, setAuthChecking] = useState(true)
   const [password, setPassword] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
-  const [tab, setTab] = useState('orders')
+  const [tab, setTab] = useState('dashboard')
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -105,14 +105,21 @@ export default function Admin() {
   const pw = sessionStorage.getItem('adminPw')
 
   const tabs = [
-    { key: 'dag',          label: 'Dag',           Icon: Clock },
-    { key: 'orders',       label: 'Bestellingen',  Icon: ClipboardList },
-    { key: 'boodschappen', label: 'Boodschappen',  Icon: ShoppingBasket },
-    { key: 'pizzas',       label: "Pizza's",       Icon: ChefHat },
-    { key: 'wijnen',       label: 'Wijnen',        Icon: Wine },
-    { key: 'winst',        label: 'Winst',         Icon: TrendingUp },
-    { key: 'opening',      label: 'Instellingen',  Icon: Settings },
+    { key: 'dashboard',    label: 'Dashboard',     Icon: LayoutDashboard, group: 'daily' },
+    { key: 'dag',          label: 'Dag',           Icon: Clock,           group: 'daily' },
+    { key: 'orders',       label: 'Bestellingen',  Icon: ClipboardList,   group: 'daily' },
+    { key: 'boodschappen', label: 'Boodschappen',  Icon: ShoppingBasket,  group: 'daily' },
+    { key: 'pizzas',       label: "Pizza's",       Icon: ChefHat,         group: 'config' },
+    { key: 'wijnen',       label: 'Wijnen',        Icon: Wine,            group: 'config' },
+    { key: 'winst',        label: 'Winst',         Icon: TrendingUp,      group: 'config' },
+    { key: 'opening',      label: 'Instellingen',  Icon: Settings,        group: 'config' },
   ]
+
+  function logout() {
+    sessionStorage.removeItem('adminPw')
+    setAuthed(false)
+    setPassword('')
+  }
 
   function navigate(key) { setTab(key); setMenuOpen(false) }
 
@@ -129,20 +136,31 @@ export default function Admin() {
           <p className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mt-1">Pizzeria · Beheer</p>
         </div>
         <nav className="flex-1 py-4 overflow-y-auto">
-          {tabs.map(t => {
+          {tabs.map((t, i) => {
             const active = tab === t.key
+            const prevGroup = i > 0 ? tabs[i - 1].group : null
             return (
-              <button key={t.key} onClick={() => setTab(t.key)}
-                className={`w-full flex items-center gap-3 px-6 py-2.5 text-sm font-sans text-left cursor-pointer transition-colors group ${active ? 'text-wine' : 'text-ink hover:text-wine'}`}>
-                <t.Icon size={15} className="shrink-0" />
-                <span className={active ? 'tracking-wide' : ''}>{t.label}</span>
-                {active && <span className="ml-auto text-wine">·</span>}
-              </button>
+              <div key={t.key}>
+                {prevGroup && prevGroup !== t.group && (
+                  <div className="px-6 my-3 border-t border-dotted border-parchment" />
+                )}
+                <button onClick={() => setTab(t.key)}
+                  className={`w-full flex items-center gap-3 px-6 py-2.5 text-sm font-sans text-left cursor-pointer transition-colors group ${active ? 'text-wine' : 'text-ink hover:text-wine'}`}>
+                  <t.Icon size={15} className="shrink-0" />
+                  <span className={active ? 'tracking-wide' : ''}>{t.label}</span>
+                  {active && <span className="ml-auto text-wine">·</span>}
+                </button>
+              </div>
             )
           })}
         </nav>
-        <div className="border-t border-dashed border-parchment px-6 py-4">
-          <a href="/" className="font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray hover:text-wine transition-colors">← Terug naar shop</a>
+        <div className="border-t border-dashed border-parchment px-6 py-4 flex items-center justify-between gap-3">
+          <a href="/" className="font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray hover:text-wine transition-colors">← Shop</a>
+          <button onClick={logout} aria-label="Uitloggen" title="Uitloggen"
+            className="flex items-center gap-1.5 font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray hover:text-wine transition-colors">
+            <LogOut size={12} />
+            Uit
+          </button>
         </div>
       </aside>
 
@@ -185,20 +203,31 @@ export default function Admin() {
                 <p className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mt-1">Pizzeria · Beheer</p>
               </div>
               <nav className="flex-1 py-4 overflow-y-auto">
-                {tabs.map(t => {
+                {tabs.map((t, i) => {
                   const active = tab === t.key
+                  const prevGroup = i > 0 ? tabs[i - 1].group : null
                   return (
-                    <button key={t.key} onClick={() => navigate(t.key)}
-                      className={`w-full flex items-center gap-3 px-6 py-3 text-sm font-sans text-left cursor-pointer transition-colors ${active ? 'text-wine' : 'text-ink hover:text-wine'}`}>
-                      <t.Icon size={16} className="shrink-0" />
-                      {t.label}
-                      {active && <span className="ml-auto text-wine">·</span>}
-                    </button>
+                    <div key={t.key}>
+                      {prevGroup && prevGroup !== t.group && (
+                        <div className="px-6 my-3 border-t border-dotted border-parchment" />
+                      )}
+                      <button onClick={() => navigate(t.key)}
+                        className={`w-full flex items-center gap-3 px-6 py-3 text-sm font-sans text-left cursor-pointer transition-colors ${active ? 'text-wine' : 'text-ink hover:text-wine'}`}>
+                        <t.Icon size={16} className="shrink-0" />
+                        {t.label}
+                        {active && <span className="ml-auto text-wine">·</span>}
+                      </button>
+                    </div>
                   )
                 })}
               </nav>
-              <div className="border-t border-dashed border-parchment px-6 py-4">
-                <a href="/" className="font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray hover:text-wine transition-colors">← Terug naar shop</a>
+              <div className="border-t border-dashed border-parchment px-6 py-4 flex items-center justify-between gap-3">
+                <a href="/" className="font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray hover:text-wine transition-colors">← Shop</a>
+                <button onClick={() => { logout(); setMenuOpen(false) }}
+                  className="flex items-center gap-1.5 font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray hover:text-wine transition-colors">
+                  <LogOut size={12} />
+                  Uitloggen
+                </button>
               </div>
             </div>
           </div>
@@ -206,6 +235,7 @@ export default function Admin() {
 
         {/* Content */}
         <div className="px-4 lg:px-8 py-6 pb-10 w-full overflow-hidden">
+          {tab === 'dashboard'    && <DashboardTab    password={pw} onNavigate={setTab} />}
           {tab === 'dag'          && <DagTab          password={pw} />}
           {tab === 'orders'       && <OrdersTab       password={pw} />}
           {tab === 'boodschappen' && <BoodschappenTab password={pw} />}
@@ -217,6 +247,183 @@ export default function Admin() {
 
       </div>
     </div>
+  )
+}
+
+// ─── Dashboard ─────────────────────────────────────────────────────────────
+
+function parseTotal(totalStr) {
+  if (!totalStr) return 0
+  const m = String(totalStr).match(/[\d]+[.,]?[\d]*/)
+  if (!m) return 0
+  return parseFloat(m[0].replace(',', '.')) || 0
+}
+
+function parseQty(orderStr) {
+  let qty = 0
+  if (!orderStr) return qty
+  orderStr.split(', ').forEach(part => {
+    const m = part.match(/^(\d+)x /)
+    if (m) qty += parseInt(m[1], 10)
+  })
+  return qty
+}
+
+function DashboardTab({ password, onNavigate }) {
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [now, setNow] = useState(new Date())
+
+  useEffect(() => {
+    fetch('/api/orders', { headers: { 'x-admin-password': password } })
+      .then(r => r.json())
+      .then(d => { setOrders(Array.isArray(d) ? d : []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 60_000)
+    return () => clearInterval(t)
+  }, [])
+
+  const today = new Date().toISOString().split('T')[0]
+  const todayOrders = orders.filter(o => o.date === today)
+    .sort((a, b) => a.time.localeCompare(b.time))
+  const upcoming = orders.filter(o => o.date > today)
+
+  const revenueToday = todayOrders.reduce((s, o) => s + parseTotal(o.total), 0)
+  const pizzasToday = todayOrders.reduce((s, o) => s + parseQty(o.order), 0)
+
+  const nowHM = now.toTimeString().slice(0, 5)
+  const nextSlot = todayOrders.find(o => o.time >= nowHM)
+  const currentSlot = [...todayOrders].reverse().find(o => o.time <= nowHM)
+  const futureSlotLabel = nextSlot ? nextSlot.time : '—'
+
+  // Upcoming grouped
+  const upcomingByDate = upcoming.reduce((acc, o) => {
+    if (!acc[o.date]) acc[o.date] = { count: 0, revenue: 0, pizzas: 0 }
+    acc[o.date].count += 1
+    acc[o.date].revenue += parseTotal(o.total)
+    acc[o.date].pizzas += parseQty(o.order)
+    return acc
+  }, {})
+  const upcomingDates = Object.entries(upcomingByDate).sort((a, b) => a[0].localeCompare(b[0])).slice(0, 5)
+
+  if (loading) return <LoadingCards />
+
+  return (
+    <div className="space-y-8 max-w-5xl">
+      {/* Greeting */}
+      <div>
+        <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-gold mb-1">Buongiorno</p>
+        <h3 className="font-serif italic text-3xl text-ink leading-tight">{formatLongDate(today)}</h3>
+        <p className="font-serif italic text-sm text-warm-gray mt-1">
+          {todayOrders.length === 0 ? 'Nog geen bestellingen vandaag.' : `${todayOrders.length} ${todayOrders.length === 1 ? 'bestelling' : 'bestellingen'} in de oven.`}
+        </p>
+      </div>
+
+      {/* KPI tiles */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <KpiTile label="Bestellingen" value={todayOrders.length} hint="vandaag" />
+        <KpiTile label="Omzet" value={`€${revenueToday.toFixed(2)}`} hint="vandaag" />
+        <KpiTile label="Pizza's" value={pizzasToday} hint="te bakken" />
+        <KpiTile label="Volgend slot" value={futureSlotLabel} hint={nextSlot ? nextSlot.name : 'geen meer'} />
+      </div>
+
+      {/* Today's timeline */}
+      <div className="bg-white border border-parchment">
+        <div className="px-5 py-4 border-b border-dashed border-parchment flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
+            <span className="h-px w-5 bg-gold/40" />
+            <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">Vandaag</p>
+          </div>
+          <button onClick={() => onNavigate('dag')}
+            className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray hover:text-wine transition-colors">
+            Bakkerij →
+          </button>
+        </div>
+        {todayOrders.length === 0 ? (
+          <div className="p-8 text-center">
+            <p className="font-serif italic text-sm text-warm-gray">Geen bestellingen voor vandaag.</p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-dotted divide-parchment">
+            {todayOrders.map(o => {
+              const isNext = nextSlot && nextSlot.key === o.key
+              const isPast = o.time < nowHM && !(currentSlot && currentSlot.key === o.key)
+              return (
+                <li key={o.key} className={`px-5 py-3 flex items-center gap-4 ${isPast ? 'opacity-50' : ''}`}>
+                  <span className={`font-serif tabular-nums text-lg w-14 ${isNext ? 'text-wine' : 'text-ink'}`}>{o.time}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-sans text-sm text-ink truncate">{o.name}</p>
+                    <p className="font-serif italic text-xs text-warm-gray truncate">{o.order}</p>
+                  </div>
+                  <span className="font-serif text-sm text-wine tabular-nums shrink-0">{o.total}</span>
+                  {isNext && (
+                    <span className="font-sans text-[9px] tracking-[0.24em] uppercase text-wine shrink-0">Volgende</span>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+
+      {/* Upcoming days */}
+      {upcomingDates.length > 0 && (
+        <div className="bg-white border border-parchment">
+          <div className="px-5 py-4 border-b border-dashed border-parchment flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
+              <span className="h-px w-5 bg-gold/40" />
+              <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">Komende dagen</p>
+            </div>
+            <button onClick={() => onNavigate('orders')}
+              className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray hover:text-wine transition-colors">
+              Alle bestellingen →
+            </button>
+          </div>
+          <ul className="divide-y divide-dotted divide-parchment">
+            {upcomingDates.map(([date, s]) => (
+              <li key={date} className="px-5 py-3 flex items-center gap-4">
+                <span className="font-serif italic text-sm text-ink flex-1 truncate">{formatLongDate(date)}</span>
+                <span className="font-sans text-[11px] tracking-[0.2em] uppercase text-warm-gray tabular-nums">{s.count} best.</span>
+                <span className="font-sans text-[11px] tracking-[0.2em] uppercase text-warm-gray tabular-nums hidden sm:inline">{s.pizzas} pz</span>
+                <span className="font-serif text-sm text-wine tabular-nums w-20 text-right">€{s.revenue.toFixed(2)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Quick actions */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <QuickAction label="Boodschappen" onClick={() => onNavigate('boodschappen')} />
+        <QuickAction label="Pizza's" onClick={() => onNavigate('pizzas')} />
+        <QuickAction label="Wijnen" onClick={() => onNavigate('wijnen')} />
+        <QuickAction label="Instellingen" onClick={() => onNavigate('opening')} />
+      </div>
+    </div>
+  )
+}
+
+function KpiTile({ label, value, hint }) {
+  return (
+    <div className="bg-white border border-parchment px-4 py-4">
+      <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray">{label}</p>
+      <p className="font-serif text-3xl text-ink tabular-nums leading-none mt-2">{value}</p>
+      {hint && <p className="font-serif italic text-[11px] text-warm-gray mt-2 truncate">{hint}</p>}
+    </div>
+  )
+}
+
+function QuickAction({ label, onClick }) {
+  return (
+    <button onClick={onClick}
+      className="border border-parchment bg-white hover:border-wine hover:text-wine transition-colors px-4 py-3 font-sans text-[11px] tracking-[0.24em] uppercase text-ink text-left">
+      {label} →
+    </button>
   )
 }
 
