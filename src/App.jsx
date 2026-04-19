@@ -41,14 +41,14 @@ export default function App() {
 
 function Shop() {
   useEffect(() => { history.scrollRestoration = 'manual' }, [])
-  useEffect(() => { localStorage.setItem('jeanke_cart', JSON.stringify(cart)) }, [cart])
-  useEffect(() => { localStorage.setItem('jeanke_wine_cart', JSON.stringify(wineCart)) }, [wineCart])
   const [cart, setCart] = useState(() => {
     try { return JSON.parse(localStorage.getItem('jeanke_cart') || '[]') } catch { return [] }
   })
   const [wineCart, setWineCart] = useState(() => {
     try { return JSON.parse(localStorage.getItem('jeanke_wine_cart') || '[]') } catch { return [] }
   })
+  useEffect(() => { localStorage.setItem('jeanke_cart', JSON.stringify(cart)) }, [cart])
+  useEffect(() => { localStorage.setItem('jeanke_wine_cart', JSON.stringify(wineCart)) }, [wineCart])
   const [showCheckout, setShowCheckout] = useState(false)
   const [successOrder, setSuccessOrder] = useState(null)
   const [pizzas, setPizzas] = useState([])
