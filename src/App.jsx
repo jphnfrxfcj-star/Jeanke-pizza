@@ -41,8 +41,14 @@ export default function App() {
 
 function Shop() {
   useEffect(() => { history.scrollRestoration = 'manual' }, [])
-  const [cart, setCart] = useState([])
-  const [wineCart, setWineCart] = useState([])
+  useEffect(() => { localStorage.setItem('jeanke_cart', JSON.stringify(cart)) }, [cart])
+  useEffect(() => { localStorage.setItem('jeanke_wine_cart', JSON.stringify(wineCart)) }, [wineCart])
+  const [cart, setCart] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('jeanke_cart') || '[]') } catch { return [] }
+  })
+  const [wineCart, setWineCart] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('jeanke_wine_cart') || '[]') } catch { return [] }
+  })
   const [showCheckout, setShowCheckout] = useState(false)
   const [successOrder, setSuccessOrder] = useState(null)
   const [pizzas, setPizzas] = useState([])
@@ -107,7 +113,10 @@ function Shop() {
     // timeout laat de modal-cleanup (overflow restore) eerst afronden
     setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 50)
   }
-  function clearCart() { setCart([]); setWineCart([]) }
+  function clearCart() {
+    setCart([]); setWineCart([])
+    localStorage.removeItem('jeanke_cart'); localStorage.removeItem('jeanke_wine_cart')
+  }
 
   function addWine(wine) {
     setWineCart(prev => {
@@ -646,7 +655,12 @@ function HeroSeal() {
 function SuccessView({ order, onReset }) {
   return (
     <div className="max-w-md mx-auto text-center px-4 py-24">
-      <div className="text-5xl mb-5">🎉</div>
+      <div className="mx-auto mb-5 w-14 h-14 flex items-center justify-center">
+        <svg width="56" height="56" viewBox="0 0 56 56" className="text-wine">
+          <circle cx="28" cy="28" r="22" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" />
+          <text x="28" y="33" textAnchor="middle" fontSize="16" fontFamily="serif" fill="currentColor">✓</text>
+        </svg>
+      </div>
       <SectionLabel n="✓" title="Grazie mille" />
       <h2 className="font-serif text-3xl italic mt-5 mb-3">Bestelling geplaatst!</h2>
       <p className="font-sans text-warm-gray text-sm mb-1">
