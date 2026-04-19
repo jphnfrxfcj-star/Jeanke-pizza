@@ -86,9 +86,9 @@ function dataRow(label, value, last = false) {
   return `
     <tr>
       <td style="padding:8px 0;font-family:Georgia,serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${C.warmGray};width:90px;vertical-align:top;">${label}</td>
-      <td style="padding:8px 0;font-family:Georgia,serif;font-size:14px;color:${C.ink};text-align:right;">${value}</td>
+      <td colspan="2" style="padding:8px 0;font-family:Georgia,serif;font-size:14px;color:${C.ink};text-align:right;">${value}</td>
     </tr>
-    ${!last ? `<tr><td colspan="2" style="font-size:0;height:1px;"><div style="border-top:1px dotted ${C.parchment};"></div></td></tr>` : ''}`
+    ${!last ? `<tr><td colspan="3" style="font-size:0;line-height:0;border-top:1px dotted ${C.parchment};">&nbsp;</td></tr>` : ''}`
 }
 
 // ── Confirmation email (to customer) ───────────────────────────────────────
@@ -99,9 +99,21 @@ function confirmationHtml({ name, order, date, timeslot, total, cancelToken }) {
   const safeTimeslot  = escapeHtml(timeslot)
   const safeTotal     = escapeHtml(total)
 
-  const orderRows = order.split(', ').map(item =>
-    `<tr><td colspan="2" style="padding:5px 0;font-family:Georgia,serif;font-size:13px;color:${C.ink};">${escapeHtml(item)}</td></tr>`
-  ).join('')
+  const orderRows = order.split(', ').map((item, i, arr) => {
+    const m = item.match(/^(\d+)x (.+?) \((.+?)\)$/)
+    const qty   = m ? escapeHtml(m[1]) : ''
+    const naam  = m ? escapeHtml(m[2]) : escapeHtml(item)
+    const prijs = m ? escapeHtml(m[3]) : ''
+    const isLast = i === arr.length - 1
+    return `
+      <tr>
+        <td style="padding:9px 0;font-family:Georgia,serif;font-size:13px;color:${C.wine};width:28px;vertical-align:top;">${qty}×</td>
+        <td style="padding:9px 6px;font-family:Georgia,serif;font-size:14px;color:${C.ink};vertical-align:top;">${naam}</td>
+        <td align="right" style="padding:9px 0;font-family:Georgia,serif;font-size:14px;color:${C.ink};white-space:nowrap;vertical-align:top;">${prijs}</td>
+      </tr>
+      ${!isLast ? `<tr><td colspan="3" style="font-size:0;line-height:0;border-top:1px dotted ${C.parchment};">&nbsp;</td></tr>` : ''}
+    `
+  }).join('')
 
   return emailWrapper(`
     ${cardHeader('Bevestiging', 'Bestelling ontvangen')}
@@ -119,15 +131,15 @@ function confirmationHtml({ name, order, date, timeslot, total, cancelToken }) {
           <table width="100%" cellpadding="0" cellspacing="0" border="0">
             ${dataRow('Datum', `<strong>${dateFormatted}</strong>`)}
             ${dataRow('Tijdslot', `<strong>${safeTimeslot}</strong>`)}
-            <!-- spacer -->
-            <tr><td colspan="2" style="padding:8px 0 4px;font-size:0;">&nbsp;</td></tr>
-            <!-- Order items -->
+            <!-- Order items header -->
+            <tr><td colspan="3" style="padding:12px 0 4px;border-top:1px dashed ${C.parchment};font-size:0;">&nbsp;</td></tr>
+            <tr><td colspan="3" style="padding:0 0 6px;font-family:Georgia,serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${C.warmGray};">Bestelling</td></tr>
             ${orderRows}
             <!-- divider -->
-            <tr><td colspan="2" style="padding:8px 0;font-size:0;border-top:1px dashed ${C.parchment};">&nbsp;</td></tr>
+            <tr><td colspan="3" style="padding:8px 0;font-size:0;border-top:1px dashed ${C.parchment};">&nbsp;</td></tr>
             <!-- Total -->
             <tr>
-              <td style="font-family:Georgia,serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${C.warmGray};vertical-align:middle;">Totaal</td>
+              <td colspan="2" style="font-family:Georgia,serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${C.warmGray};vertical-align:middle;">Totaal</td>
               <td align="right" style="font-family:Georgia,serif;font-size:22px;color:${C.wine};">${safeTotal}</td>
             </tr>
           </table>
