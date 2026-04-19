@@ -273,7 +273,7 @@ function Shop() {
                     <PaperTexture />
                     <div className="relative">
                       <SectionLabel n="I" title="Suggesties" caption="Onze keuze deze week" />
-                      <div className={`mt-8 grid gap-4 ${suggestions.length >= 2 ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
+                      <ul className="mt-8 border-y border-parchment">
                         {suggestions.map(pizza => (
                           <PizzaCard
                             key={pizza.id}
@@ -284,7 +284,7 @@ function Shop() {
                             currency={config.currency}
                           />
                         ))}
-                      </div>
+                      </ul>
                     </div>
                   </section>
                 )
@@ -294,11 +294,11 @@ function Shop() {
               <section id="menu" className="scroll-mt-24">
                 <SectionLabel n="II" title="Il Menù" caption="Tien pizza's, vers uit de houtoven" />
                 {pizzas.length === 0 ? (
-                  <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {[1,2,3,4].map(i => <div key={i} className="h-64 bg-parchment animate-pulse" />)}
+                  <div className="mt-8 space-y-3">
+                    {[1,2,3,4].map(i => <div key={i} className="h-16 bg-parchment animate-pulse" />)}
                   </div>
                 ) : (
-                  <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                  <ul className="mt-8 border-y border-parchment">
                     {pizzas.filter(p => !p.suggestion).map(pizza => (
                       <PizzaCard
                         key={pizza.id}
@@ -309,7 +309,7 @@ function Shop() {
                         currency={config.currency}
                       />
                     ))}
-                  </div>
+                  </ul>
                 )}
               </section>
 
@@ -628,13 +628,13 @@ function RegistrationView({ registration, pizzas, regName, setRegName, regEmail,
       </div>
 
       <SectionLabel n="02" title="Il Menù" caption="Een voorproefje van ons aanbod" />
-      <div className="mt-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <ul className="mt-7 border-y border-parchment">
         {pizzas.length === 0
-          ? [1,2,3,4].map(i => <div key={i} className="h-64 bg-parchment animate-pulse" />)
+          ? [1,2,3,4].map(i => <li key={i} className="h-16 bg-parchment animate-pulse mb-1" />)
           : pizzas.map(pizza => (
               <PizzaCard key={pizza.id} pizza={pizza} quantity={0} onAdd={() => {}} onRemove={() => {}} currency={currency} showOrder={false} />
             ))}
-      </div>
+      </ul>
     </div>
   )
 }
