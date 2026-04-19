@@ -101,7 +101,7 @@ function Shop() {
     })
   }
   function getQuantity(id) { return cart.find(i => i.pizza.id === id)?.quantity ?? 0 }
-  function handleSuccess(order) { setSuccessOrder(order); setShowCheckout(false); setCart([]); setWineCart([]) }
+  function handleSuccess(order) { setSuccessOrder(order); setShowCheckout(false); setCart([]); setWineCart([]); window.scrollTo({ top: 0, behavior: 'smooth' }) }
   function clearCart() { setCart([]); setWineCart([]) }
 
   function addWine(wine) {
