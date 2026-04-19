@@ -465,11 +465,11 @@ function Shop() {
       {/* ═══════ MobileCartBar ═══════ */}
       {!showRegistration && !successOrder && slots.length > 0 && (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20">
-          <div className="flex items-stretch bg-ink text-cream border-t border-ink shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.5)]">
+          <div className="flex items-stretch bg-wine text-cream border-t border-wine shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.3)]">
             <button
               onClick={() => setShowCheckout(true)}
               disabled={cartCount === 0}
-              className={`flex-1 flex items-center justify-between px-5 py-4 transition-colors ${cartCount > 0 ? 'hover:bg-wine' : 'cursor-default'}`}
+              className={`flex-1 flex items-center justify-between px-5 py-4 transition-colors ${cartCount > 0 ? 'hover:bg-wine-light' : 'cursor-default'}`}
             >
               <span className="flex items-center gap-3">
                 <span className="font-sans text-[10px] tracking-[0.28em] uppercase text-cream/70">Il Conto</span>
@@ -481,13 +481,13 @@ function Shop() {
               </span>
               {cartCount > 0 ? (
                 <span className="flex items-center gap-2">
-                  <span className="font-serif text-lg text-gold tabular-nums">
+                  <span className="font-serif text-lg text-cream/90 tabular-nums">
                     {config.currency}{cart.reduce((s, i) => s + i.pizza.price * i.quantity, 0).toFixed(2)}
                   </span>
-                  <span className="font-sans text-[10px] tracking-[0.24em] uppercase text-gold/80">→</span>
+                  <span className="font-sans text-[10px] tracking-[0.24em] uppercase text-cream/70">→</span>
                 </span>
               ) : (
-                <span className="font-serif italic text-xs text-cream/50">Kies een pizza</span>
+                <span className="font-serif italic text-xs text-cream/60">Kies een pizza</span>
               )}
             </button>
             {cartCount > 0 && (
