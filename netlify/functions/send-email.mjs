@@ -21,6 +21,17 @@ function createTransport() {
   })
 }
 
+// ── Shared colours (inline — email clients strip <style>) ──────────────────
+const C = {
+  cream:     '#F7F3EC',
+  parchment: '#EDE5D8',
+  ink:       '#1C1410',
+  wine:      '#A0522D',
+  gold:      '#BFA06A',
+  warmGray:  '#8A7E72',
+  lightGray: '#C5BAB0',
+}
+
 function emailWrapper(content) {
   return `<!DOCTYPE html>
 <html lang="nl" xmlns="http://www.w3.org/1999/xhtml">
@@ -28,13 +39,34 @@ function emailWrapper(content) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Jeanke's Pizza</title>
   <!--[if mso]><style>td,th{font-family:Georgia,serif!important;}</style><![endif]-->
 </head>
-<body style="margin:0;padding:0;background:#F7F3EC;font-family:Georgia,serif;">
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F7F3EC;">
-  <tr><td align="center" style="padding:32px 16px;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:540px;background:#ffffff;border:1px solid #EDE5D8;">
-      ${content}
+<body style="margin:0;padding:0;background:${C.cream};">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.cream};">
+  <tr><td align="center" style="padding:40px 16px 48px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;">
+
+      <!-- Wordmark -->
+      <tr><td align="center" style="padding-bottom:28px;">
+        <p style="margin:0 0 6px;font-family:Georgia,serif;font-size:11px;letter-spacing:5px;text-transform:uppercase;color:${C.gold};">Jeanke&rsquo;s Pizza</p>
+        <table cellpadding="0" cellspacing="0" border="0" align="center"><tr>
+          <td style="width:40px;height:1px;background:${C.gold};opacity:0.4;font-size:0;">&nbsp;</td>
+          <td style="padding:0 10px;color:${C.gold};font-size:12px;">&#10022;</td>
+          <td style="width:40px;height:1px;background:${C.gold};opacity:0.4;font-size:0;">&nbsp;</td>
+        </tr></table>
+      </td></tr>
+
+      <!-- Card -->
+      <tr><td style="background:#ffffff;border:1px solid ${C.parchment};">
+        ${content}
+      </td></tr>
+
+      <!-- Footer -->
+      <tr><td align="center" style="padding-top:24px;">
+        <p style="margin:0;font-family:Georgia,serif;font-size:11px;font-style:italic;color:${C.lightGray};">Con amore, uit de houtoven &mdash; Jeanke&rsquo;s Pizza</p>
+      </td></tr>
+
     </table>
   </td></tr>
 </table>
@@ -42,71 +74,132 @@ function emailWrapper(content) {
 </html>`
 }
 
-function emailHeader(title) {
-  return `<tr><td bgcolor="#3D4A2D" style="padding:36px 32px;text-align:center;">
-    <p style="color:#BFA06A;font-size:11px;letter-spacing:4px;text-transform:uppercase;margin:0 0 10px;font-family:Georgia,serif;">Jeanke's Pizza</p>
-    <h1 style="color:#F7F3EC;font-size:26px;margin:0;font-style:italic;font-weight:normal;font-family:Georgia,serif;">${title}</h1>
-  </td></tr>`
+function cardHeader(label, title) {
+  return `
+    <tr><td style="padding:28px 32px 20px;border-bottom:1px dashed ${C.parchment};">
+      <p style="margin:0 0 4px;font-family:Georgia,serif;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:${C.gold};">${label}</p>
+      <h1 style="margin:0;font-family:Georgia,serif;font-size:26px;font-style:italic;font-weight:normal;color:${C.ink};">${title}</h1>
+    </td></tr>`
 }
 
-function confirmationHtml({ name, order, date, timeslot, total, cancelToken }) {
-  const cancelUrl = `${SITE_URL}/annuleer?token=${escapeHtml(cancelToken)}`
-  const dateFormatted = new Date(date).toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long' })
-  const safeName = escapeHtml(name)
-  const safeTimeslot = escapeHtml(timeslot)
-  const safeTotal = escapeHtml(total)
-  return emailWrapper(`
-    ${emailHeader('Bestelling bevestigd')}
-    <tr><td style="padding:32px;">
-      <p style="color:#1C1410;font-size:15px;margin:0 0 16px;font-family:Georgia,serif;">Ciao <strong>${safeName}</strong>,</p>
-      <p style="color:#8A7E72;font-size:14px;line-height:1.6;margin:0 0 24px;font-family:Georgia,serif;">Uw bestelling is goed ontvangen. Tot dan!</p>
+function dataRow(label, value, last = false) {
+  return `
+    <tr>
+      <td style="padding:8px 0;font-family:Georgia,serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${C.warmGray};width:90px;vertical-align:top;">${label}</td>
+      <td style="padding:8px 0;font-family:Georgia,serif;font-size:14px;color:${C.ink};text-align:right;">${value}</td>
+    </tr>
+    ${!last ? `<tr><td colspan="2" style="font-size:0;height:1px;"><div style="border-top:1px dotted ${C.parchment};"></div></td></tr>` : ''}`
+}
 
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F7F3EC;border:1px solid #EDE5D8;margin-bottom:24px;">
-        <tr><td style="padding:20px;">
-          <table width="100%" cellpadding="4" cellspacing="0" border="0" style="font-size:13px;font-family:Georgia,serif;">
+// ── Confirmation email (to customer) ───────────────────────────────────────
+function confirmationHtml({ name, order, date, timeslot, total, cancelToken }) {
+  const cancelUrl     = `${SITE_URL}/annuleer?token=${escapeHtml(cancelToken)}`
+  const dateFormatted = new Date(date).toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long' })
+  const safeName      = escapeHtml(name)
+  const safeTimeslot  = escapeHtml(timeslot)
+  const safeTotal     = escapeHtml(total)
+
+  const orderRows = order.split(', ').map(item =>
+    `<tr><td colspan="2" style="padding:5px 0;font-family:Georgia,serif;font-size:13px;color:${C.ink};">${escapeHtml(item)}</td></tr>`
+  ).join('')
+
+  return emailWrapper(`
+    ${cardHeader('Bevestiging', 'Bestelling ontvangen')}
+
+    <!-- Greeting -->
+    <tr><td style="padding:24px 32px 0;">
+      <p style="margin:0 0 8px;font-family:Georgia,serif;font-size:15px;color:${C.ink};">Ciao <strong>${safeName}</strong>,</p>
+      <p style="margin:0;font-family:Georgia,serif;font-size:13px;font-style:italic;color:${C.warmGray};line-height:1.7;">Uw bestelling is goed ontvangen. We verheugen ons op uw komst!</p>
+    </td></tr>
+
+    <!-- Details block -->
+    <tr><td style="padding:20px 32px;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.cream};border:1px solid ${C.parchment};">
+        <tr><td style="padding:16px 20px;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            ${dataRow('Datum', `<strong>${dateFormatted}</strong>`)}
+            ${dataRow('Tijdslot', `<strong>${safeTimeslot}</strong>`)}
+            <!-- spacer -->
+            <tr><td colspan="2" style="padding:8px 0 4px;font-size:0;">&nbsp;</td></tr>
+            <!-- Order items -->
+            ${orderRows}
+            <!-- divider -->
+            <tr><td colspan="2" style="padding:8px 0;font-size:0;border-top:1px dashed ${C.parchment};">&nbsp;</td></tr>
+            <!-- Total -->
             <tr>
-              <td style="color:#8A7E72;font-size:11px;letter-spacing:1px;text-transform:uppercase;">Datum</td>
-              <td align="right" style="color:#1C1410;font-weight:bold;">${dateFormatted}</td>
-            </tr>
-            <tr>
-              <td style="color:#8A7E72;font-size:11px;letter-spacing:1px;text-transform:uppercase;">Tijdslot</td>
-              <td align="right" style="color:#1C1410;font-weight:bold;">${safeTimeslot}</td>
-            </tr>
-            <tr><td colspan="2" style="padding:8px 0 0;border-top:1px solid #EDE5D8;font-size:1px;">&nbsp;</td></tr>
-            ${order.split(', ').map(item => `<tr><td colspan="2" style="color:#1C1410;padding:3px 0;font-size:13px;">${escapeHtml(item)}</td></tr>`).join('')}
-            <tr><td colspan="2" style="padding:8px 0 0;border-top:1px solid #EDE5D8;font-size:1px;">&nbsp;</td></tr>
-            <tr>
-              <td style="color:#8A7E72;font-size:11px;letter-spacing:1px;text-transform:uppercase;">Totaal</td>
-              <td align="right" style="color:#722F37;font-size:18px;font-weight:bold;">${safeTotal}</td>
+              <td style="font-family:Georgia,serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${C.warmGray};vertical-align:middle;">Totaal</td>
+              <td align="right" style="font-family:Georgia,serif;font-size:22px;color:${C.wine};">${safeTotal}</td>
             </tr>
           </table>
         </td></tr>
       </table>
+    </td></tr>
 
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr><td align="center" style="padding:8px 0 24px;">
-          <a href="${cancelUrl}" style="display:inline-block;border:1px solid #C5BAB0;color:#8A7E72;font-size:11px;letter-spacing:3px;text-transform:uppercase;padding:12px 28px;text-decoration:none;font-family:Georgia,serif;">Bestelling annuleren</a>
-        </td></tr>
-      </table>
-
-      <p style="color:#C5BAB0;font-size:11px;text-align:center;font-style:italic;margin:0;font-family:Georgia,serif;">Jeanke's Pizza</p>
+    <!-- Cancel link -->
+    <tr><td align="center" style="padding:4px 32px 28px;">
+      <a href="${cancelUrl}" style="font-family:Georgia,serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:${C.lightGray};text-decoration:underline;">Bestelling annuleren</a>
     </td></tr>
   `)
 }
 
+// ── Owner notification ─────────────────────────────────────────────────────
 function ownerHtml({ name, email, order, date, timeslot, total }) {
   const dateFormatted = new Date(date).toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long' })
+
   return emailWrapper(`
-    ${emailHeader('Nieuwe bestelling')}
-    <tr><td style="padding:28px 32px;">
-      <table width="100%" cellpadding="6" cellspacing="0" border="0" style="font-size:14px;font-family:Georgia,serif;">
-        <tr><td style="color:#8A7E72;width:100px;">Naam</td><td><strong>${escapeHtml(name)}</strong></td></tr>
-        <tr><td style="color:#8A7E72;">E-mail</td><td>${escapeHtml(email)}</td></tr>
-        <tr><td style="color:#8A7E72;">Datum</td><td>${dateFormatted}</td></tr>
-        <tr><td style="color:#8A7E72;">Tijdslot</td><td><strong>${escapeHtml(timeslot)}</strong></td></tr>
-        <tr><td style="color:#8A7E72;">Bestelling</td><td>${escapeHtml(order)}</td></tr>
-        <tr><td style="color:#8A7E72;">Totaal</td><td><strong style="color:#722F37;">${escapeHtml(total)}</strong></td></tr>
+    ${cardHeader('Nieuwe bestelling', 'Overzicht')}
+
+    <tr><td style="padding:20px 32px;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        ${dataRow('Naam',      `<strong>${escapeHtml(name)}</strong>`)}
+        ${dataRow('E-mail',    escapeHtml(email))}
+        ${dataRow('Datum',     dateFormatted)}
+        ${dataRow('Tijdslot',  `<strong>${escapeHtml(timeslot)}</strong>`)}
+        ${dataRow('Bestelling', escapeHtml(order))}
+        <!-- divider -->
+        <tr><td colspan="2" style="padding:4px 0;font-size:0;border-top:1px dashed ${C.parchment};">&nbsp;</td></tr>
+        <tr>
+          <td style="font-family:Georgia,serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${C.warmGray};vertical-align:middle;">Totaal</td>
+          <td align="right" style="font-family:Georgia,serif;font-size:22px;color:${C.wine};">${escapeHtml(total)}</td>
+        </tr>
       </table>
+    </td></tr>
+    <tr><td style="height:8px;"></td></tr>
+  `)
+}
+
+// ── Registration confirmation (to customer) ────────────────────────────────
+function registrationHtml({ name, pizzas, registrationDate }) {
+  const dateStr = registrationDate
+    ? new Date(registrationDate).toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    : null
+
+  return emailWrapper(`
+    ${cardHeader('Inschrijving', 'Ontvangen')}
+
+    <tr><td style="padding:24px 32px 28px;">
+      <p style="margin:0 0 12px;font-family:Georgia,serif;font-size:15px;color:${C.ink};">Ciao <strong>${escapeHtml(name)}</strong>,</p>
+      <p style="margin:0 0 16px;font-family:Georgia,serif;font-size:13px;color:${C.warmGray};line-height:1.7;">
+        We hebben je inschrijving goed ontvangen voor
+        <strong style="color:${C.ink};">${escapeHtml(String(pizzas))} pizza${pizzas > 1 ? "'s" : ''}</strong>
+        ${dateStr ? `op <strong style="color:${C.ink};">${escapeHtml(dateStr)}</strong>` : ''}.
+      </p>
+      <p style="margin:0;font-family:Georgia,serif;font-size:13px;font-style:italic;color:${C.warmGray};line-height:1.7;">
+        Je krijgt een bericht zodra de bestellingen opengaan.
+      </p>
+    </td></tr>
+  `)
+}
+
+// ── Threshold notification (to owner) ─────────────────────────────────────
+function thresholdHtml({ count, threshold }) {
+  return emailWrapper(`
+    ${cardHeader('Melding', `${threshold} inschrijvingen bereikt`)}
+
+    <tr><td style="padding:24px 32px 28px;">
+      <p style="margin:0;font-family:Georgia,serif;font-size:15px;color:${C.ink};line-height:1.7;">
+        Er zijn nu <strong>${escapeHtml(String(count))} pizza-inschrijvingen</strong>. Tijd om een openingsdag in te plannen!
+      </p>
     </td></tr>
   `)
 }
@@ -115,7 +208,6 @@ export default async (req) => {
   if (req.method !== "POST") return Response.json({ error: "Method not allowed" }, { status: 405 })
 
   if (!GMAIL_USER || !GMAIL_PASSWORD) {
-    // Email not configured — skip silently
     return Response.json({ success: true, skipped: true })
   }
 
@@ -128,38 +220,24 @@ export default async (req) => {
       await transport.sendMail({
         from: `"Jeanke's Pizza" <${GMAIL_USER}>`,
         to: email,
-        subject: `✓ Bestelling bevestigd — ${timeslot}`,
+        subject: `Bestelling bevestigd — ${timeslot}`,
         html: confirmationHtml({ name, order, date, timeslot, total, cancelToken }),
       })
-      // Also notify owner
       await transport.sendMail({
         from: `"Jeanke's Pizza" <${GMAIL_USER}>`,
         to: OWNER_EMAIL,
-        subject: `🍕 Nieuwe bestelling: ${name} om ${timeslot}`,
+        subject: `Nieuwe bestelling: ${name} om ${timeslot}`,
         html: ownerHtml({ name, email, order, date, timeslot, total }),
       })
     }
 
     if (type === 'registration') {
-      const { name, pizzas, registrationDate } = body
-      const dateStr = registrationDate
-        ? new Date(registrationDate).toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-        : null
+      const { pizzas, registrationDate } = body
       await transport.sendMail({
         from: `"Jeanke's Pizza" <${GMAIL_USER}>`,
         to: email,
         subject: `Inschrijving ontvangen — Jeanke's Pizza`,
-        html: emailWrapper(`
-          ${emailHeader('Inschrijving bevestigd')}
-          <tr><td style="padding:32px;">
-            <p style="color:#1C1410;font-size:15px;margin:0 0 16px;font-family:Georgia,serif;">Ciao <strong>${escapeHtml(name)}</strong>,</p>
-            <p style="color:#8A7E72;font-size:14px;line-height:1.6;margin:0 0 24px;font-family:Georgia,serif;">
-              We hebben je inschrijving goed ontvangen voor <strong>${escapeHtml(pizzas)} pizza${pizzas > 1 ? "'s" : ''}</strong>${dateStr ? ` op <strong>${escapeHtml(dateStr)}</strong>` : ''}.
-              Je krijgt een bericht zodra de bestellingen opengaan.
-            </p>
-            <p style="color:#C5BAB0;font-size:11px;text-align:center;font-style:italic;margin:0;font-family:Georgia,serif;">Jeanke's Pizza</p>
-          </td></tr>
-        `),
+        html: registrationHtml({ name, pizzas, registrationDate }),
       })
     }
 
@@ -169,12 +247,7 @@ export default async (req) => {
         from: `"Jeanke's Pizza" <${GMAIL_USER}>`,
         to: OWNER_EMAIL,
         subject: `${threshold} inschrijvingen bereikt!`,
-        html: emailWrapper(`
-          ${emailHeader('Drempel bereikt')}
-          <tr><td style="padding:28px 32px;">
-            <p style="color:#1C1410;font-size:15px;font-family:Georgia,serif;">Je hebt <strong>${count} pizza-inschrijvingen</strong>. Tijd om een openingsdag te plannen!</p>
-          </td></tr>
-        `),
+        html: thresholdHtml({ count, threshold }),
       })
     }
 
