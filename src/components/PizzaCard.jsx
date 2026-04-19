@@ -30,9 +30,6 @@ export default function PizzaCard({ pizza, quantity, onAdd, onRemove, currency, 
 
   const num = String(pizza.id).padStart(2, '0')
   const ingredients = Array.isArray(pizza.ingredients) ? pizza.ingredients : []
-  const isHot = pizza.emoji === '🌶️' || /hot/i.test(pizza.name)
-  const hasBurrata = ingredients.some(i => /burrata/i.test(i))
-
   return (
     <li
       className={`group py-5 px-2 flex items-start gap-4 sm:gap-6 hover:bg-parchment/30 transition-colors border-b border-dotted border-parchment last:border-b-0 ${pulse ? 'bg-wine/5' : ''}`}
@@ -44,9 +41,7 @@ export default function PizzaCard({ pizza, quantity, onAdd, onRemove, currency, 
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <h3 className="font-serif text-lg text-ink leading-tight">{pizza.name}</h3>
-          {isHot && <span className="font-sans text-[10px] tracking-[0.2em] uppercase text-wine">Pittig</span>}
-          {pizza.suggestion && !isHot && <span className="font-sans text-[10px] tracking-[0.2em] uppercase text-wine">Suggestie</span>}
-          {hasBurrata && !pizza.suggestion && !isHot && <span className="font-sans text-[10px] italic text-warm-gray">Burrata</span>}
+          {pizza.suggestion && <span className="font-sans text-[10px] tracking-[0.2em] uppercase text-wine">Suggestie</span>}
         </div>
         <p className="font-sans text-xs italic text-warm-gray leading-relaxed mt-1">
           {ingredients.length > 0 ? ingredients.join(', ') : pizza.description}
