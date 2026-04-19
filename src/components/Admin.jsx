@@ -434,6 +434,7 @@ function DagTab({ password }) {
   const [pizzas, setPizzas]   = useState([])
   const [loading, setLoading] = useState(true)
   const [checked, setChecked] = useState({}) // "key_pizzaName_idx" → bool
+  const [now, setNow] = useState(new Date())
 
   useEffect(() => {
     Promise.all([
@@ -444,6 +445,11 @@ function DagTab({ password }) {
       setPizzas(Array.isArray(piz) ? piz : [])
       setLoading(false)
     }).catch(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 60_000)
+    return () => clearInterval(t)
   }, [])
 
   const today = new Date().toISOString().split('T')[0]
@@ -493,8 +499,22 @@ function DagTab({ password }) {
   const allItems = todayOrders.flatMap(o => parseItems(o.order).map((it, i) => ({ key: o.key, ...it })))
   const doneCount = allItems.filter(it => isChecked(it.key, it.name, it.idx)).length
 
+  // Determine current/next slot vs. wall clock
+  const nowHM = now.toTimeString().slice(0, 5)
+  const slotTimes = Object.keys(byTime).sort()
+  const upcomingSlot = slotTimes.find(t => t >= nowHM)
+  const activeSlot = upcomingSlot ?? slotTimes[slotTimes.length - 1]
+
   return (
     <div className="space-y-3">
+      {/* Stats strip */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <KpiTile label="Bestellingen" value={todayOrders.length} hint={todayOrders.length === 1 ? 'vandaag' : 'vandaag'} />
+        <KpiTile label="Pizza's" value={allItems.length} hint="te bakken" />
+        <KpiTile label="Voortgang" value={`${allItems.length ? Math.round((doneCount / allItems.length) * 100) : 0}%`} hint={`${doneCount}/${allItems.length}`} />
+        <KpiTile label="Volgend slot" value={upcomingSlot || '—'} hint={upcomingSlot ? `${byTime[upcomingSlot].length} best.` : 'klaar'} />
+      </div>
+
       {/* Progress bar */}
       <div className="bg-white border border-parchment px-5 py-4">
         <div className="flex justify-between items-baseline mb-3">
@@ -512,18 +532,22 @@ function DagTab({ password }) {
         const slotItems = slotOrders.flatMap(o => parseItems(o.order).map(it => ({ key: o.key, ...it })))
         const slotDone = slotItems.filter(it => isChecked(it.key, it.name, it.idx)).length
         const allDone = slotDone === slotItems.length
+        const isActive = time === activeSlot && !allDone
 
         return (
-          <div key={time} className={`bg-white border transition-opacity ${allDone ? 'border-olive/40 opacity-60' : 'border-parchment'}`}>
+          <div key={time} className={`bg-white border transition-opacity ${isActive ? 'border-wine shadow-[0_0_0_2px_rgba(160,82,45,0.15)]' : allDone ? 'border-olive/40 opacity-60' : 'border-parchment'}`}>
             {/* Slot header */}
-            <div className={`px-5 py-3 flex items-center justify-between border-b border-dashed ${allDone ? 'border-olive/20' : 'border-parchment'}`}>
+            <div className={`px-5 py-3 flex items-center justify-between border-b border-dashed ${isActive ? 'border-wine/30 bg-wine/[0.04]' : allDone ? 'border-olive/20' : 'border-parchment'}`}>
               <div className="flex items-baseline gap-3">
-                <span className={`font-serif text-2xl leading-none ${allDone ? 'text-olive' : 'text-wine'}`}>{time}</span>
+                <span className={`font-serif text-2xl leading-none ${isActive ? 'text-wine' : allDone ? 'text-olive' : 'text-ink'}`}>{time}</span>
                 <span className="font-sans text-[11px] tracking-[0.2em] uppercase text-warm-gray">
                   {slotOrders.length} best. · {slotItems.length} pizza's
                 </span>
               </div>
-              {allDone && <span className="font-sans text-[10px] text-olive tracking-[0.24em] uppercase">Klaar</span>}
+              {isActive
+                ? <span className="font-sans text-[10px] text-wine tracking-[0.24em] uppercase">Nu</span>
+                : allDone && <span className="font-sans text-[10px] text-olive tracking-[0.24em] uppercase">Klaar</span>
+              }
             </div>
 
             {/* Orders in this slot */}
