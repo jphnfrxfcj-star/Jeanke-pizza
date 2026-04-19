@@ -116,71 +116,82 @@ export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEn
       onClick={e => e.target === e.currentTarget && onClose()}>
       <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="checkout-title"
         className="bg-cream w-full sm:max-w-xl md:max-w-2xl max-h-[95vh] overflow-y-auto">
-        <div className="bg-olive px-6 py-5 flex items-start justify-between">
-          <div>
-            <p className="font-sans text-xs tracking-widest uppercase text-gold/70 mb-1">Bevestig</p>
-            <h2 id="checkout-title" className="font-serif text-2xl text-cream italic">Uw bestelling</h2>
+
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-dashed border-warm-gray-light/60 flex items-start justify-between bg-cream">
+          <div className="flex items-center gap-3">
+            <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
+            <span className="h-px w-6 bg-gold/40" />
+            <div>
+              <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-gold">Bevestig</p>
+              <h2 id="checkout-title" className="font-serif text-2xl text-ink italic leading-tight mt-0.5">Uw bestelling</h2>
+            </div>
           </div>
-          <button onClick={onClose} aria-label="Sluiten" className="text-cream/50 hover:text-cream text-2xl leading-none mt-1">×</button>
+          <button onClick={onClose} aria-label="Sluiten" className="text-warm-gray hover:text-wine text-2xl leading-none mt-1 transition-colors">×</button>
         </div>
 
         <div className="p-6 space-y-6">
+
           {/* Order summary */}
           <div className="border border-parchment bg-white">
-            <div className="px-4 py-3 border-b border-parchment">
-              <p className="font-sans text-xs tracking-widest uppercase text-warm-gray">Overzicht</p>
+            <div className="px-4 py-3 border-b border-dashed border-warm-gray-light/50 flex items-center gap-3">
+              <span className="font-serif italic text-wine text-xs leading-none">N° ·</span>
+              <span className="h-px w-4 bg-gold/40" />
+              <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">Overzicht</p>
             </div>
-            <ul className="divide-y divide-parchment">
+            <ul>
               {items.map(({ pizza, quantity }) => (
-                <li key={pizza.id} className="px-4 py-2 flex items-center gap-3">
-                  <span className="flex-1 text-sm text-ink">{pizza.name}</span>
-                  <div className="flex items-center gap-2">
+                <li key={pizza.id} className="px-4 py-2.5 flex items-center gap-3 border-b border-dotted border-warm-gray-light/40 last:border-b-0">
+                  <span className="flex-1 font-serif text-sm text-ink">{pizza.name}</span>
+                  <div className="flex items-center gap-2 shrink-0">
                     <button type="button" aria-label={`Minder ${pizza.name}`} onClick={() => onRemove(pizza)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
-                    <span className="font-sans text-sm w-4 text-center" aria-label={`${quantity} stuks`}>{quantity}</span>
+                    <span className="font-sans text-sm w-4 text-center tabular-nums" aria-label={`${quantity} stuks`}>{quantity}</span>
                     <button type="button" aria-label={`Meer ${pizza.name}`} onClick={() => onAdd(pizza)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xs transition-colors">+</button>
                   </div>
-                  <span className="text-sm text-wine w-14 text-right">{currency}{(pizza.price * quantity).toFixed(2)}</span>
+                  <span className="font-serif text-sm text-wine w-16 text-right tabular-nums shrink-0">{currency}{(pizza.price * quantity).toFixed(2)}</span>
                 </li>
               ))}
               {wineCart.map(({ wine, quantity }) => (
-                <li key={`w-${wine.id}`} className="px-4 py-2 flex items-center gap-3">
-                  <span className="flex-1 text-sm text-ink">{wine.name}</span>
-                  <div className="flex items-center gap-2">
+                <li key={`w-${wine.id}`} className="px-4 py-2.5 flex items-center gap-3 border-b border-dotted border-warm-gray-light/40 last:border-b-0">
+                  <span className="flex-1 font-serif text-sm text-ink">{wine.name}</span>
+                  <div className="flex items-center gap-2 shrink-0">
                     <button type="button" onClick={() => onRemoveWine?.(wine)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
-                    <span className="font-sans text-sm w-4 text-center">{quantity}</span>
+                    <span className="font-sans text-sm w-4 text-center tabular-nums">{quantity}</span>
                     <button type="button" onClick={() => onAddWine?.(wine)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xs transition-colors">+</button>
                   </div>
-                  <span className="text-sm text-wine w-14 text-right">{currency}{(wine.price * quantity).toFixed(2)}</span>
+                  <span className="font-serif text-sm text-wine w-16 text-right tabular-nums shrink-0">{currency}{(wine.price * quantity).toFixed(2)}</span>
                 </li>
               ))}
             </ul>
+
+            {/* Wine suggestions */}
             {suggestedWines.length > 0 && (
-              <div className="border-t-2 border-wine">
-                <div className="px-4 py-2.5 bg-wine/5 flex items-center gap-2">
-                  <Wine size={13} className="text-wine" />
-                  <p className="font-sans text-xs tracking-widest uppercase text-wine font-semibold">Wijn erbij?</p>
+              <div className="border-t border-dashed border-warm-gray-light/50">
+                <div className="px-4 py-3 flex items-center gap-3 border-b border-dotted border-warm-gray-light/40">
+                  <Wine size={13} className="text-wine shrink-0" />
+                  <p className="font-sans text-[10px] tracking-[0.24em] uppercase text-wine">Wijn erbij?</p>
                 </div>
-                <ul className="divide-y divide-wine/10 bg-wine/5">
+                <ul>
                   {suggestedWines.map(wine => {
                     const qty = wineQty(wine.id)
                     return (
-                      <li key={wine.id} className="px-4 py-2 flex items-center gap-3">
+                      <li key={wine.id} className="px-4 py-2.5 flex items-center gap-3 border-b border-dotted border-warm-gray-light/40 last:border-b-0">
                         <div className="flex-1 min-w-0">
-                          <p className="font-sans text-sm text-ink">{wine.name}</p>
-                          {wine.description && <p className="font-sans text-xs text-warm-gray truncate">{wine.description}</p>}
+                          <p className="font-serif text-sm text-ink">{wine.name}</p>
+                          {wine.description && <p className="font-sans text-xs italic text-warm-gray truncate mt-0.5">{wine.description}</p>}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           {qty === 0 ? (
                             <button type="button" onClick={() => onAddWine?.(wine)}
-                              className="font-sans text-xs border border-wine text-wine px-3 py-1 hover:bg-wine hover:text-cream transition-colors">
+                              className="font-sans text-[10px] tracking-[0.2em] uppercase border border-warm-gray-light text-ink px-3 py-1.5 hover:bg-wine hover:text-cream hover:border-wine transition-colors tabular-nums">
                               {currency}{wine.price.toFixed(2)}
                             </button>
                           ) : (
                             <>
                               <button type="button" onClick={() => onRemoveWine?.(wine)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center text-xs transition-colors">−</button>
-                              <span className="font-sans text-sm w-4 text-center">{qty}</span>
+                              <span className="font-sans text-sm w-4 text-center tabular-nums">{qty}</span>
                               <button type="button" onClick={() => onAddWine?.(wine)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center text-xs transition-colors">+</button>
-                              <span className="font-sans text-xs text-wine w-14 text-right">{currency}{(wine.price * qty).toFixed(2)}</span>
+                              <span className="font-serif text-sm text-wine w-16 text-right tabular-nums">{currency}{(wine.price * qty).toFixed(2)}</span>
                             </>
                           )}
                         </div>
@@ -190,22 +201,25 @@ export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEn
                 </ul>
               </div>
             )}
-            <div className="px-4 py-3 border-t border-parchment flex justify-between">
-              <span className="font-sans text-xs tracking-widest uppercase text-warm-gray">Totaal</span>
-              <span className="font-serif text-lg text-wine">{currency}{total.toFixed(2)}</span>
+
+            {/* Totaal */}
+            <div className="px-4 py-3 border-t border-dashed border-warm-gray-light/50 flex justify-between items-center">
+              <span className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">Totaal</span>
+              <span className="font-serif text-xl text-wine tabular-nums">{currency}{total.toFixed(2)}</span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+
             {/* Date */}
             {availableDates.length > 1 && (
               <div>
-                <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Datum</label>
+                <label className="block font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray mb-2">Datum</label>
                 <div className="flex gap-2 flex-wrap">
                   {availableDates.map(date => (
                     <button type="button" key={date}
                       onClick={() => { setSelectedDate(date); setSelectedSlot('') }}
-                      className={`px-4 py-2 text-xs font-sans tracking-wide border transition-colors ${selectedDate === date ? 'bg-olive text-cream border-olive' : 'bg-white text-ink border-parchment hover:border-olive'}`}>
+                      className={`px-4 py-2 font-sans text-xs tracking-wide border transition-colors ${selectedDate === date ? 'bg-wine text-cream border-wine' : 'bg-white text-ink border-parchment hover:border-wine/40'}`}>
                       {formatDate(date)}
                     </button>
                   ))}
@@ -216,9 +230,9 @@ export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEn
             {/* Time slots */}
             <div>
               <div className="flex items-baseline justify-between mb-2">
-                <label className="font-sans text-xs tracking-widest uppercase text-warm-gray">Tijdslot</label>
+                <label className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">Tijdslot</label>
                 {slotsNeeded > 1 && (
-                  <span className="font-sans text-xs text-warm-gray italic">
+                  <span className="font-serif italic text-xs text-warm-gray">
                     {totalPizzas} pizza's · {slotsNeeded} slots ({slotsNeeded * (settings?.slotIntervalMinutes ?? 15)} min)
                   </span>
                 )}
@@ -230,7 +244,7 @@ export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEn
                   ))}
                 </div>
               ) : slotsForDate.length === 0 ? (
-                <p className="text-sm text-wine italic">Geen tijdsloten beschikbaar.</p>
+                <p className="font-serif italic text-sm text-wine">Geen tijdsloten beschikbaar.</p>
               ) : (
                 <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
                   {slotsForDate.map((slot, idx) => {
@@ -241,10 +255,10 @@ export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEn
                       <button type="button" key={slot.time}
                         disabled={!groupOk && !inRange}
                         onClick={() => groupOk && setSelectedSlot(slot.time)}
-                        className={`py-2.5 text-xs font-sans border transition-colors ${
-                          inRange ? 'bg-olive text-cream border-olive'
+                        className={`py-2.5 font-sans text-xs border transition-colors ${
+                          inRange ? 'bg-wine text-cream border-wine'
                           : !groupOk ? 'bg-parchment/50 text-warm-gray-light border-parchment cursor-not-allowed line-through'
-                          : 'bg-white text-ink border-parchment hover:border-olive'
+                          : 'bg-white text-ink border-parchment hover:border-wine/40'
                         }`}
                       >{slot.time}</button>
                     )
@@ -255,19 +269,19 @@ export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEn
 
             {/* Name */}
             <div>
-              <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">Naam</label>
+              <label className="block font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray mb-2">Naam</label>
               <input type="text" required value={name} onChange={e => setName(e.target.value)} placeholder="Uw naam"
                 className="w-full border border-parchment bg-white px-4 py-3 text-sm text-ink focus:outline-none focus:border-gold transition-colors" />
             </div>
 
             {/* Email */}
             <div>
-              <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-2">E-mail</label>
+              <label className="block font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray mb-2">E-mail</label>
               <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="uw@email.be"
                 className="w-full border border-parchment bg-white px-4 py-3 text-sm text-ink focus:outline-none focus:border-gold transition-colors" />
             </div>
 
-            {error && <p className="text-xs text-wine italic">{error}</p>}
+            {error && <p className="font-serif italic text-sm text-wine">{error}</p>}
 
             <button type="submit" disabled={loading || slotsLoading} className="btn-primary w-full">
               {loading ? 'Even geduld...' : 'Bestelling bevestigen'}
