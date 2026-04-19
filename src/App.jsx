@@ -465,11 +465,11 @@ function Shop() {
       {/* ═══════ MobileCartBar ═══════ */}
       {!showRegistration && !successOrder && slots.length > 0 && (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20">
-          <div className="flex items-stretch bg-wine text-cream border-t border-wine shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.3)]">
+          <div className="flex items-stretch bg-[#2C1810] text-cream border-t border-[#2C1810] shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.3)]">
             <button
               onClick={() => setShowCheckout(true)}
               disabled={cartCount === 0}
-              className={`flex-1 flex items-center justify-between px-5 py-4 transition-colors ${cartCount > 0 ? 'hover:bg-wine-light' : 'cursor-default'}`}
+              className={`flex-1 flex items-center justify-between px-5 py-4 transition-colors ${cartCount > 0 ? 'hover:bg-[#3D2314]' : 'cursor-default'}`}
             >
               <span className="flex items-center gap-3">
                 <span className="font-sans text-[10px] tracking-[0.28em] uppercase text-cream/70">Il Conto</span>
