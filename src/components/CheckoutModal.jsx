@@ -233,9 +233,9 @@ export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEn
           <form onSubmit={handleSubmit} className="space-y-5">
 
             {/* Date */}
-            {availableDates.length > 1 && (
-              <div>
-                <label className="block font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray mb-2">Datum</label>
+            <div>
+              <label className="block font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray mb-2">Datum</label>
+              {availableDates.length > 1 ? (
                 <div className="flex gap-2 flex-wrap">
                   {availableDates.map(date => (
                     <button type="button" key={date}
@@ -245,8 +245,10 @@ export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEn
                     </button>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="font-serif text-sm text-ink">{formatDate(selectedDate)}</p>
+              )}
+            </div>
 
             {/* Time slots */}
             <div>
