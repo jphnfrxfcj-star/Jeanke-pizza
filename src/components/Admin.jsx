@@ -2382,7 +2382,7 @@ function NieuwsbriefTab({ password }) {
 
       {/* ── Compose ── */}
       {view === 'compose' && (
-        <div className="space-y-5 max-w-2xl">
+        <div className="space-y-5">
 
           <SectionLabel>Kop van de editie</SectionLabel>
 
@@ -2544,7 +2544,7 @@ function NieuwsbriefTab({ password }) {
 
       {/* ── Subscribers ── */}
       {view === 'subscribers' && (
-        <div className="space-y-4 max-w-2xl">
+        <div className="space-y-4">
           <SectionLabel>Subscribers</SectionLabel>
 
           {/* Import from orders */}
@@ -2608,7 +2608,7 @@ function NieuwsbriefTab({ password }) {
 
       {/* ── History ── */}
       {view === 'history' && (
-        <div className="space-y-4 max-w-2xl">
+        <div className="space-y-4">
           <SectionLabel>Verzonden edities</SectionLabel>
           {editions.filter(e => e.sent_at).length === 0 ? <Empty text="Nog geen edities verstuurd" /> : (
             <div className="bg-white border border-parchment divide-y divide-dotted divide-parchment">
