@@ -2256,7 +2256,9 @@ function NieuwsbriefTab({ password }) {
         headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
         body: JSON.stringify(buildPayload('save')),
       })
+      const data = await res.json()
       if (!res.ok) throw new Error()
+      if (data.id) setEditionId(data.id)
       toast('Editie opgeslagen')
       refreshEditions()
     } catch { toast('Opslaan mislukt', 'error') }

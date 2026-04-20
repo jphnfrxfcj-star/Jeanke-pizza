@@ -247,11 +247,14 @@ export default async (req) => {
       const existing = id ? editions.find(e => e.id === id) : null
       if (existing) {
         Object.assign(existing, { ...editionData, updated_at: new Date().toISOString() })
+        await editionStore.set("editions", JSON.stringify(editions))
+        return Response.json({ success: true, id: existing.id })
       } else {
-        editions.push({ id: randomUUID(), ...editionData, created_at: new Date().toISOString() })
+        const newId = randomUUID()
+        editions.push({ id: newId, ...editionData, created_at: new Date().toISOString() })
+        await editionStore.set("editions", JSON.stringify(editions))
+        return Response.json({ success: true, id: newId })
       }
-      await editionStore.set("editions", JSON.stringify(editions))
-      return Response.json({ success: true })
     }
 
     // ── Test mail ───────────────────────────────────────────────────────────
