@@ -2171,23 +2171,27 @@ function formatLongDate(d)  { return new Date(d).toLocaleDateString('nl-BE',{wee
 
 // ─── Nieuwsbrief ────────────────────────────────────────────────────────────
 
-const EMPTY_PIZZA = { label: '', name: '', description: '', price: '' }
-const DEFAULT_INTRO = "De houtoven wordt weer opgestookt. Drie suggesties van het huis, deze editie voor u."
+const EMPTY_PIZZA = { categorie: '', naam: '', beschrijving: '', prijs: '' }
 
 function NieuwsbriefTab({ password }) {
   const [subscribers, setSubscribers] = useState([])
   const [editions, setEditions] = useState([])
+  const [menuPizzas, setMenuPizzas] = useState([])
   const [loading, setLoading] = useState(true)
-  const [view, setView] = useState('compose') // 'compose' | 'subscribers' | 'history'
+  const [view, setView] = useState('compose')
 
-  // Compose form state
+  // Compose state
   const [editionId, setEditionId] = useState(null)
   const [number, setNumber] = useState('')
+  const [thema, setThema] = useState('')
+  const [titelLinks, setTitelLinks] = useState('')
+  const [titelRechts, setTitelRechts] = useState('')
+  const [intro, setIntro] = useState('')
+  const [ophaalDag, setOphaalDag] = useState('')
+  const [ophaalDatum, setOphaalDatum] = useState('')
+  const [ophaalTijden, setOphaalTijden] = useState('')
   const [subject, setSubject] = useState('')
-  const [ophaaldag, setOphaaldag] = useState('')
-  const [ophaaltijden, setOphaaltijden] = useState('')
-  const [intro, setIntro] = useState(DEFAULT_INTRO)
-  const [pizzas, setPizzas] = useState([{ ...EMPTY_PIZZA }, { ...EMPTY_PIZZA }, { ...EMPTY_PIZZA }])
+  const [pizzas, setPizzas] = useState([])
   const [saving, setSaving] = useState(false)
   const [sending, setSending] = useState(false)
   const [sendResult, setSendResult] = useState(null)
@@ -2197,26 +2201,49 @@ function NieuwsbriefTab({ password }) {
     Promise.all([
       fetch('/api/newsletter-subscribers', { headers: { 'x-admin-password': password } }).then(r => r.json()),
       fetch('/api/newsletter-editions',    { headers: { 'x-admin-password': password } }).then(r => r.json()),
-    ]).then(([subs, eds]) => {
+      fetch('/api/pizzas').then(r => r.json()),
+    ]).then(([subs, eds, menu]) => {
       setSubscribers(Array.isArray(subs) ? subs : [])
       const sortedEds = Array.isArray(eds) ? eds.sort((a, b) => (b.number || 0) - (a.number || 0)) : []
       setEditions(sortedEds)
-      // Auto-suggest next edition number
+      setMenuPizzas(Array.isArray(menu) ? menu : [])
       const maxNum = sortedEds.reduce((m, e) => Math.max(m, e.number || 0), 0)
       setNumber(String(maxNum + 1))
     }).catch(() => {}).finally(() => setLoading(false))
   }, [password])
 
-  // Auto-fill subject when ophaaldag changes
-  function handleOphaaldagChange(val) {
-    setOphaaldag(val)
-    if (val && (!subject || subject.startsWith(ophaaldag))) {
-      setSubject(`${val} · Jeanke's stookt de oven aan`)
+  function handleDagDatumChange(dag, datum) {
+    const combined = `${dag} ${datum}`.trim()
+    if (combined && (!subject || subject.startsWith(ophaalDag))) {
+      setSubject(`${combined} · De oven staat aan`)
     }
   }
 
   function updatePizza(i, field, val) {
     setPizzas(prev => prev.map((p, idx) => idx === i ? { ...p, [field]: val } : p))
+  }
+
+  function fillFromMenu(i, menuPizza) {
+    if (!menuPizza) return
+    setPizzas(prev => prev.map((p, idx) => idx === i ? {
+      ...p,
+      naam: menuPizza.name || '',
+      beschrijving: Array.isArray(menuPizza.ingredients) ? menuPizza.ingredients.join(', ') : '',
+      prijs: menuPizza.price ? `€ ${Number(menuPizza.price).toFixed(2).replace('.', ',')}` : '',
+    } : p))
+  }
+
+  function addPizza() {
+    if (pizzas.length >= 3) return
+    setPizzas(prev => [...prev, { ...EMPTY_PIZZA }])
+  }
+
+  function removePizza(i) {
+    setPizzas(prev => prev.filter((_, idx) => idx !== i))
+  }
+
+  function buildPayload(action) {
+    return { action, id: editionId, number: Number(number), thema, titelLinks, titelRechts, intro, ophaalDag, ophaalDatum, ophaalTijden, pizzas, subject }
   }
 
   async function handleSave() {
@@ -2225,12 +2252,11 @@ function NieuwsbriefTab({ password }) {
       const res = await fetch('/api/newsletter-editions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-        body: JSON.stringify({ action: 'save', id: editionId, number: Number(number), subject, ophaaldag, ophaaltijden, intro, pizzas }),
+        body: JSON.stringify(buildPayload('save')),
       })
-      if (!res.ok) throw new Error('Opslaan mislukt')
+      if (!res.ok) throw new Error()
       toast('Editie opgeslagen')
-      const eds = await fetch('/api/newsletter-editions', { headers: { 'x-admin-password': password } }).then(r => r.json())
-      setEditions(Array.isArray(eds) ? eds.sort((a, b) => (b.number || 0) - (a.number || 0)) : [])
+      refreshEditions()
     } catch { toast('Opslaan mislukt', 'error') }
     finally { setSaving(false) }
   }
@@ -2240,10 +2266,10 @@ function NieuwsbriefTab({ password }) {
       const res = await fetch('/api/newsletter-editions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-        body: JSON.stringify({ action: 'test', number: Number(number), subject, ophaaldag, ophaaltijden, intro, pizzas }),
+        body: JSON.stringify(buildPayload('test')),
       })
       if (!res.ok) throw new Error()
-      toast('Testmail verstuurd')
+      toast('Testmail verstuurd naar uw adres')
     } catch { toast('Testmail mislukt', 'error') }
   }
 
@@ -2255,26 +2281,34 @@ function NieuwsbriefTab({ password }) {
       const res = await fetch('/api/newsletter-editions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-        body: JSON.stringify({ action: 'send', id: editionId, number: Number(number), subject, ophaaldag, ophaaltijden, intro, pizzas }),
+        body: JSON.stringify(buildPayload('send')),
       })
       const data = await res.json()
       setSendResult(data)
       if (data.sent > 0) toast(`${data.sent} mail${data.sent > 1 ? 's' : ''} verstuurd`)
       else toast('Geen actieve subscribers', 'info')
-      const eds = await fetch('/api/newsletter-editions', { headers: { 'x-admin-password': password } }).then(r => r.json())
-      setEditions(Array.isArray(eds) ? eds.sort((a, b) => (b.number || 0) - (a.number || 0)) : [])
+      refreshEditions()
     } catch { toast('Versturen mislukt', 'error') }
     finally { setSending(false) }
+  }
+
+  async function refreshEditions() {
+    const eds = await fetch('/api/newsletter-editions', { headers: { 'x-admin-password': password } }).then(r => r.json()).catch(() => [])
+    setEditions(Array.isArray(eds) ? eds.sort((a, b) => (b.number || 0) - (a.number || 0)) : [])
   }
 
   function loadEdition(ed) {
     setEditionId(ed.id)
     setNumber(String(ed.number || ''))
+    setThema(ed.thema || '')
+    setTitelLinks(ed.titelLinks || '')
+    setTitelRechts(ed.titelRechts || '')
+    setIntro(ed.intro || '')
+    setOphaalDag(ed.ophaalDag || '')
+    setOphaalDatum(ed.ophaalDatum || '')
+    setOphaalTijden(ed.ophaalTijden || '')
     setSubject(ed.subject || '')
-    setOphaaldag(ed.ophaaldag || '')
-    setOphaaltijden(ed.ophaaltijden || '')
-    setIntro(ed.intro || DEFAULT_INTRO)
-    setPizzas(ed.pizzas?.length === 3 ? ed.pizzas : [{ ...EMPTY_PIZZA }, { ...EMPTY_PIZZA }, { ...EMPTY_PIZZA }])
+    setPizzas(Array.isArray(ed.pizzas) ? ed.pizzas : [])
     setSendResult(null)
     setView('compose')
   }
@@ -2310,7 +2344,8 @@ function NieuwsbriefTab({ password }) {
       {/* ── Compose ── */}
       {view === 'compose' && (
         <div className="space-y-5 max-w-2xl">
-          <SectionLabel>Editie-informatie</SectionLabel>
+
+          <SectionLabel>Kop van de editie</SectionLabel>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -2318,54 +2353,114 @@ function NieuwsbriefTab({ password }) {
               <input value={number} onChange={e => setNumber(e.target.value)} className={INPUT} placeholder="1" />
             </div>
             <div>
-              <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Ophaaldag</label>
-              <input value={ophaaldag} onChange={e => handleOphaaldagChange(e.target.value)} className={INPUT} placeholder="Zondag 17 mei" />
+              <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Thema-label</label>
+              <input value={thema} onChange={e => setThema(e.target.value)} className={INPUT} placeholder="La Burrata &amp; Fichi" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Titel links</label>
+              <input value={titelLinks} onChange={e => setTitelLinks(e.target.value)} className={INPUT} placeholder="Burrata" />
+            </div>
+            <div>
+              <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Titel rechts <span className="normal-case text-warm-gray-light">(optioneel, "&" ertussen)</span></label>
+              <input value={titelRechts} onChange={e => setTitelRechts(e.target.value)} className={INPUT} placeholder="Vijgen op hout" />
             </div>
           </div>
 
           <div>
-            <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Ophaaltijden</label>
-            <input value={ophaaltijden} onChange={e => setOphaaltijden(e.target.value)} className={INPUT} placeholder="18:00 — 21:00" />
+            <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Sfeertekst</label>
+            <textarea value={intro} onChange={e => setIntro(e.target.value)} rows={2}
+              className={INPUT + ' resize-none'} placeholder="Een avondje voor wie van een geblakerde korst houdt..." />
+          </div>
+
+          <SectionLabel>Ophaaldag</SectionLabel>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Dag</label>
+              <input value={ophaalDag} onChange={e => { setOphaalDag(e.target.value); handleDagDatumChange(e.target.value, ophaalDatum) }}
+                className={INPUT} placeholder="Zondag" />
+            </div>
+            <div>
+              <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Datum</label>
+              <input value={ophaalDatum} onChange={e => { setOphaalDatum(e.target.value); handleDagDatumChange(ophaalDag, e.target.value) }}
+                className={INPUT} placeholder="17 mei" />
+            </div>
+            <div>
+              <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Tijden</label>
+              <input value={ophaalTijden} onChange={e => setOphaalTijden(e.target.value)} className={INPUT} placeholder="18:00 — 21:00" />
+            </div>
           </div>
 
           <div>
             <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Onderwerp</label>
-            <input value={subject} onChange={e => setSubject(e.target.value)} className={INPUT} placeholder="Zondag 17 mei · Jeanke's stookt de oven aan" />
+            <input value={subject} onChange={e => setSubject(e.target.value)} className={INPUT}
+              placeholder="Zondag 17 mei · De oven staat aan" />
           </div>
 
-          <div>
-            <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Intro-tekst</label>
-            <textarea value={intro} onChange={e => setIntro(e.target.value)} rows={3} className={INPUT + ' resize-none'} />
-          </div>
-
-          <SectionLabel>Drie pizza's</SectionLabel>
+          <SectionLabel>
+            Pizza's in de kijker
+            <span className="ml-2 font-sans text-[10px] normal-case text-warm-gray-light">({pizzas.length}/3)</span>
+          </SectionLabel>
 
           {pizzas.map((p, i) => (
             <div key={i} className="bg-white border border-parchment p-4 space-y-3">
-              <div className="flex items-center gap-3 mb-1">
+              <div className="flex items-center gap-3">
                 <span className="font-serif italic text-wine text-sm">N° {i + 1}</span>
                 <span className="h-px flex-1 bg-parchment" />
+                <button onClick={() => removePizza(i)} className="text-warm-gray hover:text-wine transition-colors" aria-label="Verwijder">
+                  <X size={13} />
+                </button>
               </div>
+
+              {/* Menu picker */}
+              {menuPizzas.length > 0 && (
+                <div>
+                  <label className="block font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mb-1.5">Kies uit menu</label>
+                  <select onChange={e => fillFromMenu(i, menuPizzas.find(m => String(m.id) === e.target.value))}
+                    defaultValue=""
+                    className={INPUT + ' cursor-pointer'}>
+                    <option value="">— Vrij invullen —</option>
+                    {menuPizzas.map(m => (
+                      <option key={m.id} value={m.id}>{m.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mb-1.5">Categorie-label</label>
-                  <input value={p.label} onChange={e => updatePizza(i, 'label', e.target.value)} className={INPUT} placeholder="Suggestie van Jeanke" />
+                  <input value={p.categorie} onChange={e => updatePizza(i, 'categorie', e.target.value)}
+                    className={INPUT} placeholder="Suggestie van Jeanke" />
                 </div>
                 <div>
                   <label className="block font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mb-1.5">Prijs</label>
-                  <input value={p.price} onChange={e => updatePizza(i, 'price', e.target.value)} className={INPUT} placeholder="€12" />
+                  <input value={p.prijs} onChange={e => updatePizza(i, 'prijs', e.target.value)}
+                    className={INPUT} placeholder="€ 14,00" />
                 </div>
               </div>
               <div>
                 <label className="block font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mb-1.5">Naam</label>
-                <input value={p.name} onChange={e => updatePizza(i, 'name', e.target.value)} className={INPUT} placeholder="Margherita" />
+                <input value={p.naam} onChange={e => updatePizza(i, 'naam', e.target.value)}
+                  className={INPUT} placeholder="Margherita" />
               </div>
               <div>
                 <label className="block font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mb-1.5">Beschrijving</label>
-                <input value={p.description} onChange={e => updatePizza(i, 'description', e.target.value)} className={INPUT} placeholder="Tomatensaus, mozzarella, basilicum" />
+                <input value={p.beschrijving} onChange={e => updatePizza(i, 'beschrijving', e.target.value)}
+                  className={INPUT} placeholder="Tomatensaus, fior di latte, basilicum" />
               </div>
             </div>
           ))}
+
+          {pizzas.length < 3 && (
+            <button onClick={addPizza}
+              className="w-full border border-dashed border-parchment py-3 font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray hover:text-wine hover:border-wine/40 transition-colors">
+              + Pizza toevoegen
+            </button>
+          )}
 
           {/* Send result */}
           {sendResult && (
@@ -2379,12 +2474,10 @@ function NieuwsbriefTab({ password }) {
 
           {/* Actions */}
           <div className="flex flex-wrap gap-3 pt-1">
-            <button onClick={handleSave} disabled={saving}
-              className="btn-secondary text-sm px-5 py-2.5">
+            <button onClick={handleSave} disabled={saving} className="btn-secondary text-sm px-5 py-2.5">
               {saving ? 'Opslaan...' : 'Opslaan'}
             </button>
-            <button onClick={handleTest}
-              className="btn-secondary text-sm px-5 py-2.5">
+            <button onClick={handleTest} className="btn-secondary text-sm px-5 py-2.5">
               Testmail versturen
             </button>
             <button onClick={() => setConfirmSend(true)} disabled={sending || activeCount === 0}
@@ -2393,14 +2486,12 @@ function NieuwsbriefTab({ password }) {
             </button>
           </div>
 
-          {/* Confirm dialog */}
           {confirmSend && (
             <div className="fixed inset-0 bg-ink/60 flex items-center justify-center z-50 p-4">
               <div className="bg-cream border border-parchment p-6 max-w-sm w-full">
                 <h3 className="font-serif text-xl italic text-ink mb-3">Bevestig verzending</h3>
                 <p className="font-serif italic text-sm text-warm-gray mb-5">
-                  Deze nieuwsbrief wordt verstuurd naar <strong className="text-ink">{activeCount} actieve subscriber{activeCount !== 1 ? 's' : ''}</strong>.
-                  Dit kan niet ongedaan worden gemaakt.
+                  Nieuwsbrief wordt verstuurd naar <strong className="text-ink">{activeCount} actieve subscriber{activeCount !== 1 ? 's' : ''}</strong>. Dit kan niet ongedaan worden gemaakt.
                 </p>
                 <div className="flex gap-3">
                   <button onClick={handleSend} className="btn-primary flex-1">Verstuur</button>
@@ -2416,9 +2507,7 @@ function NieuwsbriefTab({ password }) {
       {view === 'subscribers' && (
         <div className="space-y-4 max-w-2xl">
           <SectionLabel>Subscribers</SectionLabel>
-          {subscribers.length === 0 ? (
-            <Empty text="Nog geen subscribers" />
-          ) : (
+          {subscribers.length === 0 ? <Empty text="Nog geen subscribers" /> : (
             <div className="bg-white border border-parchment divide-y divide-dotted divide-parchment">
               {subscribers.map(s => (
                 <div key={s.email} className="px-4 py-3 flex items-center gap-3">
@@ -2444,24 +2533,24 @@ function NieuwsbriefTab({ password }) {
       {view === 'history' && (
         <div className="space-y-4 max-w-2xl">
           <SectionLabel>Verzonden edities</SectionLabel>
-          {editions.filter(e => e.sent_at).length === 0 ? (
-            <Empty text="Nog geen edities verstuurd" />
-          ) : (
+          {editions.filter(e => e.sent_at).length === 0 ? <Empty text="Nog geen edities verstuurd" /> : (
             <div className="bg-white border border-parchment divide-y divide-dotted divide-parchment">
               {editions.filter(e => e.sent_at).map(e => (
                 <div key={e.id} className="px-4 py-3 flex items-start gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="font-sans text-[10px] tracking-[0.2em] uppercase text-gold mb-0.5">N° {e.number}</p>
+                    <p className="font-sans text-[10px] tracking-[0.2em] uppercase text-gold mb-0.5">
+                      N° {e.number}{e.thema ? ` · ${e.thema}` : ''}
+                    </p>
                     <p className="font-serif text-sm text-ink">{e.subject}</p>
                     <p className="font-sans text-xs text-warm-gray mt-0.5">
-                      {e.ophaaldag} · {e.ophaaltijden}
+                      {e.ophaalDag} {e.ophaalDatum} · {e.ophaalTijden}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="font-sans text-xs text-warm-gray">{new Date(e.sent_at).toLocaleDateString('nl-BE')}</p>
                     <p className="font-sans text-xs text-warm-gray">{e.sent_count ?? 0} verstuurd</p>
                   </div>
-                  <button onClick={() => loadEdition(e)} title="Hergebruiken"
+                  <button onClick={() => loadEdition(e)}
                     className="font-sans text-[10px] tracking-[0.2em] uppercase text-warm-gray hover:text-wine transition-colors border border-parchment px-2 py-1 shrink-0">
                     Hergebruik
                   </button>
