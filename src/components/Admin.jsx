@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Clock, ClipboardList, ShoppingBasket, ChefHat, TrendingUp, Settings, Menu, Wine, LayoutDashboard, LogOut, Search, X } from 'lucide-react'
+import { Clock, ClipboardList, ShoppingBasket, ChefHat, TrendingUp, Settings, Menu, Wine, LayoutDashboard, LogOut, Search, X, Mail } from 'lucide-react'
 import config from '../data/config.json'
 import staticPizzas from '../data/pizzas.json'
 import PaperTexture from './PaperTexture'
@@ -113,6 +113,7 @@ export default function Admin() {
     { key: 'wijnen',       label: 'Wijnen',        Icon: Wine,            group: 'config' },
     { key: 'winst',        label: 'Winst',         Icon: TrendingUp,      group: 'config' },
     { key: 'opening',      label: 'Instellingen',  Icon: Settings,        group: 'config' },
+    { key: 'nieuwsbrief',  label: 'Nieuwsbrief',   Icon: Mail,            group: 'config' },
   ]
 
   function logout() {
@@ -243,6 +244,7 @@ export default function Admin() {
           {tab === 'wijnen'       && <WijnenTab       password={pw} />}
           {tab === 'opening'      && <OpeningTab      password={pw} />}
           {tab === 'winst'        && <WinstTab        password={pw} />}
+          {tab === 'nieuwsbrief'  && <NieuwsbriefTab  password={pw} />}
         </div>
 
       </div>
@@ -2166,3 +2168,310 @@ function SectionLabel({ children }) {
 }
 function formatShortDate(d) { return new Date(d).toLocaleDateString('nl-BE',{day:'numeric',month:'short'}) }
 function formatLongDate(d)  { return new Date(d).toLocaleDateString('nl-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) }
+
+// ─── Nieuwsbrief ────────────────────────────────────────────────────────────
+
+const EMPTY_PIZZA = { label: '', name: '', description: '', price: '' }
+const DEFAULT_INTRO = "De houtoven wordt weer opgestookt. Drie suggesties van het huis, deze editie voor u."
+
+function NieuwsbriefTab({ password }) {
+  const [subscribers, setSubscribers] = useState([])
+  const [editions, setEditions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [view, setView] = useState('compose') // 'compose' | 'subscribers' | 'history'
+
+  // Compose form state
+  const [editionId, setEditionId] = useState(null)
+  const [number, setNumber] = useState('')
+  const [subject, setSubject] = useState('')
+  const [ophaaldag, setOphaaldag] = useState('')
+  const [ophaaltijden, setOphaaltijden] = useState('')
+  const [intro, setIntro] = useState(DEFAULT_INTRO)
+  const [pizzas, setPizzas] = useState([{ ...EMPTY_PIZZA }, { ...EMPTY_PIZZA }, { ...EMPTY_PIZZA }])
+  const [saving, setSaving] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [sendResult, setSendResult] = useState(null)
+  const [confirmSend, setConfirmSend] = useState(false)
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/newsletter-subscribers', { headers: { 'x-admin-password': password } }).then(r => r.json()),
+      fetch('/api/newsletter-editions',    { headers: { 'x-admin-password': password } }).then(r => r.json()),
+    ]).then(([subs, eds]) => {
+      setSubscribers(Array.isArray(subs) ? subs : [])
+      const sortedEds = Array.isArray(eds) ? eds.sort((a, b) => (b.number || 0) - (a.number || 0)) : []
+      setEditions(sortedEds)
+      // Auto-suggest next edition number
+      const maxNum = sortedEds.reduce((m, e) => Math.max(m, e.number || 0), 0)
+      setNumber(String(maxNum + 1))
+    }).catch(() => {}).finally(() => setLoading(false))
+  }, [password])
+
+  // Auto-fill subject when ophaaldag changes
+  function handleOphaaldagChange(val) {
+    setOphaaldag(val)
+    if (val && (!subject || subject.startsWith(ophaaldag))) {
+      setSubject(`${val} · Jeanke's stookt de oven aan`)
+    }
+  }
+
+  function updatePizza(i, field, val) {
+    setPizzas(prev => prev.map((p, idx) => idx === i ? { ...p, [field]: val } : p))
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/newsletter-editions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+        body: JSON.stringify({ action: 'save', id: editionId, number: Number(number), subject, ophaaldag, ophaaltijden, intro, pizzas }),
+      })
+      if (!res.ok) throw new Error('Opslaan mislukt')
+      toast('Editie opgeslagen')
+      const eds = await fetch('/api/newsletter-editions', { headers: { 'x-admin-password': password } }).then(r => r.json())
+      setEditions(Array.isArray(eds) ? eds.sort((a, b) => (b.number || 0) - (a.number || 0)) : [])
+    } catch { toast('Opslaan mislukt', 'error') }
+    finally { setSaving(false) }
+  }
+
+  async function handleTest() {
+    try {
+      const res = await fetch('/api/newsletter-editions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+        body: JSON.stringify({ action: 'test', number: Number(number), subject, ophaaldag, ophaaltijden, intro, pizzas }),
+      })
+      if (!res.ok) throw new Error()
+      toast('Testmail verstuurd')
+    } catch { toast('Testmail mislukt', 'error') }
+  }
+
+  async function handleSend() {
+    setSending(true)
+    setConfirmSend(false)
+    setSendResult(null)
+    try {
+      const res = await fetch('/api/newsletter-editions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+        body: JSON.stringify({ action: 'send', id: editionId, number: Number(number), subject, ophaaldag, ophaaltijden, intro, pizzas }),
+      })
+      const data = await res.json()
+      setSendResult(data)
+      if (data.sent > 0) toast(`${data.sent} mail${data.sent > 1 ? 's' : ''} verstuurd`)
+      else toast('Geen actieve subscribers', 'info')
+      const eds = await fetch('/api/newsletter-editions', { headers: { 'x-admin-password': password } }).then(r => r.json())
+      setEditions(Array.isArray(eds) ? eds.sort((a, b) => (b.number || 0) - (a.number || 0)) : [])
+    } catch { toast('Versturen mislukt', 'error') }
+    finally { setSending(false) }
+  }
+
+  function loadEdition(ed) {
+    setEditionId(ed.id)
+    setNumber(String(ed.number || ''))
+    setSubject(ed.subject || '')
+    setOphaaldag(ed.ophaaldag || '')
+    setOphaaltijden(ed.ophaaltijden || '')
+    setIntro(ed.intro || DEFAULT_INTRO)
+    setPizzas(ed.pizzas?.length === 3 ? ed.pizzas : [{ ...EMPTY_PIZZA }, { ...EMPTY_PIZZA }, { ...EMPTY_PIZZA }])
+    setSendResult(null)
+    setView('compose')
+  }
+
+  async function removeSubscriber(email) {
+    if (!confirm(`Subscriber ${email} verwijderen?`)) return
+    await fetch('/api/newsletter-subscribers', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+      body: JSON.stringify({ email }),
+    })
+    setSubscribers(prev => prev.filter(s => s.email !== email))
+    toast('Subscriber verwijderd')
+  }
+
+  const activeCount = subscribers.filter(s => s.status === 'active').length
+
+  if (loading) return <LoadingCards />
+
+  return (
+    <div className="space-y-6">
+
+      {/* Tab switcher */}
+      <div className="flex border-b border-parchment">
+        {[['compose', 'Nieuwe editie'], ['subscribers', `Subscribers (${activeCount})`], ['history', 'Geschiedenis']].map(([key, label]) => (
+          <button key={key} onClick={() => setView(key)}
+            className={`px-5 py-3 font-sans text-[11px] tracking-[0.24em] uppercase transition-colors ${view === key ? 'text-wine border-b-2 border-wine -mb-px' : 'text-warm-gray hover:text-ink'}`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Compose ── */}
+      {view === 'compose' && (
+        <div className="space-y-5 max-w-2xl">
+          <SectionLabel>Editie-informatie</SectionLabel>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Editie N°</label>
+              <input value={number} onChange={e => setNumber(e.target.value)} className={INPUT} placeholder="1" />
+            </div>
+            <div>
+              <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Ophaaldag</label>
+              <input value={ophaaldag} onChange={e => handleOphaaldagChange(e.target.value)} className={INPUT} placeholder="Zondag 17 mei" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Ophaaltijden</label>
+            <input value={ophaaltijden} onChange={e => setOphaaltijden(e.target.value)} className={INPUT} placeholder="18:00 — 21:00" />
+          </div>
+
+          <div>
+            <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Onderwerp</label>
+            <input value={subject} onChange={e => setSubject(e.target.value)} className={INPUT} placeholder="Zondag 17 mei · Jeanke's stookt de oven aan" />
+          </div>
+
+          <div>
+            <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Intro-tekst</label>
+            <textarea value={intro} onChange={e => setIntro(e.target.value)} rows={3} className={INPUT + ' resize-none'} />
+          </div>
+
+          <SectionLabel>Drie pizza's</SectionLabel>
+
+          {pizzas.map((p, i) => (
+            <div key={i} className="bg-white border border-parchment p-4 space-y-3">
+              <div className="flex items-center gap-3 mb-1">
+                <span className="font-serif italic text-wine text-sm">N° {i + 1}</span>
+                <span className="h-px flex-1 bg-parchment" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mb-1.5">Categorie-label</label>
+                  <input value={p.label} onChange={e => updatePizza(i, 'label', e.target.value)} className={INPUT} placeholder="Suggestie van Jeanke" />
+                </div>
+                <div>
+                  <label className="block font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mb-1.5">Prijs</label>
+                  <input value={p.price} onChange={e => updatePizza(i, 'price', e.target.value)} className={INPUT} placeholder="€12" />
+                </div>
+              </div>
+              <div>
+                <label className="block font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mb-1.5">Naam</label>
+                <input value={p.name} onChange={e => updatePizza(i, 'name', e.target.value)} className={INPUT} placeholder="Margherita" />
+              </div>
+              <div>
+                <label className="block font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mb-1.5">Beschrijving</label>
+                <input value={p.description} onChange={e => updatePizza(i, 'description', e.target.value)} className={INPUT} placeholder="Tomatensaus, mozzarella, basilicum" />
+              </div>
+            </div>
+          ))}
+
+          {/* Send result */}
+          {sendResult && (
+            <div className={`border px-4 py-3 font-sans text-sm ${sendResult.failed > 0 ? 'border-wine/40 bg-wine/5 text-wine' : 'border-olive/40 bg-olive/5 text-ink'}`}>
+              <p>Verstuurd: <strong>{sendResult.sent}</strong> · Mislukt: <strong>{sendResult.failed}</strong></p>
+              {sendResult.results?.filter(r => r.status === 'failed').map(r => (
+                <p key={r.email} className="text-xs text-warm-gray mt-1">{r.email}: {r.error}</p>
+              ))}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex flex-wrap gap-3 pt-1">
+            <button onClick={handleSave} disabled={saving}
+              className="btn-secondary text-sm px-5 py-2.5">
+              {saving ? 'Opslaan...' : 'Opslaan'}
+            </button>
+            <button onClick={handleTest}
+              className="btn-secondary text-sm px-5 py-2.5">
+              Testmail versturen
+            </button>
+            <button onClick={() => setConfirmSend(true)} disabled={sending || activeCount === 0}
+              className="btn-primary text-sm px-5 py-2.5">
+              {sending ? 'Versturen...' : `Verstuur naar ${activeCount} subscriber${activeCount !== 1 ? 's' : ''}`}
+            </button>
+          </div>
+
+          {/* Confirm dialog */}
+          {confirmSend && (
+            <div className="fixed inset-0 bg-ink/60 flex items-center justify-center z-50 p-4">
+              <div className="bg-cream border border-parchment p-6 max-w-sm w-full">
+                <h3 className="font-serif text-xl italic text-ink mb-3">Bevestig verzending</h3>
+                <p className="font-serif italic text-sm text-warm-gray mb-5">
+                  Deze nieuwsbrief wordt verstuurd naar <strong className="text-ink">{activeCount} actieve subscriber{activeCount !== 1 ? 's' : ''}</strong>.
+                  Dit kan niet ongedaan worden gemaakt.
+                </p>
+                <div className="flex gap-3">
+                  <button onClick={handleSend} className="btn-primary flex-1">Verstuur</button>
+                  <button onClick={() => setConfirmSend(false)} className="btn-secondary flex-1">Annuleer</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Subscribers ── */}
+      {view === 'subscribers' && (
+        <div className="space-y-4 max-w-2xl">
+          <SectionLabel>Subscribers</SectionLabel>
+          {subscribers.length === 0 ? (
+            <Empty text="Nog geen subscribers" />
+          ) : (
+            <div className="bg-white border border-parchment divide-y divide-dotted divide-parchment">
+              {subscribers.map(s => (
+                <div key={s.email} className="px-4 py-3 flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-serif text-sm text-ink truncate">{s.name || <span className="italic text-warm-gray">—</span>}</p>
+                    <p className="font-sans text-xs text-warm-gray truncate">{s.email}</p>
+                  </div>
+                  <span className={`font-sans text-[10px] tracking-[0.2em] uppercase px-2 py-0.5 ${s.status === 'active' ? 'bg-olive/10 text-olive' : 'bg-parchment text-warm-gray'}`}>
+                    {s.status}
+                  </span>
+                  <button onClick={() => removeSubscriber(s.email)} aria-label="Verwijderen"
+                    className="text-warm-gray hover:text-wine transition-colors shrink-0">
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── History ── */}
+      {view === 'history' && (
+        <div className="space-y-4 max-w-2xl">
+          <SectionLabel>Verzonden edities</SectionLabel>
+          {editions.filter(e => e.sent_at).length === 0 ? (
+            <Empty text="Nog geen edities verstuurd" />
+          ) : (
+            <div className="bg-white border border-parchment divide-y divide-dotted divide-parchment">
+              {editions.filter(e => e.sent_at).map(e => (
+                <div key={e.id} className="px-4 py-3 flex items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-sans text-[10px] tracking-[0.2em] uppercase text-gold mb-0.5">N° {e.number}</p>
+                    <p className="font-serif text-sm text-ink">{e.subject}</p>
+                    <p className="font-sans text-xs text-warm-gray mt-0.5">
+                      {e.ophaaldag} · {e.ophaaltijden}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-sans text-xs text-warm-gray">{new Date(e.sent_at).toLocaleDateString('nl-BE')}</p>
+                    <p className="font-sans text-xs text-warm-gray">{e.sent_count ?? 0} verstuurd</p>
+                  </div>
+                  <button onClick={() => loadEdition(e)} title="Hergebruiken"
+                    className="font-sans text-[10px] tracking-[0.2em] uppercase text-warm-gray hover:text-wine transition-colors border border-parchment px-2 py-1 shrink-0">
+                    Hergebruik
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+    </div>
+  )
+}

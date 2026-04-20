@@ -4,6 +4,7 @@ import { Wine, Pizza } from 'lucide-react'
 export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEnabled = false, onAddWine, onRemoveWine, slots, onClose, onSuccess, onAdd, onRemove, currency, settings }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false)
   const [selectedDate, setSelectedDate] = useState(slots[0]?.date ?? '')
   const [selectedSlot, setSelectedSlot] = useState('')
   const [loading, setLoading] = useState(false)
@@ -91,6 +92,14 @@ export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEn
       }
       if (!slotRes.ok) throw new Error('Slot booking failed')
       const slotData = await slotRes.json()
+
+      if (newsletterOptIn) {
+        fetch('/api/newsletter-subscribers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name }),
+        }).catch(() => {})
+      }
 
       fetch('/api/send-email', {
         method: 'POST',
@@ -303,6 +312,28 @@ export default function CheckoutModal({ items, wineCart = [], wines = [], wijnEn
               <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="uw@email.be"
                 className="w-full border border-parchment bg-white px-4 py-3 text-sm text-ink focus:outline-none focus:border-gold transition-colors" />
             </div>
+
+            {/* Newsletter opt-in */}
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <div className="relative mt-0.5 shrink-0">
+                <input
+                  type="checkbox"
+                  checked={newsletterOptIn}
+                  onChange={e => setNewsletterOptIn(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-4 h-4 border border-parchment bg-white peer-checked:bg-wine peer-checked:border-wine transition-colors flex items-center justify-center">
+                  {newsletterOptIn && (
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none" className="text-cream">
+                      <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <span className="font-serif text-xs italic text-warm-gray leading-relaxed group-hover:text-ink transition-colors">
+                Ja, stuur me af en toe suggesties van Jeanke.
+              </span>
+            </label>
 
             {error && <p className="font-serif italic text-sm text-wine">{error}</p>}
 

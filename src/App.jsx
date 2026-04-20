@@ -5,6 +5,7 @@ import Cart from './components/Cart'
 import CheckoutModal from './components/CheckoutModal'
 import Admin from './components/Admin'
 import Cancel from './components/Cancel'
+import Unsubscribe from './components/Unsubscribe'
 import PaperTexture from './components/PaperTexture'
 import SectionLabel from './components/SectionLabel'
 import config from './data/config.json'
@@ -36,6 +37,7 @@ export default function App() {
   const path = window.location.pathname
   if (path === '/beheer') return <Admin />
   if (path === '/annuleer') return <Cancel />
+  if (path === '/uitschrijven') return <Unsubscribe />
   return <Shop />
 }
 
