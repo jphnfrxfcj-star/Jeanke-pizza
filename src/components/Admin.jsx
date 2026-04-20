@@ -2399,14 +2399,15 @@ function NieuwsbriefTab({ password }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Titel links</label>
               <input value={titelLinks} onChange={e => setTitelLinks(e.target.value)} className={INPUT} placeholder="Burrata" />
             </div>
             <div>
-              <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Titel rechts <span className="normal-case text-warm-gray-light">(optioneel, "&" ertussen)</span></label>
+              <label className="block font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mb-2">Titel rechts</label>
               <input value={titelRechts} onChange={e => setTitelRechts(e.target.value)} className={INPUT} placeholder="Vijgen op hout" />
+              <p className="font-serif italic text-[11px] text-warm-gray-light mt-1.5">Optioneel — "&" wordt automatisch toegevoegd</p>
             </div>
           </div>
 
