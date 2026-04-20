@@ -52,6 +52,7 @@ function Shop() {
   const [showCheckout, setShowCheckout] = useState(false)
   const [successOrder, setSuccessOrder] = useState(null)
   const [pizzas, setPizzas] = useState(staticPizzas)
+  const [pizzasLoading, setPizzasLoading] = useState(true)
   const [wines, setWines] = useState([])
   const [openingDays, setOpeningDays] = useState(() => {
     try { return JSON.parse(sessionStorage.getItem('jeanke_opening_days') || 'null') } catch { return null }
@@ -71,6 +72,7 @@ function Shop() {
       .then(r => r.json())
       .then(data => { if (Array.isArray(data) && data.length) setPizzas(data) })
       .catch(() => {})
+      .finally(() => setPizzasLoading(false))
   }, [])
 
   useEffect(() => {
@@ -286,23 +288,26 @@ function Shop() {
               {/* Suggestions */}
               {(() => {
                 const suggestions = pizzas.filter(p => p.suggestion)
-                if (!suggestions.length) return null
+                if (!pizzasLoading && !suggestions.length) return null
                 return (
                   <section className="relative -mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 lg:px-8 py-10 bg-parchment/50 border-y lg:border border-parchment overflow-hidden">
                     <PaperTexture />
                     <div className="relative">
                       <SectionLabel n="I" title="Suggesties" caption="Onze keuze deze week" />
                       <ul className="mt-8 border-y border-parchment">
-                        {suggestions.map(pizza => (
-                          <PizzaCard
-                            key={pizza.id}
-                            pizza={pizza}
-                            quantity={getQuantity(pizza.id)}
-                            onAdd={addToCart}
-                            onRemove={removeFromCart}
-                            currency={config.currency}
-                          />
-                        ))}
+                        {pizzasLoading
+                          ? [1, 2].map(i => <li key={i} className="h-16 bg-parchment/60 animate-pulse motion-reduce:animate-none mb-px" />)
+                          : suggestions.map(pizza => (
+                              <PizzaCard
+                                key={pizza.id}
+                                pizza={pizza}
+                                quantity={getQuantity(pizza.id)}
+                                onAdd={addToCart}
+                                onRemove={removeFromCart}
+                                currency={config.currency}
+                              />
+                            ))
+                        }
                       </ul>
                     </div>
                   </section>
