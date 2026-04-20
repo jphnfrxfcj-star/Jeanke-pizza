@@ -2180,24 +2180,43 @@ function NieuwsbriefTab({ password }) {
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('compose')
 
+  const DRAFT_KEY = 'jeanke_newsletter_draft'
+
+  function loadDraft() {
+    try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null') } catch { return null }
+  }
+  function saveDraft(fields) {
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(fields)) } catch {}
+  }
+  function clearDraft() {
+    try { localStorage.removeItem(DRAFT_KEY) } catch {}
+  }
+
+  const draft = loadDraft()
+
   // Compose state
-  const [editionId, setEditionId] = useState(null)
-  const [number, setNumber] = useState('')
-  const [thema, setThema] = useState('')
-  const [titelLinks, setTitelLinks] = useState('')
-  const [titelRechts, setTitelRechts] = useState('')
-  const [intro, setIntro] = useState('')
-  const [ophaalDag, setOphaalDag] = useState('')
-  const [ophaalDatum, setOphaalDatum] = useState('')
-  const [ophaalTijden, setOphaalTijden] = useState('')
-  const [subject, setSubject] = useState('')
-  const [pizzas, setPizzas] = useState([])
+  const [editionId, setEditionId] = useState(draft?.editionId || null)
+  const [number, setNumber] = useState(draft?.number || '')
+  const [thema, setThema] = useState(draft?.thema || '')
+  const [titelLinks, setTitelLinks] = useState(draft?.titelLinks || '')
+  const [titelRechts, setTitelRechts] = useState(draft?.titelRechts || '')
+  const [intro, setIntro] = useState(draft?.intro || '')
+  const [ophaalDag, setOphaalDag] = useState(draft?.ophaalDag || '')
+  const [ophaalDatum, setOphaalDatum] = useState(draft?.ophaalDatum || '')
+  const [ophaalTijden, setOphaalTijden] = useState(draft?.ophaalTijden || '')
+  const [subject, setSubject] = useState(draft?.subject || '')
+  const [pizzas, setPizzas] = useState(draft?.pizzas || [])
   const [saving, setSaving] = useState(false)
   const [sending, setSending] = useState(false)
   const [sendResult, setSendResult] = useState(null)
   const [confirmSend, setConfirmSend] = useState(false)
-  const [importCandidates, setImportCandidates] = useState(null) // null | []
+  const [importCandidates, setImportCandidates] = useState(null)
   const [importing, setImporting] = useState(false)
+
+  // Persist draft on every change
+  useEffect(() => {
+    saveDraft({ editionId, number, thema, titelLinks, titelRechts, intro, ophaalDag, ophaalDatum, ophaalTijden, subject, pizzas })
+  }, [editionId, number, thema, titelLinks, titelRechts, intro, ophaalDag, ophaalDatum, ophaalTijden, subject, pizzas])
 
   useEffect(() => {
     Promise.all([
@@ -2210,7 +2229,8 @@ function NieuwsbriefTab({ password }) {
       setEditions(sortedEds)
       setMenuPizzas(Array.isArray(menu) ? menu : [])
       const maxNum = sortedEds.reduce((m, e) => Math.max(m, e.number || 0), 0)
-      setNumber(String(maxNum + 1))
+      // Only suggest number if no draft is loaded
+      if (!loadDraft()?.number) setNumber(String(maxNum + 1))
     }).catch(() => {}).finally(() => setLoading(false))
   }, [password])
 
@@ -2289,7 +2309,7 @@ function NieuwsbriefTab({ password }) {
       })
       const data = await res.json()
       setSendResult(data)
-      if (data.sent > 0) toast(`${data.sent} mail${data.sent > 1 ? 's' : ''} verstuurd`)
+      if (data.sent > 0) { toast(`${data.sent} mail${data.sent > 1 ? 's' : ''} verstuurd`); clearDraft() }
       else toast('Geen actieve subscribers', 'info')
       refreshEditions()
     } catch { toast('Versturen mislukt', 'error') }
