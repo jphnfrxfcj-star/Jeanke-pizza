@@ -2196,6 +2196,8 @@ function NieuwsbriefTab({ password }) {
   const [sending, setSending] = useState(false)
   const [sendResult, setSendResult] = useState(null)
   const [confirmSend, setConfirmSend] = useState(false)
+  const [importCandidates, setImportCandidates] = useState(null) // null | []
+  const [importing, setImporting] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -2311,6 +2313,43 @@ function NieuwsbriefTab({ password }) {
     setPizzas(Array.isArray(ed.pizzas) ? ed.pizzas : [])
     setSendResult(null)
     setView('compose')
+  }
+
+  async function loadImportCandidates() {
+    try {
+      const orders = await fetch('/api/orders', { headers: { 'x-admin-password': password } }).then(r => r.json())
+      const existing = new Set(subscribers.map(s => s.email.toLowerCase()))
+      const seen = new Set()
+      const candidates = []
+      for (const o of (Array.isArray(orders) ? orders : [])) {
+        const email = o.email?.toLowerCase().trim()
+        if (email && !existing.has(email) && !seen.has(email)) {
+          seen.add(email)
+          candidates.push({ email, name: o.name || '' })
+        }
+      }
+      setImportCandidates(candidates)
+    } catch { toast('Kon bestellingen niet laden', 'error') }
+  }
+
+  async function handleImport() {
+    setImporting(true)
+    let added = 0
+    for (const c of (importCandidates || [])) {
+      try {
+        await fetch('/api/newsletter-subscribers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: c.email, name: c.name }),
+        })
+        added++
+      } catch {}
+    }
+    const fresh = await fetch('/api/newsletter-subscribers', { headers: { 'x-admin-password': password } }).then(r => r.json()).catch(() => [])
+    setSubscribers(Array.isArray(fresh) ? fresh : [])
+    setImportCandidates(null)
+    setImporting(false)
+    toast(`${added} subscriber${added !== 1 ? 's' : ''} toegevoegd`)
   }
 
   async function removeSubscriber(email) {
@@ -2507,6 +2546,44 @@ function NieuwsbriefTab({ password }) {
       {view === 'subscribers' && (
         <div className="space-y-4 max-w-2xl">
           <SectionLabel>Subscribers</SectionLabel>
+
+          {/* Import from orders */}
+          {importCandidates === null ? (
+            <button onClick={loadImportCandidates}
+              className="btn-secondary text-sm px-5 py-2.5">
+              Importeer uit bestellingen
+            </button>
+          ) : importCandidates.length === 0 ? (
+            <div className="flex items-center gap-3">
+              <p className="font-serif italic text-sm text-warm-gray">Alle klanten staan al in de lijst.</p>
+              <button onClick={() => setImportCandidates(null)} className="text-warm-gray hover:text-wine transition-colors"><X size={13} /></button>
+            </div>
+          ) : (
+            <div className="bg-white border border-parchment">
+              <div className="px-4 py-3 border-b border-dashed border-parchment flex items-center justify-between">
+                <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray">
+                  {importCandidates.length} nieuw gevonden
+                </p>
+                <button onClick={() => setImportCandidates(null)} className="text-warm-gray hover:text-wine transition-colors"><X size={13} /></button>
+              </div>
+              <div className="divide-y divide-dotted divide-parchment max-h-48 overflow-y-auto">
+                {importCandidates.map(c => (
+                  <div key={c.email} className="px-4 py-2.5 flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-serif text-sm text-ink truncate">{c.name || <span className="italic text-warm-gray">—</span>}</p>
+                      <p className="font-sans text-xs text-warm-gray truncate">{c.email}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="px-4 py-3 border-t border-dashed border-parchment">
+                <button onClick={handleImport} disabled={importing} className="btn-primary text-sm px-5 py-2">
+                  {importing ? 'Bezig...' : `Voeg ${importCandidates.length} toe`}
+                </button>
+              </div>
+            </div>
+          )}
+
           {subscribers.length === 0 ? <Empty text="Nog geen subscribers" /> : (
             <div className="bg-white border border-parchment divide-y divide-dotted divide-parchment">
               {subscribers.map(s => (
