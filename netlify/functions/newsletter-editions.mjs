@@ -43,23 +43,12 @@ function newsletterHtml({ number, thema, titelLinks, titelRechts, intro, ophaalD
   const pizzaCards = pizzas.map((p, i) => `
     <tr><td style="padding:0 16px 12px;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
-        style="background:${C.cardBg};border-radius:8px;border:1px solid ${C.border};">
-        <tr><td style="padding:20px 20px 20px 0;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0">
-            <tr>
-              <td width="76" style="vertical-align:top;padding-left:16px;padding-right:4px;">
-                <div style="width:56px;height:56px;background:${C.beige};border-radius:50%;text-align:center;line-height:56px;">
-                  <span style="font-family:Georgia,serif;font-size:11px;color:${C.muted};letter-spacing:1px;">N°&nbsp;${i + 1}</span>
-                </div>
-              </td>
-              <td style="vertical-align:top;padding-right:16px;">
-                <p style="margin:0 0 3px;font-family:Arial,sans-serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:${C.gold};">${escapeHtml(p.categorie || p.label || "")}</p>
-                <p style="margin:0 0 5px;font-family:Georgia,serif;font-size:19px;font-weight:400;color:${C.brown};">${escapeHtml(p.naam || p.name || "")}</p>
-                <p style="margin:0 0 8px;font-family:Georgia,serif;font-size:13px;font-style:italic;color:${C.muted};line-height:1.6;">${escapeHtml(p.beschrijving || p.description || "")}</p>
-                <p style="margin:0;font-family:Georgia,serif;font-size:15px;color:${C.terracotta};">${escapeHtml(p.prijs || p.price || "")}</p>
-              </td>
-            </tr>
-          </table>
+        style="background:${C.cardBg};border-radius:8px;border:1px solid ${C.border};border-left:3px solid ${C.terracotta};">
+        <tr><td style="padding:18px 20px;">
+          <p style="margin:0 0 3px;font-family:Arial,sans-serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:${C.gold};">${escapeHtml(p.categorie || p.label || "")}</p>
+          <p style="margin:0 0 5px;font-family:Georgia,serif;font-size:19px;font-weight:400;color:${C.brown};">${escapeHtml(p.naam || p.name || "")}</p>
+          <p style="margin:0 0 8px;font-family:Georgia,serif;font-size:13px;font-style:italic;color:${C.muted};line-height:1.6;">${escapeHtml(p.beschrijving || p.description || "")}</p>
+          <p style="margin:0;font-family:Georgia,serif;font-size:15px;color:${C.terracotta};">${escapeHtml(p.prijs || p.price || "")}</p>
         </td></tr>
       </table>
     </td></tr>`).join("")
