@@ -284,9 +284,9 @@ function Shop() {
         ) : successOrder ? (
           <SuccessView order={successOrder} onReset={() => setSuccessOrder(null)} />
         ) : (
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-14 grid grid-cols-1 lg:grid-cols-3 gap-10">
+          <div className="py-14 flex items-start justify-center gap-10 px-4 sm:px-6 lg:px-10">
             {/* Menu column */}
-            <div className="lg:col-span-2 space-y-16">
+            <div className="w-full max-w-3xl min-w-0 space-y-16">
               {/* Suggestions */}
               {(() => {
                 const suggestions = pizzas.filter(p => p.suggestion)
@@ -392,8 +392,7 @@ function Shop() {
             </div>
 
             {/* Cart column */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-24">
+            <aside className="hidden lg:block w-72 shrink-0 sticky top-24 self-start">
                 <Cart
                   items={cart}
                   onAdd={addToCart}
@@ -408,8 +407,7 @@ function Shop() {
                   onRemoveWine={removeWine}
                   wijnEnabled={!!settings?.wijnEnabled}
                 />
-              </div>
-            </div>
+            </aside>
           </div>
         )}
       </main>
