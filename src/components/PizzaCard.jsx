@@ -32,10 +32,10 @@ export default function PizzaCard({ pizza, quantity, onAdd, onRemove, currency, 
   const ingredients = Array.isArray(pizza.ingredients) ? pizza.ingredients : []
   return (
     <li
-      className={`group py-5 px-2 flex items-center gap-4 sm:gap-6 hover:bg-parchment/30 transition-colors border-b border-dotted border-parchment last:border-b-0 ${pulse ? 'bg-wine/5' : ''}`}
+      className={`group py-5 px-2 flex items-start gap-4 sm:gap-6 hover:bg-parchment/30 transition-colors border-b border-dotted border-parchment last:border-b-0 ${pulse ? 'bg-wine/5' : ''}`}
     >
       {/* N° badge */}
-      <span className="font-serif italic text-warm-gray text-sm leading-none shrink-0 tabular-nums">N°{num}</span>
+      <span className="font-serif italic text-warm-gray text-sm leading-none shrink-0 mt-1 tabular-nums">N°{num}</span>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
@@ -54,8 +54,8 @@ export default function PizzaCard({ pizza, quantity, onAdd, onRemove, currency, 
       </div>
 
       {/* Price + controls */}
-      <div className="flex items-center gap-3 shrink-0">
-        <span className="font-serif text-lg text-wine tabular-nums whitespace-nowrap">
+      <div className="flex items-start gap-3 shrink-0">
+        <span className="font-serif text-lg text-wine tabular-nums whitespace-nowrap leading-tight">
           {currency}{pizza.price.toFixed(2)}
         </span>
         {showOrder && (
