@@ -364,22 +364,22 @@ function Shop() {
                               </p>
                             )}
                           </div>
-                          <div className="flex items-center gap-3 shrink-0">
+                          <div className="flex flex-col items-end gap-2 shrink-0 self-center">
                             <span className="font-serif text-lg text-wine tabular-nums whitespace-nowrap">
                               {config.currency}{wine.price.toFixed(2)}
                             </span>
                             {qty === 0 ? (
                               <button
                                 onClick={() => addWine(wine)}
-                                className="font-sans text-[10px] tracking-[0.2em] uppercase border border-warm-gray-light text-ink px-3 py-2 hover:bg-wine hover:text-cream hover:border-wine transition-colors whitespace-nowrap"
+                                className="font-sans text-[9px] tracking-[0.2em] uppercase border border-warm-gray-light text-ink px-2.5 py-1 hover:bg-wine hover:text-cream hover:border-wine transition-colors whitespace-nowrap"
                               >
-                                Toevoegen
+                                + Toevoegen
                               </button>
                             ) : (
                               <div className="flex items-center gap-2">
-                                <button onClick={() => removeWine(wine)} className="w-7 h-7 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center transition-colors">−</button>
-                                <span className="font-serif text-base w-4 text-center">{qty}</span>
-                                <button onClick={() => addWine(wine)} className="w-7 h-7 bg-wine hover:bg-wine-light text-cream flex items-center justify-center transition-colors">+</button>
+                                <button onClick={() => removeWine(wine)} className="w-6 h-6 border border-warm-gray-light text-ink hover:border-ink flex items-center justify-center transition-colors text-sm">−</button>
+                                <span className="font-serif text-base w-4 text-center tabular-nums">{qty}</span>
+                                <button onClick={() => addWine(wine)} className="w-6 h-6 bg-wine hover:bg-wine-light text-cream flex items-center justify-center transition-colors text-sm">+</button>
                               </div>
                             )}
                           </div>
