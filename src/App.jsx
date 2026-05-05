@@ -182,7 +182,7 @@ function Shop() {
   const showRegistration = registration?.registrationOpen === true
 
   return (
-    <div className="min-h-screen bg-cream text-ink relative overflow-x-hidden">
+    <div className="min-h-screen bg-cream text-ink relative overflow-x-clip">
 
       {/* ═══════ TopNav ═══════ */}
       <nav className="sticky top-0 z-30 bg-cream/80 backdrop-blur-md border-b border-parchment">
