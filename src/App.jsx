@@ -68,6 +68,8 @@ function Shop() {
   const [regEmail, setRegEmail] = useState('')
   const [regPizzas, setRegPizzas] = useState(1)
   const [regStatus, setRegStatus] = useState('') // '' | 'loading' | 'success' | 'duplicate' | 'error'
+  const [nlEmail, setNlEmail] = useState('')
+  const [nlStatus, setNlStatus] = useState('') // '' | 'loading' | 'success' | 'duplicate' | 'error'
 
   useEffect(() => {
     fetch('/api/pizzas')
@@ -130,6 +132,22 @@ function Shop() {
   function clearCart() {
     setCart([]); setWineCart([])
     localStorage.removeItem('jeanke_cart'); localStorage.removeItem('jeanke_wine_cart')
+  }
+
+  async function handleNewsletterSignup(e) {
+    e.preventDefault()
+    setNlStatus('loading')
+    try {
+      const res = await fetch('/api/newsletter-subscribers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: nlEmail }),
+      })
+      if (res.status === 409) { setNlStatus('duplicate'); return }
+      if (!res.ok) { setNlStatus('error'); return }
+      setNlStatus('success')
+      setNlEmail('')
+    } catch { setNlStatus('error') }
   }
 
   function addWine(wine) {
@@ -452,8 +470,8 @@ function Shop() {
       <footer className="relative bg-cream border-t border-parchment">
         <PaperTexture />
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-14 lg:pb-14 pb-28">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 sm:gap-10">
-            <div className="col-span-2 md:col-span-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
+            <div>
               <p className="font-serif italic text-2xl text-ink">Jeanke's</p>
               <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mt-1">Pizzeria artigianale</p>
               <p className="font-serif italic text-warm-gray text-sm mt-4 leading-relaxed max-w-xs">
@@ -468,6 +486,43 @@ function Shop() {
                 <li><a href="#wijn" className="hover:text-wine transition-colors">La Cantina</a></li>
                 <li><a href="#racconto" className="hover:text-wine transition-colors">Il Racconto</a></li>
               </ul>
+            </div>
+
+            <div>
+              <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold mb-3">Nieuwsbrief</p>
+              <p className="font-serif italic text-warm-gray text-xs leading-relaxed mb-4">
+                Blijf op de hoogte van onze volgende pizza-avonden.
+              </p>
+              {nlStatus === 'success' ? (
+                <div className="border border-dashed border-parchment px-4 py-3">
+                  <p className="font-serif italic text-sm text-ink">Ingeschreven!</p>
+                  <p className="font-sans text-[11px] text-warm-gray mt-1">We houden u op de hoogte.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleNewsletterSignup} className="flex flex-col gap-2">
+                  <input
+                    type="email"
+                    required
+                    value={nlEmail}
+                    onChange={e => { setNlEmail(e.target.value); if (nlStatus) setNlStatus('') }}
+                    placeholder="uw@email.be"
+                    className="w-full border border-parchment bg-cream px-3 py-2.5 text-xs text-ink focus:outline-none focus:border-olive transition-colors"
+                  />
+                  {nlStatus === 'duplicate' && (
+                    <p className="font-sans text-[11px] text-wine italic">Al ingeschreven.</p>
+                  )}
+                  {nlStatus === 'error' && (
+                    <p className="font-sans text-[11px] text-wine italic">Er ging iets mis. Probeer opnieuw.</p>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={nlStatus === 'loading'}
+                    className="btn-primary text-xs py-2.5"
+                  >
+                    {nlStatus === 'loading' ? 'Even geduld...' : 'Inschrijven'}
+                  </button>
+                </form>
+              )}
             </div>
           </div>
 
