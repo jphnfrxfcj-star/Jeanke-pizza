@@ -27,7 +27,7 @@ function generateSlotsForDates(openingDates, config, settings) {
       if (cursor > new Date(now.getTime() + 15 * 60 * 1000)) {
         slots.push({ date: dateStr, time: cursor.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }) })
       }
-      cursor.setMinutes(cursor.getMinutes() + config.slotIntervalMinutes)
+      cursor.setMinutes(cursor.getMinutes() + (settings?.slotIntervalMinutes ?? config.slotIntervalMinutes))
     }
   }
   return slots
@@ -278,7 +278,7 @@ function Shop() {
                 </span>
                 <span className="text-gold/60">✦</span>
                 <span className="font-sans text-[11px] tracking-[0.24em] uppercase">
-                  Tijdslot per {config.slotIntervalMinutes} min
+                  Tijdslot per {settings?.slotIntervalMinutes ?? config.slotIntervalMinutes} min
                 </span>
               </div>
             )}

@@ -1479,7 +1479,7 @@ function OpeningTab({ password }) {
   const [newLabel, setNewLabel] = useState('')
   const [regDate, setRegDate] = useState('')
   const [savingCfg, setSavingCfg] = useState(false)
-  const [siteSettings, setSiteSettings] = useState({ openingHour: 17, closingHour: 22, pizzasPerSlot: 3, wijnEnabled: false })
+  const [siteSettings, setSiteSettings] = useState({ openingHour: 17, closingHour: 22, pizzasPerSlot: 3, slotIntervalMinutes: 15, wijnEnabled: false })
   const [savingSettings, setSavingSettings] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -1624,6 +1624,19 @@ function OpeningTab({ password }) {
                 <span className="pr-2 text-warm-gray text-sm shrink-0">p</span>
               </div>
             </div>
+          </div>
+          <div>
+            <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-1">Slotduur</label>
+            <select value={siteSettings.slotIntervalMinutes ?? 15}
+              onChange={e=>setSiteSettings(s=>({...s, slotIntervalMinutes: Number(e.target.value)}))}
+              className="w-full border border-parchment bg-cream px-3 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors">
+              {[5, 6, 10, 12, 15, 20, 30, 60].map(m => (
+                <option key={m} value={m}>{m} minuten</option>
+              ))}
+            </select>
+            <p className="font-sans text-xs text-warm-gray italic mt-1">
+              Alleen waarden die exact passen in een uur ({'{'}5, 6, 10, 12, 15, 20, 30, 60{'}'} min).
+            </p>
           </div>
           <p className="font-sans text-xs text-warm-gray italic">
             Vanaf {siteSettings.pizzasPerSlot + 1} pizza's worden automatisch {2} tijdslots gereserveerd.
