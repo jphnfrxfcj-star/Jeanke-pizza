@@ -9,16 +9,17 @@ const OWNER_EMAIL    = process.env.OWNER_EMAIL || GMAIL_USER
 const SITE_URL       = process.env.URL || "https://secretpizza.be"
 
 const C = {
-  cream:      "#F5EFE6",
-  cardBg:     "#FFF8EF",
+  cream:      "#F7F1E8",
+  cardBg:     "#FFFBF4",
+  panel:      "#F4E8D5",
+  panelFoot:  "#F0E3CD",
   terracotta: "#C4572A",
-  brown:      "#2C1810",
-  gold:       "#C4A780",
-  goldLight:  "#C4A780",
-  text:       "#2C1810",
-  muted:      "#5a4a3a",
+  brown:      "#3A2A1E",
+  gold:       "#A8854A",
+  goldRule:   "#E2CEA8",
+  muted:      "#6B5848",
   border:     "#E8D9C3",
-  beige:      "#E8D9C3",
+  chipBg:     "#FBF3E7",
 }
 
 function escapeHtml(str) {
@@ -30,8 +31,19 @@ function escapeHtml(str) {
     .replace(/'/g, "&#x27;")
 }
 
+function flankedLabel(text, ruleColor = C.goldRule, textColor = C.gold) {
+  return `
+    <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;">
+      <tr>
+        <td style="width:30px;border-top:1px solid ${ruleColor};font-size:0;line-height:0;">&nbsp;</td>
+        <td style="padding:0 12px;font-family:Arial,sans-serif;font-size:9px;letter-spacing:4px;text-transform:uppercase;color:${textColor};white-space:nowrap;">${text}</td>
+        <td style="width:30px;border-top:1px solid ${ruleColor};font-size:0;line-height:0;">&nbsp;</td>
+      </tr>
+    </table>`
+}
+
 // ── Newsletter HTML template ────────────────────────────────────────────────
-function newsletterHtml({ number, thema, titelLinks, titelRechts, intro, ophaalDag, ophaalDatum, ophaalTijden, pizzas = [], subscriberName, unsubscribeToken }) {
+function newsletterHtml({ number, thema, titelLinks, titelRechts, intro, ophaalDag, ophaalDatum, ophaalTijden, pizzas = [], subscriberName, unsubscribeToken, slotIntervalMinutes = 15 }) {
   const unsubUrl  = `${SITE_URL}/uitschrijven?token=${escapeHtml(unsubscribeToken)}`
   const greeting  = subscriberName ? escapeHtml(subscriberName) : "beste pizza-liefhebber"
   const themaLabel = thema ? `N° ${escapeHtml(String(number))} &middot; ${escapeHtml(thema)}` : `N° ${escapeHtml(String(number))}`
@@ -40,15 +52,22 @@ function newsletterHtml({ number, thema, titelLinks, titelRechts, intro, ophaalD
     ? `${escapeHtml(titelLinks)} <em style="color:${C.terracotta};">&amp;</em> ${escapeHtml(titelRechts)}`
     : escapeHtml(titelLinks || "")
 
-  const pizzaCards = pizzas.map((p, i) => `
-    <tr><td style="padding:0 16px 12px;">
+  const pizzaCards = pizzas.map((p) => `
+    <tr><td class="px2" style="padding:0 16px 14px;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
-        style="background:${C.cardBg};border-radius:8px;border:1px solid ${C.border};border-left:3px solid ${C.terracotta};">
-        <tr><td style="padding:18px 20px;">
-          <p style="margin:0 0 3px;font-family:Arial,sans-serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:${C.gold};">${escapeHtml(p.categorie || p.label || "")}</p>
-          <p style="margin:0 0 5px;font-family:Georgia,serif;font-size:19px;font-weight:400;color:${C.brown};">${escapeHtml(p.naam || p.name || "")}</p>
-          <p style="margin:0 0 8px;font-family:Georgia,serif;font-size:13px;font-style:italic;color:${C.muted};line-height:1.6;">${escapeHtml(p.beschrijving || p.description || "")}</p>
-          <p style="margin:0;font-family:Georgia,serif;font-size:15px;color:${C.terracotta};">${escapeHtml(p.prijs || p.price || "")}</p>
+        style="background:${C.cardBg};border:1px solid ${C.border};border-left:3px solid ${C.terracotta};">
+        <tr><td style="padding:18px 22px 16px;">
+          <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:${C.gold};">${escapeHtml(p.categorie || p.label || "")}</p>
+          <p style="margin:0 0 6px;font-family:Georgia,serif;font-size:20px;font-weight:400;color:${C.brown};line-height:1.2;">${escapeHtml(p.naam || p.name || "")}</p>
+          <p style="margin:0 0 14px;font-family:Georgia,serif;font-size:13px;font-style:italic;color:${C.muted};line-height:1.6;">${escapeHtml(p.beschrijving || p.description || "")}</p>
+          <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr><td style="border-top:1px dotted ${C.border};padding-top:12px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                <td style="font-family:Georgia,serif;font-size:12px;color:${C.gold};vertical-align:middle;">&#10022;</td>
+                <td align="right" style="font-family:Georgia,serif;font-size:16px;font-weight:bold;color:${C.terracotta};vertical-align:middle;">${escapeHtml(p.prijs || p.price || "")}</td>
+              </tr></table>
+            </td></tr>
+          </table>
         </td></tr>
       </table>
     </td></tr>`).join("")
@@ -60,103 +79,123 @@ function newsletterHtml({ number, thema, titelLinks, titelRechts, intro, ophaalD
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Jeanke's Pizza</title>
+  <style>
+    @media only screen and (max-width:600px) {
+      .container { width:100% !important; }
+      .px        { padding-left:20px !important; padding-right:20px !important; }
+      .px2       { padding-left:12px !important; padding-right:12px !important; }
+      .hl        { font-size:30px !important; }
+      .dt        { font-size:42px !important; }
+      .stack     { display:block !important; width:100% !important; box-sizing:border-box !important; }
+      .stack-gap { display:block !important; width:100% !important; height:10px !important;
+                   line-height:10px !important; font-size:0 !important; }
+    }
+  </style>
 </head>
 <body style="margin:0;padding:0;background:${C.cream};">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.cream};">
-<tr><td align="center">
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
+<tr><td align="center" style="padding:0;">
+<table class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;border-left:1px solid ${C.border};border-right:1px solid ${C.border};">
 
   <!-- Terracotta top bar -->
-  <tr><td style="background:${C.terracotta};padding:10px 0;text-align:center;">
+  <tr><td style="background:${C.terracotta};padding:11px 0;text-align:center;">
     <p style="margin:0;font-family:Georgia,serif;font-size:10px;letter-spacing:5px;text-transform:uppercase;color:#fff;font-style:italic;">Piccola pizzeria artigianale</p>
   </td></tr>
 
   <!-- Editorial header -->
-  <tr><td style="background:#fff;padding:40px 24px 28px;">
-    <p style="margin:0 0 10px;font-family:Arial,sans-serif;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:${C.terracotta};">${themaLabel}</p>
-    <h1 style="margin:0 0 14px;font-family:Georgia,serif;font-size:38px;font-weight:800;letter-spacing:-1px;line-height:1.15;color:${C.brown};">${headline}</h1>
+  <tr><td class="px" style="background:#fff;padding:44px 28px 32px;">
+    <p style="margin:0 0 12px;font-family:Arial,sans-serif;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:${C.terracotta};">${themaLabel}</p>
+    <h1 class="hl" style="margin:0 0 16px;font-family:Georgia,serif;font-size:38px;font-weight:800;letter-spacing:-1px;line-height:1.14;color:${C.brown};">${headline}</h1>
     ${intro ? `<p style="margin:0;font-family:Georgia,serif;font-size:15px;color:${C.muted};line-height:1.7;font-style:italic;">${escapeHtml(intro)}</p>` : ""}
   </td></tr>
 
-  <!-- Ophaaldag block -->
-  <tr><td style="background:${C.brown};padding:36px 24px;text-align:center;">
-    <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:10px;letter-spacing:5px;text-transform:uppercase;color:${C.gold};">Ophaaldag</p>
-    <p style="margin:0;font-family:Georgia,serif;font-size:17px;font-style:italic;color:${C.goldLight};">${escapeHtml(ophaalDag || "")}</p>
-    <p style="margin:4px 0 18px;font-family:Georgia,serif;font-size:48px;font-weight:800;color:#fff;line-height:1.1;">${escapeHtml(ophaalDatum || "")}</p>
-    <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin-bottom:16px;">
+  <!-- Ophaaldag block (light parchment panel) -->
+  <tr><td class="px" style="background:${C.panel};padding:38px 24px;text-align:center;border-top:1px solid ${C.border};border-bottom:1px solid ${C.border};">
+    <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:10px;letter-spacing:5px;text-transform:uppercase;color:${C.terracotta};">Ophaaldag</p>
+    <p style="margin:0;font-family:Georgia,serif;font-size:17px;font-style:italic;color:${C.muted};">${escapeHtml(ophaalDag || "")}</p>
+    <p class="dt" style="margin:4px 0 18px;font-family:Georgia,serif;font-size:50px;font-weight:800;color:${C.brown};line-height:1.05;">${escapeHtml(ophaalDatum || "")}</p>
+    <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;">
       <tr>
-        <td style="width:40px;border-top:1px solid ${C.terracotta};font-size:0;">&nbsp;</td>
+        <td style="width:44px;border-top:1px solid ${C.terracotta};font-size:0;line-height:0;">&nbsp;</td>
         <td style="padding:0 10px;color:${C.terracotta};font-size:14px;">&#10022;</td>
-        <td style="width:40px;border-top:1px solid ${C.terracotta};font-size:0;">&nbsp;</td>
+        <td style="width:44px;border-top:1px solid ${C.terracotta};font-size:0;line-height:0;">&nbsp;</td>
       </tr>
     </table>
-    <p style="margin:0 0 6px;font-family:Georgia,serif;font-size:19px;font-style:italic;color:${C.gold};">${escapeHtml(ophaalTijden || "")}</p>
-    <p style="margin:0;font-family:Arial,sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#7a6050;">Tijdslot per 15 min &middot; afhalen aan de deur</p>
+    <p style="margin:0 0 8px;font-family:Georgia,serif;font-size:19px;font-style:italic;color:${C.terracotta};">${escapeHtml(ophaalTijden || "")}</p>
+    <p style="margin:0;font-family:Arial,sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:${C.muted};">Tijdslot per ${slotIntervalMinutes} min &middot; afhalen aan de deur</p>
   </td></tr>
 
   ${pizzas.length > 0 ? `
   <!-- Pizza cards -->
-  <tr><td style="background:#fff;padding:24px 0 12px;">
-    <p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:9px;letter-spacing:4px;text-transform:uppercase;color:${C.gold};text-align:center;">Suggesties van het huis</p>
+  <tr><td style="background:#fff;padding:30px 0 16px;">
+    <div style="text-align:center;margin:0 0 20px;">${flankedLabel("Suggesties van het huis")}</div>
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       ${pizzaCards}
     </table>
   </td></tr>` : ""}
 
   <!-- Bento grid: Il mestiere -->
-  <tr><td style="background:${C.cream};padding:28px 16px;">
-    <p style="margin:0 0 14px;font-family:Arial,sans-serif;font-size:9px;letter-spacing:4px;text-transform:uppercase;color:${C.gold};text-align:center;">Il mestiere</p>
+  <tr><td class="px2" style="background:${C.cream};padding:32px 16px;">
+    <div style="text-align:center;margin:0 0 18px;">${flankedLabel("Il mestiere")}</div>
     <!-- Top card -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:8px;">
-      <tr><td style="background:#fff;border-radius:8px;padding:20px 20px;border:1px solid ${C.border};">
-        <p style="margin:0 0 4px;font-family:Georgia,serif;font-size:17px;font-weight:700;color:${C.brown};">Deeg van 72 uur</p>
-        <p style="margin:0;font-family:Georgia,serif;font-size:13px;font-style:italic;color:${C.muted};">Lange rijzing, weinig gist. De tijd doet het werk.</p>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;">
+      <tr><td style="background:#fff;padding:20px 22px;border:1px solid ${C.border};border-left:3px solid ${C.terracotta};">
+        <p style="margin:0 0 5px;font-family:Georgia,serif;font-size:17px;font-weight:700;color:${C.brown};">Deeg van 72 uur</p>
+        <p style="margin:0;font-family:Georgia,serif;font-size:13px;font-style:italic;color:${C.muted};line-height:1.6;">Lange rijzing, weinig gist. De tijd doet het werk.</p>
       </td></tr>
     </table>
-    <!-- Two smaller cards -->
+    <!-- Two smaller cards (stack on mobile) -->
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
-        <td width="49%" style="background:#F9E5A8;border-radius:8px;padding:16px;vertical-align:top;">
-          <p style="margin:0 0 3px;font-family:Georgia,serif;font-size:18px;">&#x1F525;</p>
-          <p style="margin:0 0 3px;font-family:Georgia,serif;font-size:14px;font-weight:700;color:${C.brown};">400° houtvuur</p>
-          <p style="margin:0;font-family:Georgia,serif;font-size:12px;font-style:italic;color:${C.muted};">90 seconden, niet meer.</p>
+        <td class="stack" width="49%" style="background:#fff;border:1px solid ${C.border};padding:18px;vertical-align:top;">
+          <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;">
+            <tr><td style="width:34px;background:${C.chipBg};border:1px solid ${C.border};text-align:center;font-size:18px;padding:7px 0;line-height:1;">&#x1F525;</td></tr>
+          </table>
+          <p style="margin:0 0 4px;font-family:Georgia,serif;font-size:14px;font-weight:700;color:${C.brown};">400&deg; houtvuur</p>
+          <p style="margin:0;font-family:Georgia,serif;font-size:12px;font-style:italic;color:${C.muted};line-height:1.5;">90 seconden, niet meer.</p>
         </td>
-        <td width="2%">&nbsp;</td>
-        <td width="49%" style="background:#E8D4C8;border-radius:8px;padding:16px;vertical-align:top;">
-          <p style="margin:0 0 3px;font-family:Georgia,serif;font-size:18px;">&#x1F33F;</p>
-          <p style="margin:0 0 3px;font-family:Georgia,serif;font-size:14px;font-weight:700;color:${C.brown};">Alleen verse kruiden</p>
-          <p style="margin:0;font-family:Georgia,serif;font-size:12px;font-style:italic;color:${C.muted};">Geen droge zakjes.</p>
+        <td class="stack-gap" width="2%" style="font-size:0;line-height:0;">&nbsp;</td>
+        <td class="stack" width="49%" style="background:#fff;border:1px solid ${C.border};padding:18px;vertical-align:top;">
+          <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;">
+            <tr><td style="width:34px;background:${C.chipBg};border:1px solid ${C.border};text-align:center;font-size:18px;padding:7px 0;line-height:1;">&#x1F33F;</td></tr>
+          </table>
+          <p style="margin:0 0 4px;font-family:Georgia,serif;font-size:14px;font-weight:700;color:${C.brown};">Alleen verse kruiden</p>
+          <p style="margin:0;font-family:Georgia,serif;font-size:12px;font-style:italic;color:${C.muted};line-height:1.5;">Geen droge zakjes.</p>
         </td>
       </tr>
     </table>
   </td></tr>
 
   <!-- CTA -->
-  <tr><td style="background:#fff;padding:20px 24px 32px;text-align:center;">
-    <a href="${SITE_URL}" style="display:inline-block;font-family:Arial,sans-serif;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#fff;background:${C.terracotta};text-decoration:none;padding:15px 36px;border-radius:2px;">Reserveer uw pizza &rarr;</a>
+  <tr><td class="px" style="background:#fff;padding:26px 24px 40px;text-align:center;border-top:1px solid ${C.border};">
+    <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;">
+      <tr><td style="background:${C.terracotta};">
+        <a href="${SITE_URL}" style="display:inline-block;font-family:Arial,sans-serif;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#fff;text-decoration:none;padding:16px 42px;">Reserveer uw pizza &rarr;</a>
+      </td></tr>
+    </table>
   </td></tr>
 
-  <!-- Footer -->
-  <tr><td style="background:${C.brown};padding:28px 24px;text-align:center;">
-    <p style="margin:0 0 14px;font-family:Georgia,serif;font-size:13px;font-style:italic;color:${C.gold};line-height:1.8;">
+  <!-- Footer (light parchment) -->
+  <tr><td class="px" style="background:${C.panelFoot};padding:34px 24px;text-align:center;border-top:1px solid ${C.border};">
+    <p style="margin:0 0 16px;font-family:Georgia,serif;font-size:13px;font-style:italic;color:${C.brown};line-height:1.85;">
       &ldquo;Geen keten. Geen haast. Gewoon goede pizza,<br>gemaakt door Jeanke en zijn familie.&rdquo;
     </p>
-    <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin-bottom:16px;">
+    <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 18px;">
       <tr>
-        <td style="width:20px;border-top:1px solid ${C.terracotta};font-size:0;">&nbsp;</td>
+        <td style="width:22px;border-top:1px solid ${C.terracotta};font-size:0;line-height:0;">&nbsp;</td>
         <td style="padding:0 8px;color:${C.terracotta};font-size:12px;">&#10022;</td>
-        <td style="width:20px;border-top:1px solid ${C.terracotta};font-size:0;">&nbsp;</td>
+        <td style="width:22px;border-top:1px solid ${C.terracotta};font-size:0;line-height:0;">&nbsp;</td>
       </tr>
     </table>
-    <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:11px;color:#7a6050;">
+    <p style="margin:0 0 10px;font-family:Arial,sans-serif;font-size:11px;color:${C.muted};">
       Deze mail ontving u omdat u al eens bij ons bestelde.
     </p>
-    <a href="${unsubUrl}" style="font-family:Arial,sans-serif;font-size:11px;color:${C.gold};text-decoration:underline;">Uitschrijven</a>
+    <a href="${unsubUrl}" style="font-family:Arial,sans-serif;font-size:11px;color:${C.terracotta};text-decoration:underline;">Uitschrijven</a>
   </td></tr>
 
   <!-- Bottom terracotta bar -->
-  <tr><td style="background:${C.terracotta};padding:8px 0;text-align:center;">
-    <p style="margin:0;font-family:Arial,sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.7);">Jeanke&rsquo;s Pizza &middot; secretpizza.be</p>
+  <tr><td style="background:${C.terracotta};padding:9px 0;text-align:center;">
+    <p style="margin:0;font-family:Arial,sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.75);">Jeanke&rsquo;s Pizza &middot; secretpizza.be</p>
   </td></tr>
 
 </table>
@@ -249,8 +288,11 @@ export default async (req) => {
     // ── Test mail ───────────────────────────────────────────────────────────
     if (action === "test") {
       if (!GMAIL_USER || !GMAIL_PASSWORD) return Response.json({ error: "Gmail niet geconfigureerd" }, { status: 500 })
+      const settingsStore = getStore({ name: "settings", consistency: "strong" })
+      const siteSettings = await settingsStore.get("config", { type: "json" }).catch(() => null) || {}
+      const slotIntervalMinutes = siteSettings.slotIntervalMinutes ?? 15
       const transport = nodemailer.createTransport({ service: "gmail", auth: { user: GMAIL_USER, pass: GMAIL_PASSWORD } })
-      const html = newsletterHtml({ ...editionData, subscriberName: "Jeanke", unsubscribeToken: "test" })
+      const html = newsletterHtml({ ...editionData, subscriberName: "Jeanke", unsubscribeToken: "test", slotIntervalMinutes })
       const text = newsletterText({ ...editionData, unsubscribeToken: "test" })
       await transport.sendMail({
         from: `"Jeanke's Pizza" <${GMAIL_USER}>`,
@@ -266,6 +308,10 @@ export default async (req) => {
     if (action === "send") {
       if (!GMAIL_USER || !GMAIL_PASSWORD) return Response.json({ error: "Gmail niet geconfigureerd" }, { status: 500 })
 
+      const settingsStore = getStore({ name: "settings", consistency: "strong" })
+      const siteSettings = await settingsStore.get("config", { type: "json" }).catch(() => null) || {}
+      const slotIntervalMinutes = siteSettings.slotIntervalMinutes ?? 15
+
       const subscribers = await getSubscribers()
       const active = subscribers.filter(s => s.status === "active")
       if (active.length === 0) return Response.json({ sent: 0, failed: 0, results: [] })
@@ -276,7 +322,7 @@ export default async (req) => {
 
       for (const sub of active) {
         try {
-          const html = newsletterHtml({ ...editionData, subscriberName: sub.name, unsubscribeToken: sub.unsubscribe_token })
+          const html = newsletterHtml({ ...editionData, subscriberName: sub.name, unsubscribeToken: sub.unsubscribe_token, slotIntervalMinutes })
           const text = newsletterText({ ...editionData, unsubscribeToken: sub.unsubscribe_token })
           await transport.sendMail({
             from: `"Jeanke's Pizza" <${GMAIL_USER}>`,
