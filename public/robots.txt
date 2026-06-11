@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /beheer
+Disallow: /annuleer
+
+Sitemap: https://www.secretpizza.be/sitemap.xml
