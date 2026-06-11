@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/pizza-icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Jeanke's Pizza</title>
+    <title>Jeanke's Pizza — Handgemaakte pizza's uit de houtoven</title>
+    <link rel="canonical" href="https://www.secretpizza.be/" />
 
     <!-- Open Graph / link previews -->
     <meta property="og:type" content="website" />
@@ -23,6 +24,28 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+
+    <!-- Structured data voor Google (lokale zoekresultaten / rich results).
+         TODO: vul streetAddress, addressLocality en postalCode in. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Restaurant",
+      "name": "Jeanke's Pizza",
+      "url": "https://www.secretpizza.be/",
+      "image": "https://www.secretpizza.be/hero.jpg",
+      "servesCuisine": "Italian",
+      "description": "Handgemaakte pizza's uit de houtoven. Bestel uw tijdslot online.",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "",
+        "addressLocality": "",
+        "postalCode": "",
+        "addressCountry": "BE"
+      },
+      "acceptsReservations": "https://www.secretpizza.be/"
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
