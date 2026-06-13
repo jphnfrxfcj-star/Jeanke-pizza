@@ -1479,7 +1479,7 @@ function OpeningTab({ password }) {
   const [newLabel, setNewLabel] = useState('')
   const [regDate, setRegDate] = useState('')
   const [savingCfg, setSavingCfg] = useState(false)
-  const [siteSettings, setSiteSettings] = useState({ openingHour: 17, closingHour: 22, pizzasPerSlot: 3, slotIntervalMinutes: 15, wijnEnabled: false })
+  const [siteSettings, setSiteSettings] = useState({ openingHour: 17, openingMinute: 0, closingHour: 22, closingMinute: 0, pizzasPerSlot: 3, slotIntervalMinutes: 15, wijnEnabled: false })
   const [savingSettings, setSavingSettings] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -1599,21 +1599,27 @@ function OpeningTab({ password }) {
           <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-1">Van</label>
-              <div className="flex items-center border border-parchment bg-cream">
-                <input type="number" min="0" max="23" value={siteSettings.openingHour}
-                  onChange={e=>setSiteSettings(s=>({...s, openingHour: Number(e.target.value)}))}
-                  className="w-full px-2 py-3 text-sm text-ink bg-transparent focus:outline-none min-w-0" />
-                <span className="pr-2 text-warm-gray text-sm shrink-0">u</span>
-              </div>
+              <input
+                type="time" step="900"
+                value={`${String(siteSettings.openingHour).padStart(2,'0')}:${String(siteSettings.openingMinute ?? 0).padStart(2,'0')}`}
+                onChange={e => {
+                  const [h, m] = e.target.value.split(':').map(Number)
+                  setSiteSettings(s => ({ ...s, openingHour: h, openingMinute: m }))
+                }}
+                className="w-full border border-parchment bg-cream px-2 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors"
+              />
             </div>
             <div>
               <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-1">Tot</label>
-              <div className="flex items-center border border-parchment bg-cream">
-                <input type="number" min="0" max="23" value={siteSettings.closingHour}
-                  onChange={e=>setSiteSettings(s=>({...s, closingHour: Number(e.target.value)}))}
-                  className="w-full px-2 py-3 text-sm text-ink bg-transparent focus:outline-none min-w-0" />
-                <span className="pr-2 text-warm-gray text-sm shrink-0">u</span>
-              </div>
+              <input
+                type="time" step="900"
+                value={`${String(siteSettings.closingHour).padStart(2,'0')}:${String(siteSettings.closingMinute ?? 0).padStart(2,'0')}`}
+                onChange={e => {
+                  const [h, m] = e.target.value.split(':').map(Number)
+                  setSiteSettings(s => ({ ...s, closingHour: h, closingMinute: m }))
+                }}
+                className="w-full border border-parchment bg-cream px-2 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors"
+              />
             </div>
             <div>
               <label className="block font-sans text-xs tracking-widest uppercase text-warm-gray mb-1">Max/slot</label>

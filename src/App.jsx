@@ -11,17 +11,23 @@ import SectionLabel from './components/SectionLabel'
 import config from './data/config.json'
 import staticPizzas from './data/pizzas.json'
 
+function fmtTime(h, m) {
+  return `${h}:${String(m ?? 0).padStart(2, '0')}`
+}
+
 function generateSlotsForDates(openingDates, config, settings) {
   const slots = []
   const now = new Date()
-  const openingHour = settings?.openingHour ?? config.openingHour
-  const closingHour = settings?.closingHour ?? config.closingHour
+  const openingHour   = settings?.openingHour   ?? config.openingHour
+  const openingMinute = settings?.openingMinute  ?? 0
+  const closingHour   = settings?.closingHour    ?? config.closingHour
+  const closingMinute = settings?.closingMinute  ?? 0
   for (const { date } of openingDates) {
     const d = new Date(date + 'T00:00:00')
     if (new Date(date + 'T23:59:59') < now) continue
     const dateStr = date
-    const start = new Date(d); start.setHours(openingHour, 0, 0, 0)
-    const end   = new Date(d); end.setHours(closingHour, 0, 0, 0)
+    const start = new Date(d); start.setHours(openingHour, openingMinute, 0, 0)
+    const end   = new Date(d); end.setHours(closingHour, closingMinute, 0, 0)
     const cursor = new Date(start)
     while (cursor < end) {
       if (cursor > new Date(now.getTime() + 15 * 60 * 1000)) {
@@ -240,7 +246,7 @@ function Shop() {
                     </span>
                     <span className="text-gold">✦</span>
                     <span className="font-sans text-[11px] tracking-[0.28em] uppercase">
-                      Ophaaluren {settings?.openingHour ?? config.openingHour}:00 – {settings?.closingHour ?? config.closingHour}:00
+                      Ophaaluren {fmtTime(settings?.openingHour ?? config.openingHour, settings?.openingMinute)} – {fmtTime(settings?.closingHour ?? config.closingHour, settings?.closingMinute)}
                     </span>
                     <span className="text-gold">✦</span>
                   </span>
@@ -274,7 +280,7 @@ function Shop() {
               <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-warm-gray">
                 <span className="font-sans text-[11px] tracking-[0.24em] uppercase flex items-center gap-2">
                   <Clock size={12} className="text-wine" />
-                  Ophalen {settings?.openingHour ?? config.openingHour}:00 – {settings?.closingHour ?? config.closingHour}:00
+                  Ophalen {fmtTime(settings?.openingHour ?? config.openingHour, settings?.openingMinute)} – {fmtTime(settings?.closingHour ?? config.closingHour, settings?.closingMinute)}
                 </span>
                 <span className="text-gold/60">✦</span>
                 <span className="font-sans text-[11px] tracking-[0.24em] uppercase">
