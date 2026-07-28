@@ -3,12 +3,16 @@
     "slug": "box",
     "route": "/box",
     "num": "I",
+    "mode": "live",
     "eyebrow": "La Scatola",
     "title": "Jeanke's Pizza box",
     "tagline": "Onze houtoven-pizza, door u zelf afgebakken.",
     "intro": "Een box vol vers gedraaide deegbollen, San Marzano-saus, fior di latte en toppings — u haalt hem op, thuis schuift u hem in de oven. Alles is voorbereid, u doet het leukste deel.",
+    "teaser": "Deeg, saus en toppings mee naar huis. Acht minuten in uw eigen oven.",
     "metaTitle": "Jeanke's Pizza box — DIY pizzapakket om thuis af te bakken",
     "metaDescription": "Haal een Pizza box op bij Jeanke's Pizza: 48 uur gerijpte deegbollen, San Marzano-saus, fior di latte en toppings. Thuis afbakken in 8 minuten.",
+    "conceptBadge": "Boxen in voorbereiding",
+    "offNotice": "We maken op dit moment geen pizzaboxen klaar. Kom gerust langs op een van onze besteldagen — of laat uw mailadres na voor de nieuwsbrief, dan hoort u het zodra ze terug zijn.",
     "packages": [
       {
         "id": "piccola",
@@ -17,7 +21,8 @@
         "pizzas": 4,
         "price": 32,
         "description": "Vier deegbollen met saus, kaas en drie toppings naar keuze.",
-        "popular": false
+        "popular": false,
+        "status": ""
       },
       {
         "id": "famiglia",
@@ -26,7 +31,8 @@
         "pizzas": 8,
         "price": 58,
         "description": "Acht deegbollen, ruimere toppingkeuze en een potje pikante olie.",
-        "popular": true
+        "popular": true,
+        "status": ""
       },
       {
         "id": "festa",
@@ -35,7 +41,8 @@
         "pizzas": 12,
         "price": 84,
         "description": "Twaalf deegbollen, volledige toppingkeuze, olie en verse basilicum.",
-        "popular": false
+        "popular": false,
+        "status": ""
       }
     ],
     "contents": [
@@ -50,19 +57,27 @@
       { "n": "1", "title": "Bestel", "text": "Kies uw box en een ophaalmoment. We maken alles vers klaar op de dag zelf." },
       { "n": "2", "title": "Haal op", "text": "Ophalen op een van onze openingsdagen. De box blijft 48 uur goed in de koelkast." },
       { "n": "3", "title": "Bak af", "text": "Oven zo heet mogelijk voorverwarmen. Acht minuten en u eet." }
-    ]
+    ],
+    "tip": {
+      "label": "Tip van Jeanke",
+      "text": "Zet uw bakplaat of pizzasteen een half uur op de hoogste stand vooraf. Hoe heter de bodem, hoe dichter u bij de houtoven komt."
+    }
   },
 
   "catering": {
     "slug": "catering",
     "route": "/catering",
     "num": "II",
+    "mode": "live",
     "eyebrow": "Il Catering",
     "title": "Catering op locatie",
     "tagline": "Wij brengen de houtoven naar uw feest.",
     "intro": "Verjaardag, communie, bedrijfsborrel of trouwfeest — we rijden de oven voor, bakken ter plaatse en serveren de pizza's zo van de schep. Uw gasten eten warm, u hoeft niets te doen.",
+    "teaser": "Wij rijden de houtoven voor en bakken ter plaatse, van 20 tot 150 gasten.",
     "metaTitle": "Pizzacatering op locatie — Jeanke's Pizza",
     "metaDescription": "Houtoven-pizzacatering voor feesten, bedrijfsevents en trouwfeesten in België. Vers gebakken op locatie, vanaf 20 personen.",
+    "conceptBadge": "Catering in voorbereiding",
+    "offNotice": "We nemen momenteel geen nieuwe cateringopdrachten aan. Voor bestaande afspraken verandert er niets — mail ons gerust bij vragen.",
     "formulas": [
       {
         "id": "aperitivo",
@@ -71,7 +86,8 @@
         "pricePerPerson": 14,
         "duration": "2 uur bakken",
         "description": "Pizza in punten doorgegeven tijdens de receptie. Vier soorten, onbeperkt aangevuld.",
-        "includes": ["Vier pizzasoorten", "Doorgeefservice", "Servetten en bordjes"]
+        "includes": ["Vier pizzasoorten", "Doorgeefservice", "Servetten en bordjes"],
+        "status": ""
       },
       {
         "id": "festa",
@@ -80,7 +96,8 @@
         "pricePerPerson": 17,
         "duration": "3 uur bakken",
         "description": "Volwaardige maaltijd: hele pizza's per gast, plus een antipasti-plank vooraf.",
-        "includes": ["Zes pizzasoorten", "Antipasti-plank", "Vegetarische opties", "Bediening aan de oven"]
+        "includes": ["Zes pizzasoorten", "Antipasti-plank", "Vegetarische opties", "Bediening aan de oven"],
+        "status": ""
       },
       {
         "id": "matrimonio",
@@ -89,7 +106,8 @@
         "pricePerPerson": null,
         "duration": "In overleg",
         "description": "Trouwfeesten en grote events. Menu, timing en opstelling volledig op maat.",
-        "includes": ["Menu op maat", "Proefsessie vooraf", "Extra bakker", "Dessertpizza"]
+        "includes": ["Menu op maat", "Proefsessie vooraf", "Extra bakker", "Dessertpizza"],
+        "status": ""
       }
     ],
     "practical": [
@@ -105,12 +123,16 @@
     "slug": "workshops",
     "route": "/workshops",
     "num": "III",
+    "mode": "live",
     "eyebrow": "La Scuola",
     "title": "Pizza-workshops",
     "tagline": "Leer draaien, beleggen en bakken zoals in Napels.",
     "intro": "In een kleine groep aan de werkbank: deeg voelen, met de handen uitrekken, beleggen en zelf voor de houtoven staan. U eet wat u maakt, en gaat naar huis met het recept en een bol deeg.",
+    "teaser": "Zelf leren draaien en bakken, in kleine groep aan de deegtafel.",
     "metaTitle": "Pizza-workshops in de houtoven — Jeanke's Pizza",
     "metaDescription": "Leer pizza maken in een kleine groep: deeg draaien, beleggen en bakken in de houtoven. Workshops voor beginners, gevorderden, kinderen en teambuilding.",
+    "conceptBadge": "Workshops in voorbereiding",
+    "offNotice": "Er staan voorlopig geen workshops gepland. Schrijf u in op de nieuwsbrief, dan bent u er als eerste bij zodra de nieuwe reeks opengaat.",
     "types": [
       {
         "id": "base",
@@ -120,7 +142,8 @@
         "groupSize": "6 – 12 deelnemers",
         "level": "Beginner",
         "description": "Van bloem tot pizza. Hydratatie, rijzing, met de hand uitrekken en bakken op steen.",
-        "includes": ["Alle ingrediënten", "Eten wat u bakt", "Een bol deeg mee naar huis", "Receptenkaart"]
+        "includes": ["Alle ingrediënten", "Eten wat u bakt", "Een bol deeg mee naar huis", "Receptenkaart"],
+        "status": ""
       },
       {
         "id": "napoletana",
@@ -130,7 +153,8 @@
         "groupSize": "6 – 10 deelnemers",
         "level": "Gevorderd",
         "description": "Poolish en biga, lange rijping, en werken op 450 °C in de houtoven.",
-        "includes": ["Voordeeg zelf aanzetten", "Werken aan de houtoven", "Proeverij van drie deegsoorten", "Schriftelijke handleiding"]
+        "includes": ["Voordeeg zelf aanzetten", "Werken aan de houtoven", "Proeverij van drie deegsoorten", "Schriftelijke handleiding"],
+        "status": ""
       },
       {
         "id": "bambini",
@@ -140,7 +164,8 @@
         "groupSize": "6 – 14 kinderen",
         "level": "Vanaf 7 jaar",
         "description": "Kinderfeestje aan de deegtafel. Kneden, beleggen, en met een schepje de oven in.",
-        "includes": ["Schort mee naar huis", "Eigen pizza", "Limonade", "Begeleiding door twee bakkers"]
+        "includes": ["Schort mee naar huis", "Eigen pizza", "Limonade", "Begeleiding door twee bakkers"],
+        "status": ""
       },
       {
         "id": "teambuilding",
@@ -150,8 +175,16 @@
         "groupSize": "10 – 40 deelnemers",
         "level": "Bedrijven",
         "description": "In ploegen tegen elkaar bakken, met jurering en een aperitief. Bij u of bij ons.",
-        "includes": ["Bij u op locatie mogelijk", "Wedstrijdformule", "Aperitief en drank", "Factuur met btw"]
+        "includes": ["Bij u op locatie mogelijk", "Wedstrijdformule", "Aperitief en drank", "Factuur met btw"],
+        "status": ""
       }
+    ],
+    "flow": [
+      { "title": "Ontvangen", "text": "We beginnen met een glas en een stuk focaccia uit de oven, terwijl we het deeg bovenhalen." },
+      { "title": "Deeg begrijpen", "text": "Bloem, water, zout, gist — waarom de verhoudingen doen wat ze doen, en hoe u voelt of het deeg klaar is." },
+      { "title": "Zelf draaien", "text": "Met de handen uitrekken, nooit met een deegrol. Iedereen krijgt eigen bollen om op te oefenen." },
+      { "title": "De oven in", "text": "U schuift uw eigen pizza in de houtoven en draait hem zelf. Verbrande randen horen erbij." },
+      { "title": "Aan tafel", "text": "We eten samen wat er gebakken is, en u gaat naar huis met deeg en het recept." }
     ]
   },
 
@@ -159,12 +192,16 @@
     "slug": "ovens",
     "route": "/ovens",
     "num": "IV",
+    "mode": "concept",
     "eyebrow": "Il Forno",
     "title": "Gozney & Ooni ovens",
     "tagline": "De ovens waar we zelf mee werken.",
     "intro": "We willen de ovens die bij ons dagelijks draaien ook aan huis kunnen leveren, met uitleg en een startpakket erbij. Dit aanbod is in voorbereiding — laat uw interesse na, dan bent u de eerste die het hoort.",
+    "teaser": "Gozney en Ooni — de ovens waar we zelf mee werken. Aanbod in voorbereiding.",
     "metaTitle": "Gozney & Ooni pizzaovens — Jeanke's Pizza",
     "metaDescription": "Gozney en Ooni pizzaovens, geselecteerd door Jeanke's Pizza. Aanbod in voorbereiding — laat uw interesse na.",
+    "conceptBadge": "Aanbod in voorbereiding",
+    "offNotice": "We bieden op dit moment geen ovens aan. Zodra daar verandering in komt, leest u het in de nieuwsbrief.",
     "brands": [
       {
         "name": "Gozney",
@@ -185,7 +222,8 @@
         "capacity": "1 pizza · 30 cm",
         "priceFrom": 499,
         "description": "Draagbaar, met siliconen buitenmantel. De klassieker om mee te beginnen.",
-        "bestFor": "Terras en meenemen"
+        "bestFor": "Terras en meenemen",
+        "status": ""
       },
       {
         "id": "gozney-arc-xl",
@@ -196,7 +234,8 @@
         "capacity": "1 pizza · 36 cm",
         "priceFrom": 899,
         "description": "Brede bakvloer en een grote vlamboog, zodat de rand gelijkmatig kleurt.",
-        "bestFor": "Wie vaak voor gasten bakt"
+        "bestFor": "Wie vaak voor gasten bakt",
+        "status": ""
       },
       {
         "id": "gozney-dome",
@@ -207,7 +246,8 @@
         "capacity": "1 – 2 pizza's · 35 cm",
         "priceFrom": 1899,
         "description": "Onze eigen werkpaardoven. Bakt pizza, maar evengoed brood, vis en groenten.",
-        "bestFor": "Buitenkeuken"
+        "bestFor": "Buitenkeuken",
+        "status": ""
       },
       {
         "id": "ooni-karu-12g",
@@ -218,7 +258,8 @@
         "capacity": "1 pizza · 30 cm",
         "priceFrom": 399,
         "description": "Glazen deur en drie brandstoffen. Instapmodel dat toch echt houtvuur geeft.",
-        "bestFor": "Beginners"
+        "bestFor": "Beginners",
+        "status": ""
       },
       {
         "id": "ooni-koda-16",
@@ -229,7 +270,8 @@
         "capacity": "1 pizza · 40 cm",
         "priceFrom": 649,
         "description": "Aan en klaar in twintig minuten, zonder as. De makkelijkste van allemaal.",
-        "bestFor": "Doordeweekse avonden"
+        "bestFor": "Doordeweekse avonden",
+        "status": ""
       },
       {
         "id": "ooni-volt-12",
@@ -240,7 +282,8 @@
         "capacity": "1 pizza · 30 cm",
         "priceFrom": 899,
         "description": "Werkt op een gewoon stopcontact, binnen én buiten. Geen vlam, wel hitte.",
-        "bestFor": "Appartement of binnenkeuken"
+        "bestFor": "Appartement of binnenkeuken",
+        "status": ""
       }
     ],
     "disclaimer": "We zijn nog volop in gesprek met beide merken. Modellen, specificaties en prijzen zijn indicatief en onder voorbehoud zolang de samenwerking niet rond is."

@@ -14,9 +14,9 @@ import PizzaBox from './components/PizzaBox'
 import Catering from './components/Catering'
 import Workshops from './components/Workshops'
 import Ovens from './components/Ovens'
+import { useServices } from './lib/useServices'
 import config from './data/config.json'
 import staticPizzas from './data/pizzas.json'
-import services from './data/services.json'
 
 function fmtTime(h, m) {
   return `${h}:${String(m ?? 0).padStart(2, '0')}`
@@ -518,42 +518,47 @@ function Shop() {
 
 /* ───────────────────────── Sub-views ───────────────────────── */
 
-const TEASERS = [
-  { key: 'box',       Icon: Package,        blurb: 'Deeg, saus en toppings mee naar huis. Acht minuten in uw eigen oven.' },
-  { key: 'catering',  Icon: Utensils,       blurb: 'Wij rijden de houtoven voor en bakken ter plaatse, van 20 tot 150 gasten.' },
-  { key: 'workshops', Icon: GraduationCap,  blurb: 'Zelf leren draaien en bakken, in kleine groep aan de deegtafel.' },
-  { key: 'ovens',     Icon: Flame,          blurb: 'Gozney en Ooni — de ovens waar we zelf mee werken. Aanbod in voorbereiding.' },
-]
+const TEASER_ICONS = { box: Package, catering: Utensils, workshops: GraduationCap, ovens: Flame }
 
-/** Vier compacte teasers naar de dienstenpagina's. */
+/**
+ * Compacte teasers naar de dienstenpagina's. Diensten die in het beheer op
+ * "uit" staan verdwijnen hier; staan ze allemaal uit, dan valt de hele
+ * sectie weg in plaats van een lege balk achter te laten.
+ */
 function ServiceTeasers() {
+  const services = useServices()
+  const shown = ['box', 'catering', 'workshops', 'ovens']
+    .map(key => ({ key, service: services[key], Icon: TEASER_ICONS[key] }))
+    .filter(({ service }) => service && service.mode !== 'off')
+
+  if (!shown.length) return null
+
   return (
     <section id="oltre" className="relative bg-parchment/50 border-y border-parchment overflow-hidden scroll-mt-24">
       <PaperTexture />
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-16">
         <SectionLabel n="IV" title="Oltre la pizza" caption="Meer dan de vrijdagavond — thuis, op locatie, of aan uw eigen oven." />
 
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-parchment border border-parchment">
-          {TEASERS.map(({ key, Icon, blurb }) => {
-            const service = services[key]
-            return (
-              <a
-                key={key}
-                href={service.route}
-                className="group bg-cream p-6 flex flex-col hover:bg-white transition-colors"
-              >
-                <Icon size={20} className="text-wine shrink-0" />
-                <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold mt-4">{service.eyebrow}</p>
-                <h3 className="font-serif text-xl text-ink leading-tight mt-1 group-hover:text-wine transition-colors">
-                  {service.title}
-                </h3>
-                <p className="font-sans text-sm text-warm-gray leading-relaxed mt-3 flex-1">{blurb}</p>
-                <span className="font-sans text-[10px] tracking-[0.24em] uppercase text-ink group-hover:text-wine transition-colors mt-5">
-                  Ontdek →
-                </span>
-              </a>
-            )
-          })}
+        <div className={`mt-10 grid grid-cols-1 sm:grid-cols-2 gap-px bg-parchment border border-parchment ${
+          shown.length >= 4 ? 'lg:grid-cols-4' : shown.length === 3 ? 'lg:grid-cols-3' : ''
+        }`}>
+          {shown.map(({ key, service, Icon }) => (
+            <a
+              key={key}
+              href={service.route}
+              className="group bg-cream p-6 flex flex-col hover:bg-white transition-colors"
+            >
+              <Icon size={20} className="text-wine shrink-0" />
+              <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold mt-4">{service.eyebrow}</p>
+              <h3 className="font-serif text-xl text-ink leading-tight mt-1 group-hover:text-wine transition-colors">
+                {service.title}
+              </h3>
+              <p className="font-sans text-sm text-warm-gray leading-relaxed mt-3 flex-1">{service.teaser}</p>
+              <span className="font-sans text-[10px] tracking-[0.24em] uppercase text-ink group-hover:text-wine transition-colors mt-5">
+                Ontdek →
+              </span>
+            </a>
+          ))}
         </div>
       </div>
     </section>

@@ -1,33 +1,27 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Flame, Thermometer, Ruler } from 'lucide-react'
-import ServicePage, { ServiceSection } from './ServicePage'
+import ServicePage, { ServiceSection, StatusBadge, ctaLabel } from './ServicePage'
 import InquiryForm from './InquiryForm'
-import services from '../data/services.json'
+import { useServices } from '../lib/useServices'
 import config from '../data/config.json'
 
-const data = services.ovens
-const BRANDS = ['Alle', ...data.brands.map(b => b.name)]
-
 export default function Ovens() {
-  // 'concept' → interesselijst zonder prijzen. 'live' → richtprijzen en offerteaanvraag.
-  // Om te schakelen: /beheer → Instellingen → Ovenaanbod.
-  const [mode, setMode] = useState('concept')
+  const data = useServices().ovens
   const [brand, setBrand] = useState('Alle')
   const [selected, setSelected] = useState('')
 
-  useEffect(() => {
-    fetch('/api/settings')
-      .then(r => r.json())
-      .then(s => { if (s?.ovensMode === 'live') setMode('live') })
-      .catch(() => {})
-  }, [])
+  // Conceptmodus: geen prijzen, interesse in plaats van offerte.
+  // Om te schakelen: /beheer → Diensten → Ovens → Modus.
+  const concept = data.mode === 'concept'
+  const allModels = data.models || []
+  const brands = data.brands || []
 
-  const isLive = mode === 'live'
-  const models = brand === 'Alle' ? data.models : data.models.filter(m => m.brand === brand)
+  const brandFilters = ['Alle', ...brands.map(b => b.name)]
+  const models = brand === 'Alle' ? allModels : allModels.filter(m => m.brand === brand)
 
-  const options = data.models.map(m => ({
+  const options = allModels.map(m => ({
     value: m.id,
-    label: `${m.brand} ${m.name}${isLive ? ` — vanaf ${config.currency}${m.priceFrom}` : ''}`,
+    label: `${m.brand} ${m.name}${concept ? '' : ` — vanaf ${config.currency}${m.priceFrom}`}`,
   }))
 
   function choose(id) {
@@ -36,12 +30,12 @@ export default function Ovens() {
   }
 
   return (
-    <ServicePage service={data} badge={isLive ? null : 'Aanbod in voorbereiding'}>
+    <ServicePage service={data}>
 
       {/* ── Merken ── */}
       <ServiceSection title="De merken" caption="Twee huizen, elk met hun eigen karakter.">
         <div className="grid sm:grid-cols-2 gap-px bg-parchment border border-parchment">
-          {data.brands.map(b => (
+          {brands.map(b => (
             <div key={b.name} className="bg-cream p-6 text-center">
               <p className="font-serif text-2xl text-ink">{b.name}</p>
               <span className="block h-px w-10 bg-gold/40 mx-auto my-4" />
@@ -53,22 +47,24 @@ export default function Ovens() {
 
       {/* ── Modellen ── */}
       <ServiceSection tone="parchment" title="De modellen" caption="Wat we in huis willen halen, en voor wie het bedoeld is.">
-        <div className="flex items-center justify-center gap-2 mb-8">
-          {BRANDS.map(b => (
-            <button
-              key={b}
-              onClick={() => setBrand(b)}
-              aria-pressed={brand === b}
-              className={`font-sans text-[10px] tracking-[0.24em] uppercase px-3.5 py-2 border transition-colors ${
-                brand === b
-                  ? 'bg-ink text-cream border-ink'
-                  : 'border-warm-gray-light text-ink hover:border-ink'
-              }`}
-            >
-              {b}
-            </button>
-          ))}
-        </div>
+        {brandFilters.length > 2 && (
+          <div className="flex items-center justify-center gap-2 mb-8">
+            {brandFilters.map(b => (
+              <button
+                key={b}
+                onClick={() => setBrand(b)}
+                aria-pressed={brand === b}
+                className={`font-sans text-[10px] tracking-[0.24em] uppercase px-3.5 py-2 border transition-colors ${
+                  brand === b
+                    ? 'bg-ink text-cream border-ink'
+                    : 'border-warm-gray-light text-ink hover:border-ink'
+                }`}
+              >
+                {b}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="grid sm:grid-cols-2 gap-px bg-parchment border border-parchment">
           {models.map(model => (
@@ -78,7 +74,11 @@ export default function Ovens() {
                   <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold">{model.brand}</p>
                   <h3 className="font-serif text-xl text-ink leading-tight mt-0.5">{model.name}</h3>
                 </div>
-                {isLive ? (
+                {concept ? (
+                  <span className="font-sans text-[9px] tracking-[0.2em] uppercase text-warm-gray-light text-right shrink-0 whitespace-nowrap">
+                    Prijs volgt
+                  </span>
+                ) : (
                   <span className="text-right shrink-0">
                     <span className="block font-serif text-xl text-wine tabular-nums whitespace-nowrap">
                       {config.currency}{model.priceFrom}
@@ -87,12 +87,10 @@ export default function Ovens() {
                       vanaf
                     </span>
                   </span>
-                ) : (
-                  <span className="font-sans text-[9px] tracking-[0.2em] uppercase text-warm-gray-light text-right shrink-0 whitespace-nowrap">
-                    Prijs volgt
-                  </span>
                 )}
               </div>
+
+              {model.status && <p className="mt-3"><StatusBadge status={model.status} /></p>}
 
               <p className="font-serif italic text-sm text-warm-gray leading-relaxed mt-4 flex-1">
                 {model.description}
@@ -128,9 +126,7 @@ export default function Ovens() {
                     : 'border-warm-gray-light text-ink hover:bg-wine hover:text-cream hover:border-wine'
                 }`}
               >
-                {selected === model.id
-                  ? 'Gekozen ✓'
-                  : isLive ? 'Offerte aanvragen' : 'Houd mij op de hoogte'}
+                {ctaLabel({ selected: selected === model.id, status: model.status, concept, fallback: 'Offerte aanvragen' })}
               </button>
             </div>
           ))}
@@ -143,13 +139,13 @@ export default function Ovens() {
           <div className="text-center mb-8">
             <div className="flex items-center gap-3 justify-center font-sans text-[10px] tracking-[0.32em] uppercase text-gold">
               <span className="h-px w-6 bg-gold/40" />
-              <span>{isLive ? 'Offerte aanvragen' : 'Interesselijst'}</span>
+              <span>{concept ? 'Interesselijst' : 'Offerte aanvragen'}</span>
               <span className="h-px w-6 bg-gold/40" />
             </div>
             <p className="font-serif italic text-warm-gray text-sm mt-3 max-w-md mx-auto">
-              {isLive
-                ? 'Laat weten welk model u overweegt, dan bezorgen we u prijs en levertermijn.'
-                : 'Zet uzelf op de lijst. U hoort van ons zodra we kunnen leveren — vrijblijvend, geen bestelling.'}
+              {concept
+                ? 'Zet uzelf op de lijst. U hoort van ons zodra we kunnen leveren — vrijblijvend, geen bestelling.'
+                : 'Laat weten welk model u overweegt, dan bezorgen we u prijs en levertermijn.'}
             </p>
           </div>
 
@@ -160,15 +156,17 @@ export default function Ovens() {
             preselect={selected}
             messageLabel="Waar wil u de oven zetten?"
             messagePlaceholder="Bijvoorbeeld: op het terras, vooral voor het gezin in het weekend. Twijfel tussen gas en hout."
-            submitLabel={isLive ? 'Offerte aanvragen' : 'Houd mij op de hoogte'}
-            successText={isLive
-              ? 'We bezorgen u prijs en levertermijn, meestal binnen twee werkdagen.'
-              : 'U staat op de lijst. Zodra ons ovenaanbod rond is, bent u een van de eersten die het hoort.'}
+            submitLabel={concept ? 'Houd mij op de hoogte' : 'Offerte aanvragen'}
+            successText={concept
+              ? 'U staat op de lijst. Zodra ons ovenaanbod rond is, bent u een van de eersten die het hoort.'
+              : 'We bezorgen u prijs en levertermijn, meestal binnen twee werkdagen.'}
           />
 
-          <p className="font-sans text-[11px] text-warm-gray-light italic leading-relaxed text-center mt-6 max-w-lg mx-auto">
-            {data.disclaimer}
-          </p>
+          {concept && data.disclaimer && (
+            <p className="font-sans text-[11px] text-warm-gray-light italic leading-relaxed text-center mt-6 max-w-lg mx-auto">
+              {data.disclaimer}
+            </p>
+          )}
           <p className="font-sans text-[11px] text-warm-gray-light leading-relaxed text-center mt-3 max-w-lg mx-auto">
             Gozney en Ooni zijn merknamen van hun respectieve eigenaars. Jeanke's Pizza is
             geen officiële verdeler zolang dat hier niet uitdrukkelijk vermeld staat.

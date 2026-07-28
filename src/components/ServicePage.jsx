@@ -28,12 +28,19 @@ function setCanonical(path) {
  * Gedeelde opmaak voor de dienstenpagina's (box, catering, workshops, ovens).
  * Zet titel, meta-description en canonical, en tekent nav, hero en footer.
  *
+ * Reageert op service.mode:
+ *   live    — gewone pagina
+ *   concept — badge onder de intro; de pagina zelf verbergt prijzen
+ *   off     — hero blijft staan, inhoud maakt plaats voor een bericht, zodat
+ *             bestaande links en zoekresultaten niet doodlopen
+ *
  * Props:
  *   service  — object uit src/data/services.json
- *   badge    — optionele melding onder de intro, bv. "Aanbod in voorbereiding"
  *   children — de secties van de pagina
  */
-export default function ServicePage({ service, badge, children }) {
+export default function ServicePage({ service, children }) {
+  const isOff = service.mode === 'off'
+  const badge = service.mode === 'concept' ? service.conceptBadge : null
   useEffect(() => {
     const previousTitle = document.title
     document.title = service.metaTitle
@@ -88,11 +95,57 @@ export default function ServicePage({ service, badge, children }) {
         </div>
       </header>
 
-      <main className="relative">{children}</main>
+      <main className="relative">
+        {isOff ? (
+          <section className="relative bg-parchment/50 border-y border-parchment overflow-hidden">
+            <PaperTexture />
+            <div className="relative max-w-xl mx-auto px-4 sm:px-6 lg:px-10 py-16 text-center">
+              <div className="flex items-center gap-3 justify-center font-sans text-[10px] tracking-[0.32em] uppercase text-gold">
+                <span className="h-px w-6 bg-gold/40" />
+                <span>Even niet</span>
+                <span className="h-px w-6 bg-gold/40" />
+              </div>
+              <p className="font-serif italic text-warm-gray text-base leading-relaxed mt-5">
+                {service.offNotice}
+              </p>
+              <a href="/" className="btn-primary inline-block mt-8">Naar de pizzeria</a>
+            </div>
+          </section>
+        ) : children}
+      </main>
 
       <SiteFooter />
     </div>
   )
+}
+
+const STATUS_LABELS = {
+  nieuw:         { label: 'Nieuw',       cls: 'border-gold/50 text-gold' },
+  'op-aanvraag': { label: 'Op aanvraag', cls: 'border-warm-gray-light text-warm-gray' },
+  volzet:        { label: 'Volzet',      cls: 'border-wine/40 text-wine' },
+}
+
+/** Kleine statusbadge op een formule, box, workshop of ovenmodel. */
+export function StatusBadge({ status }) {
+  const meta = STATUS_LABELS[status]
+  if (!meta) return null
+  return (
+    <span className={`inline-block border px-2 py-0.5 font-sans text-[9px] tracking-[0.2em] uppercase whitespace-nowrap ${meta.cls}`}>
+      {meta.label}
+    </span>
+  )
+}
+
+/**
+ * Tekst op de keuzeknop van een item. Volzet en conceptmodus winnen van het
+ * standaardlabel, zodat een bezoeker nooit "Offerte aanvragen" leest bij iets
+ * dat nog niet te koop is.
+ */
+export function ctaLabel({ selected, status, concept, fallback }) {
+  if (selected) return 'Gekozen ✓'
+  if (status === 'volzet') return 'Op de wachtlijst'
+  if (concept) return 'Houd mij op de hoogte'
+  return fallback
 }
 
 /** Sectiekop binnen een dienstenpagina. */

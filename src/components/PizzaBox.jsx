@@ -1,18 +1,22 @@
 import { useState } from 'react'
 import { Check } from 'lucide-react'
-import ServicePage, { ServiceSection } from './ServicePage'
+import ServicePage, { ServiceSection, StatusBadge, ctaLabel } from './ServicePage'
 import InquiryForm from './InquiryForm'
-import services from '../data/services.json'
+import { useServices } from '../lib/useServices'
 import config from '../data/config.json'
 
-const data = services.box
-
 export default function PizzaBox() {
+  const data = useServices().box
   const [selected, setSelected] = useState('')
 
-  const options = data.packages.map(p => ({
+  const concept = data.mode === 'concept'
+  const packages = data.packages || []
+
+  const options = packages.map(p => ({
     value: p.id,
-    label: `${p.name} — ${p.pizzas} pizza's · ${config.currency}${p.price}`,
+    label: concept
+      ? `${p.name} — ${p.pizzas} pizza's`
+      : `${p.name} — ${p.pizzas} pizza's · ${config.currency}${p.price}`,
   }))
 
   function choose(id) {
@@ -26,7 +30,7 @@ export default function PizzaBox() {
       {/* ── Pakketten ── */}
       <ServiceSection title="De boxen" caption="Kies de maat die bij uw tafel past.">
         <div className="grid sm:grid-cols-3 gap-px bg-parchment border border-parchment">
-          {data.packages.map(pkg => (
+          {packages.map(pkg => (
             <div key={pkg.id} className="relative bg-cream p-6 flex flex-col text-center">
               {pkg.popular && (
                 <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap bg-wine text-cream font-sans text-[9px] tracking-[0.24em] uppercase px-3 py-1">
@@ -36,12 +40,22 @@ export default function PizzaBox() {
               <p className="font-serif text-2xl text-ink leading-tight mt-2">{pkg.name}</p>
               <p className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mt-2">{pkg.serves}</p>
 
-              <p className="font-serif text-4xl text-wine tabular-nums mt-5">
-                {config.currency}{pkg.price}
-              </p>
-              <p className="font-sans text-[11px] text-warm-gray-light mt-1 tabular-nums">
-                {pkg.pizzas} pizza's · {config.currency}{(pkg.price / pkg.pizzas).toFixed(2)} per stuk
-              </p>
+              {pkg.status && <p className="mt-3"><StatusBadge status={pkg.status} /></p>}
+
+              {concept ? (
+                <p className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray-light mt-5">
+                  Prijs volgt · {pkg.pizzas} pizza's
+                </p>
+              ) : (
+                <>
+                  <p className="font-serif text-4xl text-wine tabular-nums mt-5">
+                    {config.currency}{pkg.price}
+                  </p>
+                  <p className="font-sans text-[11px] text-warm-gray-light mt-1 tabular-nums">
+                    {pkg.pizzas} pizza's · {config.currency}{(pkg.price / pkg.pizzas).toFixed(2)} per stuk
+                  </p>
+                </>
+              )}
 
               <p className="font-serif italic text-sm text-warm-gray leading-relaxed mt-5 flex-1">
                 {pkg.description}
@@ -55,7 +69,7 @@ export default function PizzaBox() {
                     : 'border-warm-gray-light text-ink hover:bg-wine hover:text-cream hover:border-wine'
                 }`}
               >
-                {selected === pkg.id ? 'Gekozen ✓' : 'Kies deze box'}
+                {ctaLabel({ selected: selected === pkg.id, status: pkg.status, concept, fallback: 'Kies deze box' })}
               </button>
             </div>
           ))}
@@ -65,7 +79,7 @@ export default function PizzaBox() {
       {/* ── Inhoud ── */}
       <ServiceSection tone="parchment" title="In de box" caption="Alles voorbereid, niets te veel.">
         <ul className="grid sm:grid-cols-2 gap-x-8 gap-y-3 max-w-xl mx-auto">
-          {data.contents.map(item => (
+          {(data.contents || []).map(item => (
             <li key={item} className="flex items-start gap-3">
               <Check size={14} className="text-wine mt-1 shrink-0" />
               <span className="font-sans text-sm text-ink leading-relaxed">{item}</span>
@@ -77,7 +91,7 @@ export default function PizzaBox() {
       {/* ── Zo werkt het ── */}
       <ServiceSection title="Zo werkt het" caption="Van bestelling tot bord in drie stappen.">
         <ol className="grid sm:grid-cols-3 gap-8">
-          {data.steps.map(step => (
+          {(data.steps || []).map(step => (
             <li key={step.n} className="text-center">
               <span className="font-serif italic text-3xl text-gold">{step.n}</span>
               <p className="font-serif text-lg text-ink mt-2">{step.title}</p>
@@ -86,13 +100,12 @@ export default function PizzaBox() {
           ))}
         </ol>
 
-        <div className="mt-10 border border-dashed border-parchment px-5 py-4 max-w-xl mx-auto">
-          <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold mb-2">Tip van Jeanke</p>
-          <p className="font-serif italic text-sm text-warm-gray leading-relaxed">
-            Zet uw bakplaat of pizzasteen een half uur op de hoogste stand vooraf. Hoe heter de bodem,
-            hoe dichter u bij de houtoven komt.
-          </p>
-        </div>
+        {data.tip && (
+          <div className="mt-10 border border-dashed border-parchment px-5 py-4 max-w-xl mx-auto">
+            <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold mb-2">{data.tip.label}</p>
+            <p className="font-serif italic text-sm text-warm-gray leading-relaxed">{data.tip.text}</p>
+          </div>
+        )}
       </ServiceSection>
 
       {/* ── Aanvraag ── */}
@@ -101,11 +114,13 @@ export default function PizzaBox() {
           <div className="text-center mb-8">
             <div className="flex items-center gap-3 justify-center font-sans text-[10px] tracking-[0.32em] uppercase text-gold">
               <span className="h-px w-6 bg-gold/40" />
-              <span>Box reserveren</span>
+              <span>{concept ? 'Interesselijst' : 'Box reserveren'}</span>
               <span className="h-px w-6 bg-gold/40" />
             </div>
             <p className="font-serif italic text-warm-gray text-sm mt-3 max-w-md mx-auto">
-              Laat weten welke box u wil en wanneer u hem komt halen. We bevestigen per mail.
+              {concept
+                ? 'De boxen zijn nog in voorbereiding. Laat uw mailadres na, dan hoort u het zodra ze te bestellen zijn.'
+                : 'Laat weten welke box u wil en wanneer u hem komt halen. We bevestigen per mail.'}
             </p>
           </div>
 
@@ -114,11 +129,13 @@ export default function PizzaBox() {
             options={options}
             optionLabel="Welke box"
             preselect={selected}
-            fields={{ date: true }}
+            fields={{ date: !concept }}
             messageLabel="Toppings of opmerkingen"
             messagePlaceholder="Bijvoorbeeld: twee keer vegetarisch, geen ansjovis, glutenvrij deeg mogelijk?"
-            submitLabel="Box reserveren"
-            successText="We bevestigen uw box en een ophaalmoment per mail, meestal binnen één werkdag."
+            submitLabel={concept ? 'Houd mij op de hoogte' : 'Box reserveren'}
+            successText={concept
+              ? 'U staat op de lijst. Zodra de boxen te bestellen zijn, laten we het weten.'
+              : 'We bevestigen uw box en een ophaalmoment per mail, meestal binnen één werkdag.'}
           />
         </div>
       </section>

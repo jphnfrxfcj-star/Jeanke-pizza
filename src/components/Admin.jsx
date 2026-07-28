@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Clock, ClipboardList, ShoppingBasket, ChefHat, TrendingUp, Settings, Menu, Wine, LayoutDashboard, LogOut, Search, X, Mail, Inbox, Trash2 } from 'lucide-react'
+import { Clock, ClipboardList, ShoppingBasket, ChefHat, TrendingUp, Settings, Menu, Wine, LayoutDashboard, LogOut, Search, X, Mail, Inbox, Trash2, Layers, ChevronUp, ChevronDown, Plus } from 'lucide-react'
 import config from '../data/config.json'
 import staticPizzas from '../data/pizzas.json'
+import staticServices from '../data/services.json'
+import { mergeServices } from '../lib/useServices'
 import PaperTexture from './PaperTexture'
 
 const INPUT = "w-full border border-parchment bg-cream px-4 py-3 text-sm text-ink focus:outline-none focus:border-olive transition-colors"
@@ -111,6 +113,7 @@ export default function Admin() {
     { key: 'boodschappen', label: 'Boodschappen',  Icon: ShoppingBasket,  group: 'daily' },
     { key: 'aanvragen',    label: 'Aanvragen',     Icon: Inbox,           group: 'daily' },
     { key: 'pizzas',       label: "Pizza's",       Icon: ChefHat,         group: 'config' },
+    { key: 'diensten',     label: 'Diensten',      Icon: Layers,          group: 'config' },
     { key: 'wijnen',       label: 'Wijnen',        Icon: Wine,            group: 'config' },
     { key: 'winst',        label: 'Winst',         Icon: TrendingUp,      group: 'config' },
     { key: 'opening',      label: 'Instellingen',  Icon: Settings,        group: 'config' },
@@ -243,6 +246,7 @@ export default function Admin() {
           {tab === 'boodschappen' && <BoodschappenTab password={pw} />}
           {tab === 'aanvragen'    && <AanvragenTab    password={pw} />}
           {tab === 'pizzas'       && <PizzasTab       password={pw} />}
+          {tab === 'diensten'     && <DienstenTab     password={pw} />}
           {tab === 'wijnen'       && <WijnenTab       password={pw} />}
           {tab === 'opening'      && <OpeningTab      password={pw} />}
           {tab === 'winst'        && <WinstTab        password={pw} />}
@@ -1481,7 +1485,7 @@ function OpeningTab({ password }) {
   const [newLabel, setNewLabel] = useState('')
   const [regDate, setRegDate] = useState('')
   const [savingCfg, setSavingCfg] = useState(false)
-  const [siteSettings, setSiteSettings] = useState({ openingHour: 17, openingMinute: 0, closingHour: 22, closingMinute: 0, pizzasPerSlot: 3, slotIntervalMinutes: 15, wijnEnabled: false, ovensMode: 'concept' })
+  const [siteSettings, setSiteSettings] = useState({ openingHour: 17, openingMinute: 0, closingHour: 22, closingMinute: 0, pizzasPerSlot: 3, slotIntervalMinutes: 15, wijnEnabled: false })
   const [savingSettings, setSavingSettings] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -1659,21 +1663,9 @@ function OpeningTab({ password }) {
               <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${siteSettings.wijnEnabled ? 'left-7' : 'left-1'}`} />
             </button>
           </label>
-          <label className="flex items-center justify-between gap-4 pt-2 border-t border-dotted border-parchment">
-            <div>
-              <p className="font-sans text-sm text-ink">Ovenaanbod live</p>
-              <p className="font-sans text-xs text-warm-gray mt-0.5">
-                {siteSettings.ovensMode === 'live'
-                  ? 'Richtprijzen zichtbaar, bezoekers vragen een offerte aan'
-                  : 'In voorbereiding — geen prijzen, bezoekers laten enkel interesse na'}
-              </p>
-            </div>
-            <button type="button"
-              onClick={() => setSiteSettings(s => ({ ...s, ovensMode: s.ovensMode === 'live' ? 'concept' : 'live' }))}
-              className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${siteSettings.ovensMode === 'live' ? 'bg-wine' : 'bg-parchment'}`}>
-              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${siteSettings.ovensMode === 'live' ? 'left-7' : 'left-1'}`} />
-            </button>
-          </label>
+          <p className="font-sans text-xs text-warm-gray italic pt-2 border-t border-dotted border-parchment">
+            Box, catering, workshops en ovens beheert u onder <strong className="not-italic text-ink">Diensten</strong>.
+          </p>
           <button type="submit" disabled={savingSettings} className="btn-primary w-full">
             {savingSettings ? 'Bezig...' : 'Opslaan'}
           </button>
@@ -2177,6 +2169,429 @@ function WinstTab({ password }) {
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
+
+// ─── Diensten (box, catering, workshops, ovens) ────────────────────────────
+
+const SERVICE_TABS = [
+  { key: 'box',       label: 'Box',       listKey: 'packages', noun: 'box' },
+  { key: 'catering',  label: 'Catering',  listKey: 'formulas', noun: 'formule' },
+  { key: 'workshops', label: 'Workshops', listKey: 'types',    noun: 'workshop' },
+  { key: 'ovens',     label: 'Ovens',     listKey: 'models',   noun: 'model' },
+]
+
+const SERVICE_MODES = [
+  { key: 'live',    label: 'Live',             hint: 'Zichtbaar met prijzen, bezoekers kunnen aanvragen' },
+  { key: 'concept', label: 'In voorbereiding', hint: 'Zichtbaar zonder prijzen, bezoekers laten interesse na' },
+  { key: 'off',     label: 'Uit',              hint: 'Uit de navigatie en de homepage; de pagina toont een bericht' },
+]
+
+const ITEM_STATUSES = [
+  { key: '',             label: 'Geen badge' },
+  { key: 'nieuw',        label: 'Nieuw' },
+  { key: 'op-aanvraag',  label: 'Op aanvraag' },
+  { key: 'volzet',       label: 'Volzet' },
+]
+
+// Per dienst welke velden een item heeft. De formulieren worden hieruit
+// opgebouwd, zodat de vier diensten dezelfde code delen.
+const SERVICE_FIELDS = {
+  box: [
+    { key: 'name',        label: 'Naam',                  type: 'text',     required: true, placeholder: 'Box Famiglia' },
+    { key: 'serves',      label: 'Aantal personen',       type: 'text',     placeholder: '4 – 6 personen' },
+    { key: 'pizzas',      label: "Aantal pizza's",        type: 'number',   required: true, min: 1 },
+    { key: 'price',       label: 'Prijs (€)',             type: 'number',   required: true, step: '0.01', min: 0 },
+    { key: 'description', label: 'Omschrijving',          type: 'textarea' },
+    { key: 'popular',     label: 'Badge "Meest gekozen"', type: 'checkbox' },
+  ],
+  catering: [
+    { key: 'name',           label: 'Naam',                 type: 'text',     required: true, placeholder: 'Festa' },
+    { key: 'guests',         label: 'Aantal gasten',        type: 'text',     placeholder: '40 – 80 gasten' },
+    { key: 'duration',       label: 'Duur',                 type: 'text',     placeholder: '3 uur bakken' },
+    { key: 'pricePerPerson', label: 'Prijs per persoon (€)', type: 'number',  step: '0.01', min: 0, hint: 'Leeg laten toont "Op maat"' },
+    { key: 'description',    label: 'Omschrijving',         type: 'textarea' },
+    { key: 'includes',       label: 'Inbegrepen',           type: 'list' },
+  ],
+  workshops: [
+    { key: 'name',        label: 'Naam',            type: 'text',     required: true, placeholder: 'Napoletana' },
+    { key: 'level',       label: 'Niveau',          type: 'text',     placeholder: 'Gevorderd' },
+    { key: 'duration',    label: 'Duur',            type: 'text',     placeholder: '3,5 uur' },
+    { key: 'groupSize',   label: 'Groepsgrootte',   type: 'text',     placeholder: '6 – 10 deelnemers' },
+    { key: 'price',       label: 'Prijs p.p. (€)',  type: 'number',   step: '0.01', min: 0, hint: 'Leeg laten toont "Op maat"' },
+    { key: 'description', label: 'Omschrijving',    type: 'textarea' },
+    { key: 'includes',    label: 'Inbegrepen',      type: 'list' },
+  ],
+  ovens: [
+    { key: 'brand',       label: 'Merk',              type: 'text',     required: true, placeholder: 'Gozney' },
+    { key: 'name',        label: 'Model',             type: 'text',     required: true, placeholder: 'Roccbox' },
+    { key: 'fuel',        label: 'Brandstof',         type: 'text',     placeholder: 'Gas of hout' },
+    { key: 'maxTemp',     label: 'Max. temperatuur',  type: 'text',     placeholder: '500 °C' },
+    { key: 'capacity',    label: 'Capaciteit',        type: 'text',     placeholder: '1 pizza · 30 cm' },
+    { key: 'priceFrom',   label: 'Vanafprijs (€)',    type: 'number',   step: '1', min: 0 },
+    { key: 'description', label: 'Omschrijving',      type: 'textarea' },
+    { key: 'bestFor',     label: 'Geschikt voor',     type: 'text',     placeholder: 'Terras en meenemen' },
+  ],
+}
+
+function emptyItem(serviceKey) {
+  const item = { id: crypto.randomUUID(), status: '' }
+  for (const f of SERVICE_FIELDS[serviceKey]) {
+    item[f.key] = f.type === 'checkbox' ? false : f.type === 'list' ? [] : f.type === 'number' ? null : ''
+  }
+  return item
+}
+
+/** Korte samenvattingsregel per item in de lijst. */
+function itemSummary(serviceKey, item) {
+  if (serviceKey === 'box')       return [item.serves, item.pizzas ? `${item.pizzas} pizza's` : null].filter(Boolean).join(' · ')
+  if (serviceKey === 'catering')  return [item.guests, item.duration].filter(Boolean).join(' · ')
+  if (serviceKey === 'workshops') return [item.level, item.duration, item.groupSize].filter(Boolean).join(' · ')
+  return [item.brand, item.fuel, item.capacity].filter(Boolean).join(' · ')
+}
+
+function itemPrice(serviceKey, item) {
+  const raw = serviceKey === 'box' ? item.price
+    : serviceKey === 'catering' ? item.pricePerPerson
+    : serviceKey === 'workshops' ? item.price
+    : item.priceFrom
+  if (raw === null || raw === undefined || raw === '') return 'Op maat'
+  const suffix = serviceKey === 'catering' || serviceKey === 'workshops' ? ' p.p.' : ''
+  return `${config.currency}${raw}${suffix}`
+}
+
+function DienstenTab({ password }) {
+  const [services, setServices] = useState(staticServices)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [active, setActive] = useState('box')
+  const [editing, setEditing] = useState(null) // item-id, of 'new'
+  const [form, setForm] = useState(null)
+
+  useEffect(() => {
+    fetch('/api/services')
+      .then(r => r.json())
+      .then(stored => setServices(mergeServices(staticServices, stored)))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const tab = SERVICE_TABS.find(t => t.key === active)
+  const service = services[active] || {}
+  const items = service[tab.listKey] || []
+  const fields = SERVICE_FIELDS[active]
+
+  async function persist(next) {
+    setServices(next)
+    setSaving(true)
+    try {
+      const res = await fetch('/api/services', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+        body: JSON.stringify(next),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        toast(`Opslaan mislukt: ${body.error || res.status}`, 'error')
+        return false
+      }
+      return true
+    } catch {
+      toast('Verbindingsfout', 'error')
+      return false
+    } finally { setSaving(false) }
+  }
+
+  function updateService(patch) {
+    return persist({ ...services, [active]: { ...service, ...patch } })
+  }
+
+  function updateItems(list) {
+    return persist({ ...services, [active]: { ...service, [tab.listKey]: list } })
+  }
+
+  async function setMode(mode) {
+    const ok = await updateService({ mode })
+    if (ok) toast(`${tab.label}: ${SERVICE_MODES.find(m => m.key === mode).label.toLowerCase()}`, 'info')
+  }
+
+  function startEdit(item) { setEditing(item.id); setForm({ ...item }) }
+  function startNew()      { setEditing('new');   setForm(emptyItem(active)) }
+  function cancel()        { setEditing(null);    setForm(null) }
+
+  async function saveItem(e) {
+    e.preventDefault()
+    for (const f of fields) {
+      if (!f.required) continue
+      const v = form[f.key]
+      if (v === '' || v === null || v === undefined) {
+        toast(`${f.label} is verplicht`, 'error')
+        return
+      }
+    }
+    const list = editing === 'new' ? [...items, form] : items.map(i => i.id === editing ? form : i)
+    if (await updateItems(list)) { toast('Opgeslagen'); cancel() }
+  }
+
+  async function removeItem(item) {
+    if (!confirm(`"${item.name}" verwijderen?`)) return
+    if (await updateItems(items.filter(i => i.id !== item.id))) toast('Verwijderd')
+  }
+
+  function move(index, delta) {
+    const target = index + delta
+    if (target < 0 || target >= items.length) return
+    const list = [...items]
+    ;[list[index], list[target]] = [list[target], list[index]]
+    updateItems(list)
+  }
+
+  if (loading) return <LoadingCards />
+
+  return (
+    <div className="space-y-5">
+
+      {/* Dienstkeuze */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {SERVICE_TABS.map(t => {
+          const mode = services[t.key]?.mode || 'live'
+          return (
+            <button key={t.key} onClick={() => { setActive(t.key); cancel() }}
+              className={`flex items-center gap-2 font-sans text-[10px] tracking-[0.2em] uppercase px-3 py-2 border transition-colors ${
+                active === t.key ? 'bg-ink text-cream border-ink' : 'border-parchment text-ink hover:border-ink'
+              }`}>
+              {t.label}
+              <span className={`w-1.5 h-1.5 rounded-full ${
+                mode === 'live' ? 'bg-olive' : mode === 'concept' ? 'bg-gold' : 'bg-warm-gray-light'
+              }`} />
+            </button>
+          )
+        })}
+        {saving && <span className="font-sans text-[10px] tracking-[0.2em] uppercase text-warm-gray-light ml-2">Opslaan…</span>}
+      </div>
+
+      {/* Modus */}
+      <div className="bg-white border border-parchment">
+        <div className="px-5 py-4 border-b border-dashed border-warm-gray-light/50 flex items-center gap-3">
+          <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
+          <span className="h-px w-5 bg-gold/40" />
+          <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray">Modus — {tab.label}</p>
+        </div>
+        <div className="px-5 py-4 space-y-2">
+          {SERVICE_MODES.map(m => {
+            const on = (service.mode || 'live') === m.key
+            return (
+              <button key={m.key} onClick={() => setMode(m.key)}
+                className={`w-full text-left border px-4 py-3 transition-colors ${
+                  on ? 'border-wine bg-wine/5' : 'border-parchment hover:border-warm-gray-light'
+                }`}>
+                <div className="flex items-center gap-2.5">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${on ? 'bg-wine' : 'bg-parchment'}`} />
+                  <span className={`font-sans text-sm ${on ? 'text-ink' : 'text-warm-gray'}`}>{m.label}</span>
+                </div>
+                <p className="font-sans text-xs text-warm-gray mt-1 ml-[18px]">{m.hint}</p>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Items */}
+      <div className="bg-white border border-parchment">
+        <div className="px-5 py-4 border-b border-dashed border-warm-gray-light/50 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
+            <span className="h-px w-5 bg-gold/40" />
+            <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray truncate">
+              {tab.label} — {items.length} {items.length === 1 ? tab.noun : tab.noun + 's'}
+            </p>
+          </div>
+          {editing === null && (
+            <button onClick={startNew}
+              className="flex items-center gap-1.5 font-sans text-[10px] tracking-[0.2em] uppercase text-wine hover:text-wine-light transition-colors shrink-0">
+              <Plus size={13} /> Nieuw
+            </button>
+          )}
+        </div>
+
+        {editing === 'new' && (
+          <ServiceItemForm fields={fields} form={form} setForm={setForm} onSubmit={saveItem} onCancel={cancel} title={`Nieuwe ${tab.noun}`} />
+        )}
+
+        {items.length === 0 && editing !== 'new' ? (
+          <p className="px-5 py-8 text-center font-serif italic text-warm-gray text-sm">
+            Nog niets toegevoegd.
+          </p>
+        ) : (
+          <ul className="divide-y divide-dotted divide-parchment">
+            {items.map((item, i) => (
+              <li key={item.id}>
+                {editing === item.id ? (
+                  <ServiceItemForm fields={fields} form={form} setForm={setForm} onSubmit={saveItem} onCancel={cancel} title={item.name} />
+                ) : (
+                  <div className="px-5 py-3.5 flex items-center gap-3">
+                    <div className="flex flex-col shrink-0">
+                      <button onClick={() => move(i, -1)} disabled={i === 0} aria-label="Naar boven"
+                        className="text-warm-gray-light hover:text-ink disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                        <ChevronUp size={14} />
+                      </button>
+                      <button onClick={() => move(i, 1)} disabled={i === items.length - 1} aria-label="Naar beneden"
+                        className="text-warm-gray-light hover:text-ink disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                        <ChevronDown size={14} />
+                      </button>
+                    </div>
+
+                    <button onClick={() => startEdit(item)} className="flex-1 min-w-0 text-left group">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-serif text-lg text-ink group-hover:text-wine transition-colors">{item.name}</span>
+                        {item.popular && <span className="font-sans text-[9px] tracking-[0.2em] uppercase text-wine">Meest gekozen</span>}
+                        {item.status && (
+                          <span className="font-sans text-[9px] tracking-[0.2em] uppercase text-gold border border-gold/40 px-1.5 py-0.5">
+                            {ITEM_STATUSES.find(s => s.key === item.status)?.label}
+                          </span>
+                        )}
+                      </div>
+                      <p className="font-sans text-[11px] text-warm-gray mt-0.5 truncate">{itemSummary(active, item)}</p>
+                    </button>
+
+                    <span className="font-serif text-base text-wine tabular-nums shrink-0 whitespace-nowrap">
+                      {itemPrice(active, item)}
+                    </span>
+                    <button onClick={() => removeItem(item)} aria-label={`${item.name} verwijderen`}
+                      className="text-warm-gray-light hover:text-wine transition-colors shrink-0">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <p className="font-sans text-xs text-warm-gray italic leading-relaxed">
+        Wijzigingen zijn meteen zichtbaar op de site. Teksten zoals de intro, de praktische
+        voorwaarden en de stappenblokken staan in <code className="not-italic">src/data/services.json</code>.
+      </p>
+    </div>
+  )
+}
+
+/** Formulier voor één box, formule, workshop of ovenmodel. */
+function ServiceItemForm({ fields, form, setForm, onSubmit, onCancel, title }) {
+  function set(key, value) { setForm(f => ({ ...f, [key]: value })) }
+
+  return (
+    <form onSubmit={onSubmit} className="px-5 py-5 bg-cream border-y border-parchment space-y-4">
+      <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold">{title}</p>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        {fields.map(f => {
+          if (f.type === 'textarea' || f.type === 'list') return null
+          const id = `svc-${f.key}`
+          if (f.type === 'checkbox') {
+            return (
+              <label key={f.key} className="flex items-center justify-between gap-4 sm:col-span-2 border border-parchment px-4 py-3 bg-white">
+                <span className="font-sans text-sm text-ink">{f.label}</span>
+                <button type="button" onClick={() => set(f.key, !form[f.key])}
+                  className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${form[f.key] ? 'bg-wine' : 'bg-parchment'}`}>
+                  <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${form[f.key] ? 'left-7' : 'left-1'}`} />
+                </button>
+              </label>
+            )
+          }
+          return (
+            <div key={f.key}>
+              <label htmlFor={id} className="block font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray mb-2">
+                {f.label}{f.required && <span className="text-wine"> *</span>}
+              </label>
+              <input
+                id={id}
+                type={f.type}
+                step={f.step}
+                min={f.min}
+                placeholder={f.placeholder}
+                className={INPUT}
+                value={form[f.key] ?? ''}
+                onChange={e => set(f.key, f.type === 'number'
+                  ? (e.target.value === '' ? null : Number(e.target.value))
+                  : e.target.value)}
+              />
+              {f.hint && <p className="font-sans text-xs text-warm-gray italic mt-1">{f.hint}</p>}
+            </div>
+          )
+        })}
+
+        <div>
+          <label htmlFor="svc-status" className="block font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray mb-2">Badge</label>
+          <select id="svc-status" className={INPUT} value={form.status ?? ''} onChange={e => set('status', e.target.value)}>
+            {ITEM_STATUSES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+          </select>
+          <p className="font-sans text-xs text-warm-gray italic mt-1">
+            Bij "Volzet" heet de knop op de site "Op de wachtlijst".
+          </p>
+        </div>
+      </div>
+
+      {fields.filter(f => f.type === 'textarea').map(f => (
+        <div key={f.key}>
+          <label htmlFor={`svc-${f.key}`} className="block font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray mb-2">{f.label}</label>
+          <textarea id={`svc-${f.key}`} rows={2} className={`${INPUT} resize-y`}
+            value={form[f.key] ?? ''} onChange={e => set(f.key, e.target.value)} />
+        </div>
+      ))}
+
+      {fields.filter(f => f.type === 'list').map(f => (
+        <ListField key={f.key} label={f.label} values={form[f.key] || []} onChange={v => set(f.key, v)} />
+      ))}
+
+      <div className="flex gap-2 pt-1">
+        <button type="submit" className="btn-primary flex-1">Opslaan</button>
+        <button type="button" onClick={onCancel} className="btn-secondary">Annuleren</button>
+      </div>
+    </form>
+  )
+}
+
+/** Bewerkbare lijst van korte regels, bv. "Inbegrepen". */
+function ListField({ label, values, onChange }) {
+  const [draft, setDraft] = useState('')
+
+  function add() {
+    const v = draft.trim()
+    if (!v || values.includes(v)) { setDraft(''); return }
+    onChange([...values, v])
+    setDraft('')
+  }
+
+  return (
+    <div>
+      <span className="block font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray mb-2">{label}</span>
+      {values.length > 0 && (
+        <ul className="flex flex-wrap gap-1.5 mb-2">
+          {values.map(v => (
+            <li key={v} className="flex items-center gap-1.5 bg-white border border-parchment px-2.5 py-1.5">
+              <span className="font-sans text-xs text-ink">{v}</span>
+              <button type="button" onClick={() => onChange(values.filter(x => x !== v))}
+                aria-label={`${v} verwijderen`} className="text-warm-gray-light hover:text-wine transition-colors">
+                <X size={12} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          className={INPUT}
+          placeholder="Regel toevoegen en op Enter drukken"
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); add() } }}
+        />
+        <button type="button" onClick={add} className="btn-secondary shrink-0">Voeg toe</button>
+      </div>
+    </div>
+  )
+}
 
 // ─── Aanvragen (box, catering, workshops, ovens) ───────────────────────────
 

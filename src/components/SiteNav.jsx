@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { Menu, X } from 'lucide-react'
+import { useServices } from '../lib/useServices'
 
 /**
  * Gedeelde topnavigatie voor de shop en de dienstenpagina's.
+ *
+ * Diensten die in het beheer op "uit" staan verdwijnen hier vanzelf.
  *
  * Props:
  *   open     — bool | null. Toont de status-stip ("Open" / "Gesloten").
@@ -10,16 +13,23 @@ import { Menu, X } from 'lucide-react'
  *   current  — pathname van de actieve pagina, bv. "/catering"
  */
 
-export const NAV_LINKS = [
-  { href: '/#menu',      label: 'Menù',      match: '/' },
-  { href: '/box',        label: 'Box',       match: '/box' },
-  { href: '/catering',   label: 'Catering',  match: '/catering' },
-  { href: '/workshops',  label: 'Workshops', match: '/workshops' },
-  { href: '/ovens',      label: 'Ovens',     match: '/ovens' },
+const SERVICE_NAV = [
+  { key: 'box',       label: 'Box' },
+  { key: 'catering',  label: 'Catering' },
+  { key: 'workshops', label: 'Workshops' },
+  { key: 'ovens',     label: 'Ovens' },
 ]
 
 export default function SiteNav({ open = null, current = '/' }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const services = useServices()
+
+  const NAV_LINKS = [
+    { href: '/#menu', label: 'Menù', match: '/' },
+    ...SERVICE_NAV
+      .filter(({ key }) => services[key]?.mode !== 'off')
+      .map(({ key, label }) => ({ href: services[key].route, label, match: services[key].route })),
+  ]
 
   return (
     <nav className="sticky top-0 z-30 bg-cream/80 backdrop-blur-md border-b border-parchment">

@@ -42,6 +42,8 @@ src/
     Workshops.jsx          ← /workshops route
     Ovens.jsx              ← /ovens route
     PaperTexture.jsx, SectionLabel.jsx
+  lib/
+    useServices.js         ← laadt /api/services over services.json heen (mergeServices)
   data/
     config.json            ← storeName, slotIntervalMinutes, openingHour, closingHour, currency
     pizzas.json            ← fallback pizzadata
@@ -51,6 +53,7 @@ netlify/
     pizzas.mjs, wines.mjs, opening-days.mjs, slots.mjs, orders.mjs
     register.mjs, settings.mjs, admin-verify.mjs, cancel.mjs
     inquiries.mjs          ← aanvragen box/catering/workshop/oven (/api/inquiries)
+    services.mjs           ← beheerbare dienstendata (/api/services)
     send-email.mjs         ← escapeHtml() tegen XSS; types: confirmation, registration,
                              threshold, inquiry
     newsletter-subscribers.mjs, newsletter-editions.mjs, unsubscribe.mjs
@@ -79,28 +82,52 @@ N° IV Oltre la pizza (teasers) · N° V Il Racconto. Elke dienstenpagina heeft 
 nummer in `services.json` (`num`).
 
 ## Diensten (box, catering, workshops, ovens)
-Alle teksten, prijzen en specs staan in `src/data/services.json` — pas die aan, niet de JSX.
-Elke pagina gebruikt `ServicePage` (zet `document.title`, meta-description en canonical)
-en `InquiryForm`.
 
-Aanvragen gaan naar `/api/inquiries` (Netlify Blobs, store `inquiries`) en daarna
-vrijblijvend naar `/api/send-email` met `type: 'inquiry'`. Als de mail faalt is de
-aanvraag toch bewaard. Beheer: `/beheer` → tab **Aanvragen** (filteren, status
-nieuw/opgevolgd/afgerond, verwijderen).
+### Waar de data vandaan komt
+`src/data/services.json` is de basis en blijft de bron van waarheid voor een verse
+omgeving. Daaroverheen legt `useServices()` wat er in Netlify Blobs staat (store
+`services`, key `config`), **per dienst en per veld**. Gevolg: velden die later in
+code bijkomen blijven werken, ook als de bewaarde blob ouder is. Wijzig teksten dus
+in `services.json`, niet in de JSX.
 
-**Ovens staan in conceptmodus.** Er is nog geen partnership met Gozney of Ooni. Zolang
-`settings.ovensMode !== 'live'`:
-- geen prijzen zichtbaar ("Prijs volgt"), badge "Aanbod in voorbereiding"
-- knop en formulier heten "Houd mij op de hoogte" i.p.v. "Offerte aanvragen"
-- disclaimer onderaan dat we geen officiële verdeler zijn
+Prijzen, formules en modus wijzigt u in `/beheer` → tab **Diensten**. Dat schrijft naar
+de blob en is meteen zichtbaar, zonder deploy.
 
-Omschakelen zodra de samenwerking rond is: `/beheer` → Instellingen → *Ovenaanbod live*.
-Controleer dan eerst of de `priceFrom`-waarden in `services.json` nog kloppen.
+### Modus per dienst
+Elke dienst heeft `mode`:
+- `live` — gewone pagina met prijzen
+- `concept` — badge uit `conceptBadge`, geen prijzen ("Prijs volgt"), knoppen en
+  formulier heten "Houd mij op de hoogte" in plaats van offerte/reserveren
+- `off` — verdwijnt uit navigatie en homepage-teasers; de pagina blijft bestaan en
+  toont `offNotice`, zodat bestaande links en zoekresultaten niet doodlopen
+
+`ServicePage` regelt `concept` en `off` centraal; de pagina's zelf verbergen enkel
+hun prijzen. **Ovens staat standaard op `concept`** omdat er nog geen partnership is
+met Gozney of Ooni — controleer de `priceFrom`-waarden vóór u op live zet.
+
+### Status per item
+Elke box, formule, workshop en oven heeft `status`: leeg, `nieuw`, `op-aanvraag` of
+`volzet`. Bij `volzet` heet de knop "Op de wachtlijst" — de aanvraag blijft dus mogelijk.
+
+### Aanvragen
+Gaan naar `/api/inquiries` (Netlify Blobs, store `inquiries`) en daarna vrijblijvend
+naar `/api/send-email` met `type: 'inquiry'`. Als de mail faalt is de aanvraag toch
+bewaard. Beheer: `/beheer` → tab **Aanvragen** (filteren, status nieuw/opgevolgd/
+afgerond, verwijderen).
+
+### Nog niet beheerbaar (staat in services.json)
+Intro, tagline, teaser, praktische voorwaarden, "in de box"-lijst, de stappenblokken
+(`steps`, `flow`), de tip, `conceptBadge`, `offNotice`, merkomschrijvingen, de
+disclaimer en de SEO-velden. Sectievolgorde, iconen en N°-nummering horen bewust in
+code — dat is ontwerp, geen bedrijfsvoering.
 
 ## Veldnamen data
 Pizzas: `id, name, ingredients[], price, emoji, suggestion`
 Wines: `id, name, description, price, type, tags[]`
 Inquiries: `id, type, name, email, phone, option, date, guests, location, message, status, createdAt`
+Diensten: elke dienst heeft `mode`, `route`, `num`, `eyebrow`, `title`, `tagline`, `intro`,
+`teaser`, `metaTitle`, `metaDescription`, `conceptBadge`, `offNotice` + een eigen itemlijst
+(`packages` / `formulas` / `types` / `models`). Elk item heeft `id`, `name` en `status`.
 
 ## Beveiliging (al geïmplementeerd)
 - Admin-wachtwoord: server-side via `/api/admin-verify`, nooit in bundle
@@ -108,6 +135,9 @@ Inquiries: `id, type, name, email, phone, option, date, guests, location, messag
 - Modal a11y: `role="dialog"`, `aria-modal`, focus-trap, Escape-key, scroll-lock
 - `/api/inquiries`: lengte- en typevalidatie op elk veld, honeypot tegen bots,
   dubbele inzending binnen 2 minuten wordt genegeerd, GET/PUT/DELETE achter `x-admin-password`
+- `/api/services`: PUT achter `x-admin-password`, bewaart alleen de vier bekende
+  dienstsleutels en weigert een onbekende `mode` (die zou een dienst ongemerkt
+  onzichtbaar maken)
 
 ## SEO — bekende beperking
 De site is client-rendered. `ServicePage` zet titel, meta-description en canonical met JS,
