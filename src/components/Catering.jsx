@@ -30,30 +30,23 @@ export default function Catering() {
         <div className="space-y-px bg-parchment border border-parchment">
           {data.formulas.map(formula => (
             <div key={formula.id} className="bg-cream p-6 sm:p-7">
-              <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-                <div>
-                  <h3 className="font-serif text-2xl text-ink leading-tight">{formula.name}</h3>
-                  <p className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mt-1.5">
-                    {formula.guests} · {formula.duration}
-                  </p>
-                </div>
-                {/* Wikkelt op mobiel naar een eigen regel: dan links uitlijnen
-                    met de rest van de kaart, pas vanaf sm rechts naast de naam */}
-                <div className="text-left sm:text-right">
-                  {formula.pricePerPerson ? (
-                    <>
-                      <p className="font-serif text-3xl text-wine tabular-nums leading-none">
-                        {config.currency}{formula.pricePerPerson}
-                      </p>
-                      <p className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray-light mt-1.5">
-                        vanaf, per persoon
-                      </p>
-                    </>
-                  ) : (
-                    <p className="font-serif italic text-xl text-wine">Op maat</p>
-                  )}
-                </div>
+              {/* Zelfde opzet als de workshopkaarten: naam links, prijs rechts
+                  op dezelfde regel, ook op mobiel. Vandaar geen flex-wrap. */}
+              <div className="flex items-baseline justify-between gap-3">
+                <h3 className="font-serif text-2xl text-ink leading-tight">{formula.name}</h3>
+                {formula.pricePerPerson ? (
+                  <span className="font-serif text-2xl text-wine tabular-nums whitespace-nowrap shrink-0">
+                    {config.currency}{formula.pricePerPerson}
+                    <span className="font-sans text-[10px] tracking-[0.2em] uppercase text-warm-gray ml-1.5">p.p.</span>
+                  </span>
+                ) : (
+                  <span className="font-serif italic text-lg text-wine whitespace-nowrap shrink-0">Op maat</span>
+                )}
               </div>
+
+              <p className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray mt-1.5">
+                {formula.guests} · {formula.duration}
+              </p>
 
               <p className="font-serif italic text-warm-gray leading-relaxed mt-4">{formula.description}</p>
 
@@ -81,7 +74,8 @@ export default function Catering() {
         </div>
 
         <p className="font-sans text-xs text-warm-gray-light italic text-center mt-5 leading-relaxed">
-          Richtprijzen inclusief deeg, ingrediënten, bakker en materiaal. Drank is niet inbegrepen.
+          Vanafprijzen per persoon, inclusief deeg, ingrediënten, bakker en materiaal.
+          Drank is niet inbegrepen.
         </p>
       </ServiceSection>
 
