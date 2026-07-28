@@ -61,7 +61,10 @@ export default function SiteNav({ open = null, current = '/' }) {
     if (!menuOpen) return
     const opener = buttonRef.current
     document.body.style.overflow = 'hidden'
-    overlayRef.current?.querySelector('a, button')?.focus()
+    // Focus op de dialoog zelf, niet op de eerste link. Anders ziet "Menù"
+    // eruit alsof hij al gekozen is, en tekenen sommige browsers (Safari) hun
+    // eigen blauwe ring rond een link die programmatisch focus krijgt.
+    overlayRef.current?.focus()
 
     function onKeyDown(e) {
       if (e.key === 'Escape') { setMenuOpen(false); return }
@@ -71,10 +74,16 @@ export default function SiteNav({ open = null, current = '/' }) {
       // ze de kring waar de focus in blijft.
       const items = [opener, ...(overlayRef.current?.querySelectorAll('a[href], button') ?? [])].filter(Boolean)
       if (!items.length) return
-      const first = items[0]
-      const last = items[items.length - 1]
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+      // De hele cyclus zelf sturen, niet alleen de randen. De overlay hangt via
+      // een portal achteraan in body terwijl de knop in de nav staat, dus de
+      // natuurlijke tabvolgorde loopt daartussen door de hele pagina heen.
+      e.preventDefault()
+      const idx = items.indexOf(document.activeElement)
+      const laatste = items.length - 1
+      const volgende = e.shiftKey
+        ? (idx <= 0 ? laatste : idx - 1)
+        : (idx === -1 || idx === laatste ? 0 : idx + 1)
+      items[volgende].focus()
     }
     document.addEventListener('keydown', onKeyDown)
     return () => {
@@ -153,7 +162,8 @@ export default function SiteNav({ open = null, current = '/' }) {
           role="dialog"
           aria-modal="true"
           aria-label="Navigatie"
-          className="lg:hidden fixed inset-x-0 top-14 bottom-0 z-40 bg-cream overflow-y-auto overscroll-contain animate-[fadeIn_150ms_ease-out] motion-reduce:animate-none"
+          tabIndex={-1}
+          className="lg:hidden fixed inset-x-0 top-14 bottom-0 z-40 bg-cream overflow-y-auto overscroll-contain focus:outline-none animate-[fadeIn_150ms_ease-out] motion-reduce:animate-none"
         >
           <PaperTexture />
           <div className="relative flex min-h-full flex-col px-6 pt-8 pb-10">

@@ -37,11 +37,13 @@ export default function PizzaBox() {
 
       {/* ── Pakketten ── */}
       <ServiceSection title="De boxen" caption="Kies de maat die bij uw tafel past.">
-        <div className="grid sm:grid-cols-3 gap-px bg-parchment border border-parchment">
+        {/* Mobiel losse kaarten met ruimte ertussen; vanaf sm klapt de ruimte
+              dicht tot een haarlijn en wordt het één strak raster. */}
+          <div className="grid gap-4 sm:grid-cols-3 sm:gap-px sm:bg-parchment sm:border sm:border-parchment">
           {/* Kaarten staan op ivory: cream ging op in de pagina, puur wit
               was te fel en te koud voor dit palet. Zie tailwind.config.js. */}
           {packages.map(pkg => (
-            <div key={pkg.id} className="relative bg-ivory p-6 flex flex-col text-center">
+            <div key={pkg.id} className="relative bg-ivory border border-parchment sm:border-0 p-6 flex flex-col text-center">
               {pkg.popular && (
                 <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap bg-wine text-cream font-sans text-[9px] tracking-[0.24em] uppercase px-3 py-1">
                   Meest gekozen

@@ -29,11 +29,12 @@ export default function Catering() {
 
       {/* ── Formules ── */}
       <ServiceSection title="De formules" caption="Van receptie tot volledig avondmaal.">
-        <div className="space-y-px bg-parchment border border-parchment">
+        {/* Mobiel losse kaarten met ruimte ertussen, vanaf sm een strak blok */}
+          <div className="space-y-4 sm:space-y-px sm:bg-parchment sm:border sm:border-parchment">
           {/* Kaarten staan op ivory — zie tailwind.config.js voor de
               papierschaal parchment → cream → ivory. */}
           {formulas.map(formula => (
-            <div key={formula.id} className="bg-ivory p-6 sm:p-7">
+            <div key={formula.id} className="bg-ivory border border-parchment sm:border-0 p-6 sm:p-7">
               {/* Zelfde opzet als de workshopkaarten: naam links, prijs rechts
                   op dezelfde regel, ook op mobiel. Vandaar geen flex-wrap. */}
               <div className="flex items-baseline justify-between gap-3">
