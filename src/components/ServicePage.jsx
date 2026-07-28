@@ -30,7 +30,7 @@ function setCanonical(path) {
  *
  * Props:
  *   service  — object uit src/data/services.json
- *   badge    — optionele tekst rechts naast het kruimelpad, bv. "In voorbereiding"
+ *   badge    — optionele melding onder de intro, bv. "Aanbod in voorbereiding"
  *   children — de secties van de pagina
  */
 export default function ServicePage({ service, badge, children }) {
@@ -46,6 +46,17 @@ export default function ServicePage({ service, badge, children }) {
   return (
     <div className="min-h-screen bg-cream text-ink relative overflow-x-clip">
       <SiteNav current={service.route} />
+
+      {/* Kruimelpad — terugweg naar de shop, los van de leesflow van de hero */}
+      <nav aria-label="Kruimelpad" className="relative bg-cream border-b border-parchment/70">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-3 flex items-center gap-2.5 font-sans text-[10px] tracking-[0.24em] uppercase">
+          <a href="/" className="text-warm-gray hover:text-wine transition-colors">
+            ← Pizzeria
+          </a>
+          <span className="text-gold/50" aria-hidden="true">/</span>
+          <span className="text-ink truncate">{service.eyebrow}</span>
+        </div>
+      </nav>
 
       <header className="relative bg-cream overflow-hidden">
         <PaperTexture />
@@ -73,12 +84,6 @@ export default function ServicePage({ service, badge, children }) {
               {badge}
             </p>
           )}
-
-          <p className="mt-8">
-            <a href="/" className="font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray hover:text-wine transition-colors">
-              ← Terug naar de pizzeria
-            </a>
-          </p>
         </div>
       </header>
 
