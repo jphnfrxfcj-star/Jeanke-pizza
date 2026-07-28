@@ -522,7 +522,7 @@ function ServiceTeasers() {
             <a
               key={key}
               href={service.route}
-              className="group bg-cream p-6 flex flex-col hover:bg-white transition-colors"
+              className="group bg-cream p-6 flex flex-col hover:bg-ivory transition-colors"
             >
               <Icon size={20} className="text-wine shrink-0" />
               <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold mt-4">{service.eyebrow}</p>
@@ -554,7 +554,7 @@ function RegistrationView({ registration, pizzas, regName, setRegName, regEmail,
         </p>
       )}
 
-      <div className="bg-white border border-parchment mb-8">
+      <div className="bg-ivory border border-parchment mb-8">
         <div className="px-6 py-5 border-b border-dashed border-parchment text-center">
           <p className="font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray mb-1">Gereserveerde pizza's</p>
           <p className="font-serif text-4xl text-ink mb-1">

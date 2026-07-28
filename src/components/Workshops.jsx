@@ -28,10 +28,10 @@ export default function Workshops() {
       {/* ── Workshops ── */}
       <ServiceSection title="De workshops" caption="Vier formules, altijd in kleine groep.">
         <div className="grid sm:grid-cols-2 gap-px bg-parchment border border-parchment">
-          {/* Kaarten zijn wit, niet cream: op mobiel staan ze volle breedte
-              op een cream pagina en gingen ze op in de achtergrond. */}
+          {/* Kaarten staan op ivory — zie tailwind.config.js voor de
+              papierschaal parchment → cream → ivory. */}
           {types.map(workshop => (
-            <div key={workshop.id} className="bg-white p-6 flex flex-col">
+            <div key={workshop.id} className="bg-ivory p-6 flex flex-col">
               <div className="flex items-baseline justify-between gap-3">
                 <h3 className="font-serif text-xl text-ink leading-tight">{workshop.name}</h3>
                 {concept ? (

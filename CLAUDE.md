@@ -33,6 +33,24 @@ Bij het vervangen van een fontbestand: geef het een nieuwe naam, want `netlify.t
 zet er een cache van een jaar op.
 
 ## Design tokens (tailwind.config.js)
+
+### Papierschaal
+Drie vlakken, alle drie op tint 38° met ~40% verzadiging, van donker naar licht:
+
+| token | hex | lichtheid | gebruik |
+|---|---|---|---|
+| `parchment` | `#EDE5D8` | 88,8% | borders, getinte secties |
+| `cream` | `#F7F3EC` | 94,7% | paginaachtergrond |
+| `ivory` | `#FBF9F6` | 97,5% | kaarten en formulieren boven de pagina |
+
+**Gebruik geen `bg-white` op de publieke site.** Puur wit heeft nul verzadiging en
+leest als een koud gat in dit warme palet. Cream als kaartkleur is het andere uiterste:
+dan valt de kaart samen met de pagina en verdwijnt hij, vooral op mobiel waar kaarten
+volle breedte staan. `ivory` zit ertussen — 2,8 punten lichter dan de pagina, genoeg om
+te lichten, weinig genoeg om warm te blijven. `/beheer` mag wél puur wit gebruiken; dat
+is een werkomgeving, geen etalage.
+
+### Overige
 - `cream` — achtergrond
 - `parchment` — subtiele borders/vlakken
 - `wine` — primaire accentkleur (terracotta ~#A0522D)
