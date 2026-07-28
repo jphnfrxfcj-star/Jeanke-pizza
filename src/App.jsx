@@ -207,7 +207,7 @@ function Shop() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 h-14 flex items-center justify-between">
           <a href="#top" className="flex items-baseline gap-2 group">
             <span className="font-serif italic text-xl text-ink group-hover:text-wine transition-colors">Jeanke's</span>
-            <span className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray hidden sm:inline">Pizzeria</span>
+            <span className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray hidden sm:inline">Secret Pizza</span>
           </a>
           <div className="flex items-center gap-6">
             <a href="#menu" className="hidden sm:inline font-sans text-xs tracking-[0.24em] uppercase text-ink hover:text-wine transition-colors">Menù</a>
@@ -458,6 +458,9 @@ function Shop() {
           <p className="font-sans text-sm text-cream/60 leading-relaxed">
             Geen keten. Geen haast. Gewoon goede pizza, gemaakt door Jeanke en zijn familie — voor u en de uwen.
           </p>
+          <p className="font-sans text-sm text-cream/60 leading-relaxed mt-4">
+            In de buurt kennen ze ons als <em>Secret Pizza</em> — vandaar ook onze naam op het web.
+          </p>
           <div className="mt-10 flex items-center justify-center gap-4 text-gold/70">
             <span className="h-px w-12 bg-gold/30" />
             <span>✦</span>
@@ -473,7 +476,7 @@ function Shop() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
             <div>
               <p className="font-serif italic text-2xl text-ink">Jeanke's</p>
-              <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mt-1">Pizzeria artigianale</p>
+              <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mt-1">Secret Pizza · Pizzeria artigianale</p>
               <p className="font-serif italic text-warm-gray text-sm mt-4 leading-relaxed max-w-xs">
                 Vers deeg, houtoven, en een portie Italiaanse <em>allegria</em>.
               </p>
@@ -528,7 +531,7 @@ function Shop() {
 
           <div className="mt-12 pt-6 border-t border-dashed border-parchment flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray-light">
-              © {new Date().getFullYear()} Jeanke's Pizza
+              © {new Date().getFullYear()} Jeanke's Pizza · Secret Pizza
             </p>
             <p className="font-serif italic text-xs text-warm-gray-light">
               Con amore, uit de houtoven.
