@@ -40,7 +40,7 @@ const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI']
 
 export default function SiteNav({ open = null, current = '/' }) {
   const [menuOpen, setMenuOpen] = useState(false)
-  const services = useServices()
+  const { services } = useServices()
   const overlayRef = useRef(null)
   const buttonRef = useRef(null)
 

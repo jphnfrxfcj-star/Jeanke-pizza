@@ -129,6 +129,15 @@ omgeving. Daaroverheen legt `useServices()` wat er in Netlify Blobs staat (store
 code bijkomen blijven werken, ook als de bewaarde blob ouder is. Wijzig teksten dus
 in `services.json`, niet in de JSX.
 
+**Prijzen wachten op het antwoord.** `useServices()` geeft `{ services, resolved }`
+terug. Zolang `resolved` false is komen de waarden nog uit het bestand en tonen de
+pagina's een `PriceSkeleton` in plaats van een bedrag — ook in de keuzelijst van het
+aanvraagformulier, want een schermlezer leest die opties voor. Zonder dat zag een
+bezoeker €58 naar €64 springen zodra de beheerde versie binnenkwam, en een bedrag dat
+verspringt wordt niet meer vertrouwd. De uitkomst gaat in `sessionStorage`
+(`jeanke_services`), dus alleen de allereerste pagina van een bezoek wacht. Faalt de
+fetch, dan is `resolved` alsnog true en verschijnen de waarden uit het bestand.
+
 Prijzen, formules en modus wijzigt u in `/beheer` → tab **Diensten**. Dat schrijft naar
 de blob en is meteen zichtbaar, zonder deploy.
 

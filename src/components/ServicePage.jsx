@@ -126,6 +126,23 @@ export default function ServicePage({ service, children }) {
   )
 }
 
+/**
+ * Plaatshouder voor een prijs die nog niet vaststaat.
+ *
+ * Het alternatief — vast de waarde uit services.json tonen — laat de prijs
+ * zichtbaar verspringen zodra de beheerde versie binnenkomt. Beter even niets
+ * dan even iets verkeerds, zeker bij een bedrag.
+ */
+export function PriceSkeleton({ className = 'h-8 w-20' }) {
+  return (
+    <span
+      role="status"
+      aria-label="Prijs wordt geladen"
+      className={`inline-block bg-parchment/70 animate-pulse motion-reduce:animate-none align-middle ${className}`}
+    />
+  )
+}
+
 const STATUS_LABELS = {
   nieuw:         { label: 'Nieuw',       cls: 'border-gold/50 text-gold' },
   'op-aanvraag': { label: 'Op aanvraag', cls: 'border-warm-gray-light text-warm-gray' },

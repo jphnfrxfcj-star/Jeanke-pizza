@@ -1,20 +1,25 @@
 import { useState } from 'react'
 import { Check } from 'lucide-react'
-import ServicePage, { ServiceSection, StatusBadge, ctaLabel } from './ServicePage'
+import ServicePage, { ServiceSection, StatusBadge, ctaLabel, PriceSkeleton } from './ServicePage'
 import InquiryForm from './InquiryForm'
 import { useServices } from '../lib/useServices'
 import config from '../data/config.json'
 
 export default function Workshops() {
-  const data = useServices().workshops
+  const { services, resolved } = useServices()
+  const data = services.workshops
   const [selected, setSelected] = useState('')
 
   const concept = data.mode === 'concept'
   const types = data.types || []
 
+  // Geen prijs in de keuzelijst zolang die niet vaststaat — zie PizzaBox.
+  const toonPrijs = resolved && !concept
   const options = types.map(t => ({
     value: t.id,
-    label: !concept && t.price ? `${t.name} — ${config.currency}${t.price} p.p.` : `${t.name} — op maat`,
+    label: !toonPrijs ? t.name
+      : t.price ? `${t.name} — ${config.currency}${t.price} p.p.`
+      : `${t.name} — op maat`,
   }))
 
   function choose(id) {
@@ -39,6 +44,8 @@ export default function Workshops() {
                   <span className="font-sans text-[10px] tracking-[0.2em] uppercase text-warm-gray-light whitespace-nowrap shrink-0">
                     Prijs volgt
                   </span>
+                ) : !resolved ? (
+                  <PriceSkeleton className="h-7 w-14" />
                 ) : workshop.price ? (
                   <span className="font-serif text-2xl text-wine tabular-nums whitespace-nowrap shrink-0">
                     {config.currency}{workshop.price}

@@ -79,7 +79,7 @@ export default function InquiryForm({
 
   if (status === 'success') {
     return (
-      <div className="bg-ivory border border-parchment px-6 py-10 text-center">
+      <div className="bg-ivory border-y sm:border border-parchment -mx-4 sm:mx-0 px-6 py-10 text-center">
         <div className="mx-auto mb-4 w-12 h-12 flex items-center justify-center">
           <svg width="48" height="48" viewBox="0 0 56 56" className="text-wine" aria-hidden="true">
             <circle cx="28" cy="28" r="22" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" />
@@ -96,7 +96,13 @@ export default function InquiryForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-ivory border border-parchment">
+    <form
+      onSubmit={handleSubmit}
+      /* Volle schermbreedte op mobiel: -mx-4 heft de px-4 van de sectie op.
+         De zijranden vervallen dan, want die zouden tegen de schermrand
+         plakken; boven en onder blijven ze staan als afbakening. */
+      className="bg-ivory border-y sm:border border-parchment -mx-4 sm:mx-0"
+    >
       <div className="px-5 sm:px-6 py-5 border-b border-dashed border-parchment">
         <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-gold">Aanvraag</p>
         <p className="font-serif italic text-xl text-ink mt-1">Laat iets van u horen</p>

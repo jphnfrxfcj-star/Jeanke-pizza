@@ -502,7 +502,7 @@ const TEASER_ICONS = { box: Package, catering: Utensils, workshops: GraduationCa
  * sectie weg in plaats van een lege balk achter te laten.
  */
 function ServiceTeasers() {
-  const services = useServices()
+  const { services } = useServices()
   const shown = ['box', 'catering', 'workshops', 'ovens']
     .map(key => ({ key, service: services[key], Icon: TEASER_ICONS[key] }))
     .filter(({ service }) => service && service.mode !== 'off')

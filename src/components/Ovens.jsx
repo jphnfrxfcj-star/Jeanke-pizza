@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Flame, Thermometer, Ruler } from 'lucide-react'
-import ServicePage, { ServiceSection, StatusBadge, ctaLabel } from './ServicePage'
+import ServicePage, { ServiceSection, StatusBadge, ctaLabel, PriceSkeleton } from './ServicePage'
 import InquiryForm from './InquiryForm'
 import { useServices } from '../lib/useServices'
 import config from '../data/config.json'
@@ -44,7 +44,8 @@ function ModelImage({ src, alt, brand, reserveSpace }) {
 }
 
 export default function Ovens() {
-  const data = useServices().ovens
+  const { services, resolved } = useServices()
+  const data = services.ovens
   const [brand, setBrand] = useState('Alle')
   const [selected, setSelected] = useState('')
 
@@ -60,9 +61,11 @@ export default function Ovens() {
   // Zodra één model in beeld een foto heeft, houden de andere hun plek vrij.
   const anyImages = models.some(m => m.imageUrl)
 
+  // Geen prijs in de keuzelijst zolang die niet vaststaat — zie PizzaBox.
+  const toonPrijs = resolved && !concept
   const options = allModels.map(m => ({
     value: m.id,
-    label: `${m.brand} ${m.name}${concept ? '' : ` — vanaf ${config.currency}${m.priceFrom}`}`,
+    label: `${m.brand} ${m.name}${toonPrijs ? ` — vanaf ${config.currency}${m.priceFrom}` : ''}`,
   }))
 
   function choose(id) {
@@ -126,6 +129,8 @@ export default function Ovens() {
                   <span className="font-sans text-[9px] tracking-[0.2em] uppercase text-warm-gray-light text-right shrink-0 whitespace-nowrap">
                     Prijs volgt
                   </span>
+                ) : !resolved ? (
+                  <PriceSkeleton className="h-6 w-16" />
                 ) : (
                   <span className="text-right shrink-0">
                     <span className="block font-serif text-xl text-wine tabular-nums whitespace-nowrap">

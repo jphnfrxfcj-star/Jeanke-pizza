@@ -1,22 +1,27 @@
 import { useState } from 'react'
 import { Check } from 'lucide-react'
-import ServicePage, { ServiceSection, StatusBadge, ctaLabel } from './ServicePage'
+import ServicePage, { ServiceSection, StatusBadge, ctaLabel, PriceSkeleton } from './ServicePage'
 import InquiryForm from './InquiryForm'
 import { useServices } from '../lib/useServices'
 import config from '../data/config.json'
 
 export default function Catering() {
-  const data = useServices().catering
+  const { services, resolved } = useServices()
+  const data = services.catering
   const [selected, setSelected] = useState('')
 
   const concept = data.mode === 'concept'
   const formulas = data.formulas || []
 
+  // Geen prijs in de keuzelijst zolang die niet vaststaat — zie PizzaBox.
+  const toonPrijs = resolved && !concept
   const options = formulas.map(f => ({
     value: f.id,
-    label: !concept && f.pricePerPerson
-      ? `${f.name} — vanaf ${config.currency}${f.pricePerPerson} p.p.`
-      : `${f.name} — op maat`,
+    label: !toonPrijs
+      ? f.name
+      : f.pricePerPerson
+        ? `${f.name} — vanaf ${config.currency}${f.pricePerPerson} p.p.`
+        : `${f.name} — op maat`,
   }))
 
   function choose(id) {
@@ -43,6 +48,8 @@ export default function Catering() {
                   <span className="font-sans text-[10px] tracking-[0.2em] uppercase text-warm-gray-light whitespace-nowrap shrink-0">
                     Prijs volgt
                   </span>
+                ) : !resolved ? (
+                  <PriceSkeleton className="h-7 w-16" />
                 ) : formula.pricePerPerson ? (
                   <span className="font-serif text-2xl text-wine tabular-nums whitespace-nowrap shrink-0">
                     {config.currency}{formula.pricePerPerson}

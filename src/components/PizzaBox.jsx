@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Check } from 'lucide-react'
-import ServicePage, { ServiceSection, StatusBadge, ctaLabel } from './ServicePage'
+import ServicePage, { ServiceSection, StatusBadge, ctaLabel, PriceSkeleton } from './ServicePage'
 import InquiryForm from './InquiryForm'
 import { useServices } from '../lib/useServices'
 import config from '../data/config.json'
@@ -14,17 +14,21 @@ function unitPrice(pkg) {
 }
 
 export default function PizzaBox() {
-  const data = useServices().box
+  const { services, resolved } = useServices()
+  const data = services.box
   const [selected, setSelected] = useState('')
 
   const concept = data.mode === 'concept'
   const packages = data.packages || []
 
+  // Geen prijs in de keuzelijst zolang die niet vaststaat: de opties zijn
+  // onzichtbaar tot je de lijst opent, maar een schermlezer leest ze wel voor.
+  const toonPrijs = resolved && !concept
   const options = packages.map(p => ({
     value: p.id,
-    label: concept
-      ? `${p.name} — ${p.pizzas} pizza's`
-      : `${p.name} — ${p.pizzas} pizza's · ${config.currency}${p.price}`,
+    label: toonPrijs
+      ? `${p.name} — ${p.pizzas} pizza's · ${config.currency}${p.price}`
+      : `${p.name}${p.pizzas ? ` — ${p.pizzas} pizza's` : ''}`,
   }))
 
   function choose(id) {
@@ -58,6 +62,10 @@ export default function PizzaBox() {
                 <p className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray-light mt-5">
                   Prijs volgt{pkg.pizzas ? ` · ${pkg.pizzas} pizza's` : ''}
                 </p>
+              ) : !resolved ? (
+                /* Nog niet zeker van het bedrag: liever even niets dan een
+                   prijs die voor de ogen van de bezoeker verspringt. */
+                <p className="mt-5"><PriceSkeleton className="h-9 w-24" /></p>
               ) : (
                 <>
                   <p className="font-serif text-4xl text-wine tabular-nums mt-5">
