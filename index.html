@@ -21,9 +21,11 @@
     <meta name="twitter:description" content="Secret Pizza, oftewel Jeanke's Pizza: handgemaakte pizza's uit de houtoven. Bestel uw tijdslot online." />
     <meta name="twitter:image" content="https://www.secretpizza.be/hero.jpg" />
     <meta name="description" content="Secret Pizza, oftewel Jeanke's Pizza — handgemaakte pizza's uit de houtoven in België. Bestel uw tijdslot online." />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+    <!-- Fonts worden zelf gehost (zie src/fonts.css en public/fonts/).
+         Niet terugzetten naar de Google Fonts CDN: die stuurt het IP-adres van
+         elke bezoeker naar Google en zou een toestemmingsvraag vergen. -->
+    <link rel="preload" href="/fonts/dm-serif-display-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
 
     <!-- Structured data voor Google (lokale zoekresultaten / rich results).
          TODO: vul streetAddress, addressLocality en postalCode in.

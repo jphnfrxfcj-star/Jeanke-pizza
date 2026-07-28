@@ -12,6 +12,14 @@
 [functions."newsletter-editions"]
   timeout = 26
 
+# Fonts hebben geen hash in hun naam, dus zonder deze regel laat Netlify ze
+# bij elk bezoek hervalideren. Ze wijzigen nooit; bij een nieuwe versie geeft
+# u het bestand een andere naam.
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

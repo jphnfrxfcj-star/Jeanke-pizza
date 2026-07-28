@@ -9,7 +9,28 @@ Prod-branch: `claude/pizza-ordering-app-qCbom`.
 - Frontend: React (JSX), Tailwind CSS v3
 - Backend: Netlify Functions (ESM `.mjs`)
 - Storage: Netlify Blobs (geen database)
-- Fonts: DM Serif Display (font-serif), DM Sans (font-sans)
+- Fonts: DM Serif Display (font-serif), DM Sans (font-sans) — **zelf gehost**
+
+## Fonts en cookies
+De fonts staan in `public/fonts/` met de `@font-face`-regels in `src/fonts.css`
+(geïmporteerd bovenaan `index.css`). Die regels zijn letterlijk overgenomen uit de CSS
+die Google aanlevert, zodat de weergave identiek blijft. Beide families vallen onder de
+SIL Open Font License 1.1; de licentieteksten staan ernaast.
+
+**Zet dit niet terug naar de Google Fonts CDN.** Die stuurt het IP-adres van elke
+bezoeker naar Google, wat een toestemmingsvraag zou vergen. Nu spreekt de site geen
+enkele derde partij aan — gemeten op alle routes inclusief `/beheer`.
+
+**De site zet geen cookies.** `document.cookie` komt nergens voor. In `localStorage`
+staan enkel `jeanke_cart` en `jeanke_wine_cart`, in `sessionStorage` de gecachte
+openingsdagen, de registratiestatus en (op `/beheer`) `adminPw`. Dat is allemaal strikt
+noodzakelijk of functioneel, dus **een cookiebanner is niet nodig**. Wel nog te doen:
+een privacyverklaring, want informeren moet ook zonder toestemming. Zodra er analytics,
+een Meta Pixel of een ingebedde YouTube-video bijkomt, verandert dat en is
+voorafgaande toestemming wél verplicht.
+
+Bij het vervangen van een fontbestand: geef het een nieuwe naam, want `netlify.toml`
+zet er een cache van een jaar op.
 
 ## Design tokens (tailwind.config.js)
 - `cream` — achtergrond
