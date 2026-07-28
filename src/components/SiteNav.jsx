@@ -30,9 +30,11 @@ export default function SiteNav({ open = null, current = '/' }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const services = useServices()
 
-  // De shop geeft de status mee; op de dienstenpagina's zoeken we hem zelf op.
-  const fetched = useOpenStatus()
-  const status = open !== null ? open : fetched
+  // De shop geeft de status mee; alleen als die ontbreekt zoeken we hem zelf
+  // op, anders zou de homepage alles dubbel ophalen.
+  const fetched = useOpenStatus(open === null)
+  // Onbekend telt als gesloten, zodat er meteen een label staat.
+  const status = (open !== null ? open : fetched) === true
 
   const NAV_LINKS = [
     { href: '/#menu', label: 'Menù', match: '/' },
@@ -76,7 +78,7 @@ export default function SiteNav({ open = null, current = '/' }) {
             <span className="hidden sm:grid font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray">
               <span aria-hidden="true" className="col-start-1 row-start-1 invisible">Gesloten</span>
               <span className="col-start-1 row-start-1 whitespace-nowrap">
-                {status === null ? '' : status ? 'Open' : 'Gesloten'}
+                {status ? 'Open' : 'Gesloten'}
               </span>
             </span>
           </div>

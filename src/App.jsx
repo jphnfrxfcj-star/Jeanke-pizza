@@ -176,9 +176,10 @@ function Shop() {
     <div className="min-h-screen bg-cream text-ink relative overflow-x-clip">
 
       {/* ═══════ TopNav ═══════ */}
-      {/* null zolang de openingsdagen nog niet binnen zijn: dan houdt de nav
-          de plek vrij in plaats van alvast "Gesloten" te beweren */}
-      <SiteNav open={slotsLoading ? null : slots.length > 0} current="/" />
+      {/* Altijd een boolean doorgeven: dan toont de nav meteen een label en
+          hoeft ze de openingsdagen niet zelf op te halen. Tijdens het laden is
+          dat "Gesloten", wat na een paar honderd milliseconden omslaat. */}
+      <SiteNav open={slots.length > 0} current="/" />
 
       {/* ═══════ AnnouncementBar (ticker) ═══════ */}
       {!showRegistration && openingDays && openingDays.length > 0 && (

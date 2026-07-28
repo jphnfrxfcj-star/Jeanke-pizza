@@ -6,22 +6,25 @@ import config from '../data/config.json'
  * Is er nog een tijdslot vrij om te bestellen?
  *
  * Alleen bedoeld voor de dienstenpagina's, waar de shopstate niet bestaat maar
- * de nav wel dezelfde "Open"/"Gesloten"-stip moet tonen. De shop zelf berekent
- * de slots al en geeft het antwoord als prop mee aan SiteNav, zodat daar geen
- * tweede keer wordt opgehaald.
+ * de nav wel dezelfde "Open"/"Gesloten"-stip moet tonen.
  *
- * Geeft null zolang het antwoord nog niet bekend is. De nav houdt dan de plek
- * al vrij, zodat er niets verspringt wanneer de data binnenkomt.
+ * De shop berekent de slots zelf en geeft het antwoord als prop mee aan
+ * SiteNav. Daarom de `enabled`-schakelaar: zonder die vlag zou de nav op de
+ * homepage /api/opening-days en /api/settings een tweede keer ophalen.
+ *
+ * Geeft null zolang het antwoord onbekend is. De nav toont dan "Gesloten" —
+ * de veilige kant, want beter niets beloven dan een gesloten avond als open
+ * aankondigen.
  */
 
 let cache = null
 let inflight = null
 
-export function useOpenStatus() {
+export function useOpenStatus(enabled = true) {
   const [open, setOpen] = useState(() => cache)
 
   useEffect(() => {
-    if (cache !== null) return
+    if (!enabled || cache !== null) return
     if (!inflight) {
       inflight = Promise.all([
         fetch('/api/opening-days').then(r => (r.ok ? r.json() : [])).catch(() => []),
@@ -40,7 +43,7 @@ export function useOpenStatus() {
       if (alive) setOpen(result)
     })
     return () => { alive = false }
-  }, [])
+  }, [enabled])
 
   return open
 }
