@@ -88,8 +88,8 @@ export default function Ovens() {
                     </span>
                   </span>
                 ) : (
-                  <span className="font-sans text-[9px] tracking-[0.2em] uppercase text-warm-gray-light text-right shrink-0">
-                    Prijs<br />volgt
+                  <span className="font-sans text-[9px] tracking-[0.2em] uppercase text-warm-gray-light text-right shrink-0 whitespace-nowrap">
+                    Prijs volgt
                   </span>
                 )}
               </div>

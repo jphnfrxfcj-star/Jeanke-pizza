@@ -37,7 +37,9 @@ export default function Catering() {
                     {formula.guests} · {formula.duration}
                   </p>
                 </div>
-                <div className="text-right">
+                {/* Wikkelt op mobiel naar een eigen regel: dan links uitlijnen
+                    met de rest van de kaart, pas vanaf sm rechts naast de naam */}
+                <div className="text-left sm:text-right">
                   {formula.pricePerPerson ? (
                     <>
                       <p className="font-serif text-3xl text-wine tabular-nums leading-none">

@@ -60,7 +60,8 @@ export default function ServicePage({ service, badge, children }) {
 
       <header className="relative bg-cream overflow-hidden">
         <PaperTexture />
-        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-10 pt-12 pb-12 sm:pt-16 sm:pb-16 text-center">
+        {/* Weinig padding onderaan: de eerste sectie brengt zelf al ruimte mee */}
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-10 pt-10 pb-4 sm:pt-14 sm:pb-6 text-center">
           <div className="flex items-center justify-center gap-3 font-sans text-[10px] tracking-[0.32em] uppercase text-gold mb-5">
             <span className="h-px w-6 bg-gold/40" />
             <span className="font-serif italic text-wine tracking-normal text-sm leading-none">N° {service.num}</span>
@@ -100,7 +101,7 @@ export function ServiceSection({ title, caption, id, children, tone = 'cream' })
   return (
     <section id={id} className={`relative scroll-mt-20 ${bg} overflow-hidden`}>
       {tone === 'parchment' && <PaperTexture />}
-      <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-10 py-12 sm:py-16">
+      <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-10 py-10 sm:py-14">
         <div className="flex flex-col items-center text-center gap-3">
           <div className="flex items-center gap-3 justify-center font-sans text-[10px] tracking-[0.32em] uppercase text-gold">
             <span className="h-px w-6 bg-gold/40" />

@@ -29,7 +29,7 @@ export default function PizzaBox() {
           {data.packages.map(pkg => (
             <div key={pkg.id} className="relative bg-cream p-6 flex flex-col text-center">
               {pkg.popular && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-wine text-cream font-sans text-[9px] tracking-[0.24em] uppercase px-3 py-1">
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap bg-wine text-cream font-sans text-[9px] tracking-[0.24em] uppercase px-3 py-1">
                   Meest gekozen
                 </span>
               )}
