@@ -163,7 +163,11 @@ export default function SiteNav({ open = null, current = '/' }) {
           aria-modal="true"
           aria-label="Navigatie"
           tabIndex={-1}
-          className="lg:hidden fixed inset-x-0 top-14 bottom-0 z-40 bg-cream overflow-y-auto overscroll-contain focus:outline-none animate-[fadeIn_150ms_ease-out] motion-reduce:animate-none"
+          /* outline-none onvoorwaardelijk, niet enkel op :focus — de dialoog krijgt
+             bij het openen programmatisch focus en Safari tekent daar anders zijn
+             eigen blauwe ring omheen. Geen zichtbaarheidsverlies: dat de overlay
+             verschijnt ís de aanwijzing, hier valt niets te bedienen. */
+          className="lg:hidden fixed inset-x-0 top-14 bottom-0 z-40 bg-cream overflow-y-auto overscroll-contain outline-none animate-[fadeIn_150ms_ease-out] motion-reduce:animate-none"
         >
           <PaperTexture />
           <div className="relative flex min-h-full flex-col px-6 pt-8 pb-10">
