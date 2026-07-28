@@ -15,36 +15,9 @@ import Catering from './components/Catering'
 import Workshops from './components/Workshops'
 import Ovens from './components/Ovens'
 import { useServices } from './lib/useServices'
+import { fmtTime, generateSlotsForDates } from './lib/slots'
 import config from './data/config.json'
 import staticPizzas from './data/pizzas.json'
-
-function fmtTime(h, m) {
-  return `${h}:${String(m ?? 0).padStart(2, '0')}`
-}
-
-function generateSlotsForDates(openingDates, config, settings) {
-  const slots = []
-  const now = new Date()
-  const openingHour   = settings?.openingHour   ?? config.openingHour
-  const openingMinute = settings?.openingMinute  ?? 0
-  const closingHour   = settings?.closingHour    ?? config.closingHour
-  const closingMinute = settings?.closingMinute  ?? 0
-  for (const { date } of openingDates) {
-    const d = new Date(date + 'T00:00:00')
-    if (new Date(date + 'T23:59:59') < now) continue
-    const dateStr = date
-    const start = new Date(d); start.setHours(openingHour, openingMinute, 0, 0)
-    const end   = new Date(d); end.setHours(closingHour, closingMinute, 0, 0)
-    const cursor = new Date(start)
-    while (cursor < end) {
-      if (cursor > new Date(now.getTime() + 15 * 60 * 1000)) {
-        slots.push({ date: dateStr, time: cursor.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }) })
-      }
-      cursor.setMinutes(cursor.getMinutes() + (settings?.slotIntervalMinutes ?? config.slotIntervalMinutes))
-    }
-  }
-  return slots
-}
 
 export default function App() {
   // Trailing slash weghalen zodat /catering en /catering/ dezelfde pagina tonen
@@ -203,7 +176,9 @@ function Shop() {
     <div className="min-h-screen bg-cream text-ink relative overflow-x-clip">
 
       {/* ═══════ TopNav ═══════ */}
-      <SiteNav open={slots.length > 0} current="/" />
+      {/* null zolang de openingsdagen nog niet binnen zijn: dan houdt de nav
+          de plek vrij in plaats van alvast "Gesloten" te beweren */}
+      <SiteNav open={slotsLoading ? null : slots.length > 0} current="/" />
 
       {/* ═══════ AnnouncementBar (ticker) ═══════ */}
       {!showRegistration && openingDays && openingDays.length > 0 && (

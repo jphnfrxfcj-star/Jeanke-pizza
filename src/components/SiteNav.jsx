@@ -1,15 +1,21 @@
 import { useState } from 'react'
 import { Menu, X } from 'lucide-react'
 import { useServices } from '../lib/useServices'
+import { useOpenStatus } from '../lib/useOpenStatus'
 
 /**
  * Gedeelde topnavigatie voor de shop en de dienstenpagina's.
  *
  * Diensten die in het beheer op "uit" staan verdwijnen hier vanzelf.
  *
+ * De "Open"/"Gesloten"-stip staat er altijd, op elke pagina en ook zolang het
+ * antwoord nog onbekend is. Eerder verdween de stip op de dienstenpagina's en
+ * wisselde het label tussen twee breedtes, waardoor de nav verschoof bij het
+ * navigeren én op het moment dat de openingsdagen binnenkwamen.
+ *
  * Props:
- *   open     — bool | null. Toont de status-stip ("Open" / "Gesloten").
- *              null verbergt de stip (op pagina's waar bestellen niet speelt).
+ *   open     — bool | null. Geef mee als de pagina de slots zelf al berekent
+ *              (de shop doet dat); anders zoekt de nav het zelf op.
  *   current  — pathname van de actieve pagina, bv. "/catering"
  */
 
@@ -23,6 +29,10 @@ const SERVICE_NAV = [
 export default function SiteNav({ open = null, current = '/' }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const services = useServices()
+
+  // De shop geeft de status mee; op de dienstenpagina's zoeken we hem zelf op.
+  const fetched = useOpenStatus()
+  const status = open !== null ? open : fetched
 
   const NAV_LINKS = [
     { href: '/#menu', label: 'Menù', match: '/' },
@@ -55,17 +65,21 @@ export default function SiteNav({ open = null, current = '/' }) {
             ))}
           </div>
 
-          {open !== null && (
-            <div className="flex items-center gap-2">
-              <span className={`relative flex h-2 w-2 ${open ? '' : 'opacity-40'}`}>
-                {open && <span className="absolute inline-flex h-full w-full rounded-full bg-olive opacity-60 animate-ping motion-reduce:animate-none" />}
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${open ? 'bg-olive' : 'bg-warm-gray-light'}`} />
+          <div className="flex items-center gap-2 shrink-0">
+            <span className={`relative flex h-2 w-2 ${status ? '' : 'opacity-40'}`}>
+              {status && <span className="absolute inline-flex h-full w-full rounded-full bg-olive opacity-60 animate-ping motion-reduce:animate-none" />}
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${status ? 'bg-olive' : 'bg-warm-gray-light'}`} />
+            </span>
+            {/* Het langste label reserveert de breedte, zodat "Open" en
+                "Gesloten" elkaar kunnen aflossen zonder de nav te verschuiven.
+                Een vaste rem-waarde zou breken bij een andere letter. */}
+            <span className="hidden sm:grid font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray">
+              <span aria-hidden="true" className="col-start-1 row-start-1 invisible">Gesloten</span>
+              <span className="col-start-1 row-start-1 whitespace-nowrap">
+                {status === null ? '' : status ? 'Open' : 'Gesloten'}
               </span>
-              <span className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray hidden sm:inline">
-                {open ? 'Open' : 'Gesloten'}
-              </span>
-            </div>
-          )}
+            </span>
+          </div>
 
           <button
             onClick={() => setMenuOpen(v => !v)}
