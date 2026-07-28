@@ -4,6 +4,16 @@ const GMAIL_USER     = process.env.GMAIL_USER
 const GMAIL_PASSWORD = process.env.GMAIL_APP_PASSWORD
 const OWNER_EMAIL    = process.env.OWNER_EMAIL || GMAIL_USER
 const SITE_URL       = process.env.URL || 'https://jeanke-pizza.netlify.app'
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
+
+// Types die alleen een andere function mag versturen, niet de browser.
+// Zonder deze grens is dit endpoint een open mailrelay: wie dan ook kan een
+// bericht naar een willekeurig adres laten sturen vanaf ons Gmail-account.
+const INTERNAL_ONLY = new Set(['inquiry'])
+
+function isInternalCall(req) {
+  return !!ADMIN_PASSWORD && req.headers.get('x-internal-token') === ADMIN_PASSWORD
+}
 
 function escapeHtml(str) {
   return String(str ?? '')
@@ -296,6 +306,11 @@ export default async (req) => {
   try {
     const body = await req.json()
     const { name, email, order, date, timeslot, total, cancelToken, type } = body
+
+    if (INTERNAL_ONLY.has(type) && !isInternalCall(req)) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const transport = createTransport()
 
     if (type === 'confirmation') {

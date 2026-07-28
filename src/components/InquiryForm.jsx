@@ -5,7 +5,8 @@ const LABEL = "block font-sans text-[11px] tracking-[0.24em] uppercase text-warm
 
 /**
  * Aanvraagformulier voor box, catering, workshops en ovens.
- * Bewaart de aanvraag via /api/inquiries en stuurt bevestigingsmails via /api/send-email.
+ * Bewaart de aanvraag via /api/inquiries. Die function verstuurt de
+ * bevestigingsmails zelf, server-side — de browser raakt /api/send-email niet aan.
  *
  * Props:
  *   type         — 'box' | 'catering' | 'workshop' | 'oven'
@@ -40,7 +41,7 @@ export default function InquiryForm({
 
   function set(key, value) {
     setForm(f => ({ ...f, [key]: value }))
-    if (status === 'error') setStatus('')
+    if (status === 'error' || status === 'busy') setStatus('')
   }
 
   async function handleSubmit(e) {
@@ -53,6 +54,9 @@ export default function InquiryForm({
       email: form.email,
       phone: form.phone,
       option: form.option,
+      // Leesbare naam meesturen als hint; de server zoekt hem zelf op en
+      // gebruikt deze alleen als dat niet lukt.
+      optionLabel: options.find(o => o.value === form.option)?.label || '',
       date: fields.date ? form.date : '',
       guests: fields.guests ? form.guests : '',
       location: fields.location ? form.location : '',
@@ -61,31 +65,15 @@ export default function InquiryForm({
     }
 
     try {
+      // De bevestigingsmails verstuurt /api/inquiries zelf, server-side.
       const res = await fetch('/api/inquiries', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
+      if (res.status === 429) { setStatus('busy'); return }
       if (!res.ok) { setStatus('error'); return }
       setStatus('success')
-
-      // Mails zijn bijzaak — de aanvraag is al bewaard.
-      fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'inquiry',
-          inquiryType: type,
-          name: payload.name,
-          email: payload.email,
-          phone: payload.phone,
-          option: options.find(o => o.value === payload.option)?.label || payload.option,
-          date: payload.date,
-          guests: payload.guests,
-          location: payload.location,
-          message: payload.message,
-        }),
-      }).catch(() => {})
     } catch { setStatus('error') }
   }
 
@@ -189,6 +177,9 @@ export default function InquiryForm({
 
         {status === 'error' && (
           <p className="font-sans text-xs text-wine italic">Er ging iets mis bij het versturen. Probeer opnieuw of mail ons rechtstreeks.</p>
+        )}
+        {status === 'busy' && (
+          <p className="font-sans text-xs text-wine italic">Er komen nu veel aanvragen binnen. Probeer het over een paar minuten nog eens.</p>
         )}
 
         <button type="submit" disabled={status === 'loading'} className="btn-primary w-full">

@@ -2323,11 +2323,20 @@ function DienstenTab({ password }) {
   async function saveItem(e) {
     e.preventDefault()
     for (const f of fields) {
-      if (!f.required) continue
       const v = form[f.key]
-      if (v === '' || v === null || v === undefined) {
+      const empty = v === '' || v === null || v === undefined
+      if (f.required && empty) {
         toast(`${f.label} is verplicht`, 'error')
         return
+      }
+      // Zonder deze controle kon een 0 of een niet-numerieke waarde als
+      // "€Infinity" of "€NaN" op de klantpagina belanden.
+      if (f.type === 'number' && !empty) {
+        const n = Number(v)
+        if (!Number.isFinite(n) || (f.min !== undefined && n < f.min)) {
+          toast(`${f.label}: vul een getal in${f.min !== undefined ? ` van minstens ${f.min}` : ''}`, 'error')
+          return
+        }
       }
     }
     const list = editing === 'new' ? [...items, form] : items.map(i => i.id === editing ? form : i)

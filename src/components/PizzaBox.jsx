@@ -5,6 +5,14 @@ import InquiryForm from './InquiryForm'
 import { useServices } from '../lib/useServices'
 import config from '../data/config.json'
 
+/** Stukprijs, of null wanneer die niet zinnig te berekenen is. */
+function unitPrice(pkg) {
+  const price = Number(pkg.price)
+  const count = Number(pkg.pizzas)
+  if (!Number.isFinite(price) || !Number.isFinite(count) || count <= 0) return null
+  return (price / count).toFixed(2)
+}
+
 export default function PizzaBox() {
   const data = useServices().box
   const [selected, setSelected] = useState('')
@@ -44,7 +52,7 @@ export default function PizzaBox() {
 
               {concept ? (
                 <p className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray-light mt-5">
-                  Prijs volgt · {pkg.pizzas} pizza's
+                  Prijs volgt{pkg.pizzas ? ` · ${pkg.pizzas} pizza's` : ''}
                 </p>
               ) : (
                 <>
@@ -52,7 +60,10 @@ export default function PizzaBox() {
                     {config.currency}{pkg.price}
                   </p>
                   <p className="font-sans text-[11px] text-warm-gray-light mt-1 tabular-nums">
-                    {pkg.pizzas} pizza's · {config.currency}{(pkg.price / pkg.pizzas).toFixed(2)} per stuk
+                    {pkg.pizzas ? `${pkg.pizzas} pizza's` : ''}
+                    {/* Stukprijs alleen tonen als hij te berekenen valt — anders
+                        kwam er "€Infinity" of "€NaN" op de klantpagina */}
+                    {unitPrice(pkg) && ` · ${config.currency}${unitPrice(pkg)} per stuk`}
                   </p>
                 </>
               )}

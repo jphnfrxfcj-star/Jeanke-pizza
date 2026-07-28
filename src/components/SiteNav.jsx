@@ -27,7 +27,7 @@ export default function SiteNav({ open = null, current = '/' }) {
   const NAV_LINKS = [
     { href: '/#menu', label: 'Menù', match: '/' },
     ...SERVICE_NAV
-      .filter(({ key }) => services[key]?.mode !== 'off')
+      .filter(({ key }) => services[key]?.route && services[key].mode !== 'off')
       .map(({ key, label }) => ({ href: services[key].route, label, match: services[key].route })),
   ]
 

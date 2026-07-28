@@ -127,10 +127,14 @@ om ook boxen, formules of workshops een foto te geven.
 er geen partnership is, is er geen gebruiksrecht op hun beeldmateriaal.
 
 ### Aanvragen
-Gaan naar `/api/inquiries` (Netlify Blobs, store `inquiries`) en daarna vrijblijvend
-naar `/api/send-email` met `type: 'inquiry'`. Als de mail faalt is de aanvraag toch
-bewaard. Beheer: `/beheer` → tab **Aanvragen** (filteren, status nieuw/opgevolgd/
-afgerond, verwijderen).
+Gaan naar `/api/inquiries` (Netlify Blobs, store `inquiries`). **Die function stuurt de
+mails zelf**, met een interne call naar `/api/send-email` en `x-internal-token`. De
+browser raakt `/api/send-email` niet aan — anders zou dat endpoint een open mailrelay
+zijn voor het type `inquiry`. Faalt de mail, dan is de aanvraag toch bewaard.
+
+De formulenaam in de mail wordt server-side opgezocht in de `services`-blob; het label
+dat de browser meestuurt is alleen een terugval. Beheer: `/beheer` → tab **Aanvragen**
+(filteren, status nieuw/opgevolgd/afgerond, verwijderen).
 
 ### Nog niet beheerbaar (staat in services.json)
 Intro, tagline, teaser, praktische voorwaarden, "in de box"-lijst, de stappenblokken
@@ -152,9 +156,27 @@ Diensten: elke dienst heeft `mode`, `route`, `num`, `eyebrow`, `title`, `tagline
 - Modal a11y: `role="dialog"`, `aria-modal`, focus-trap, Escape-key, scroll-lock
 - `/api/inquiries`: lengte- en typevalidatie op elk veld, honeypot tegen bots,
   dubbele inzending binnen 2 minuten wordt genegeerd, GET/PUT/DELETE achter `x-admin-password`
+- `/api/inquiries`: floodgrens van 10 aanvragen per 5 minuten (429), interne
+  foutteksten worden niet naar de client teruggegeven
 - `/api/services`: PUT achter `x-admin-password`, bewaart alleen de vier bekende
-  dienstsleutels en weigert een onbekende `mode` (die zou een dienst ongemerkt
-  onzichtbaar maken)
+  dienstsleutels, weigert een onbekende `mode` (die zou een dienst ongemerkt
+  onzichtbaar maken) en een payload boven 256 kB
+- `/api/send-email`: `type: 'inquiry'` staat in `INTERNAL_ONLY` en vereist
+  `x-internal-token` = `ADMIN_PASSWORD`
+
+## Openstaand na de security-review
+- **`/api/send-email` is nog open voor `confirmation`, `registration` en `threshold`.**
+  Die worden vanuit de browser aangeroepen (CheckoutModal, App.handleRegister), dus wie
+  dan ook kan mail laten versturen vanaf het Gmail-account. Dezelfde oplossing als bij
+  de aanvragen: `orders.mjs` en `register.mjs` laten mailen en die types ook in
+  `INTERNAL_ONLY` zetten. Raakt de afrekenflow, dus niet ongetest doorvoeren.
+- **Read-modify-write op één blobsleutel** (orders, register, newsletter, inquiries):
+  twee gelijktijdige inzendingen kunnen elkaar overschrijven. Netlify Blobs heeft geen
+  compare-and-swap; een sleutel per record zou dit oplossen.
+- **Geen privacyverklaring en geen bewaartermijn** voor de persoonsgegevens in
+  `inquiries` (naam, e-mail, telefoon, locatie, bericht).
+- Adminwachtwoord staat in `sessionStorage`. Aanvaardbaar zolang er geen XSS is —
+  er staat nergens `dangerouslySetInnerHTML` of `innerHTML` in de code.
 
 ## SEO — bekende beperking
 De site is client-rendered. `ServicePage` zet titel, meta-description en canonical met JS,

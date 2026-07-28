@@ -41,12 +41,19 @@ function setCanonical(path) {
 export default function ServicePage({ service, children }) {
   const isOff = service.mode === 'off'
   const badge = service.mode === 'concept' ? service.conceptBadge : null
+  // Eén keer bij het openen naar boven. Dit stond eerder in dezelfde effect
+  // als de meta-tags, waardoor de pagina terugsprong naar boven op het moment
+  // dat /api/services binnenkwam — precies wanneer de bezoeker al aan het
+  // scrollen was.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [])
+
   useEffect(() => {
     const previousTitle = document.title
     document.title = service.metaTitle
     setMeta('description', service.metaDescription)
     setCanonical(service.route)
-    window.scrollTo({ top: 0, behavior: 'instant' })
     return () => { document.title = previousTitle }
   }, [service])
 
