@@ -2,7 +2,7 @@ import { getStore } from "@netlify/blobs"
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
 
-const DEFAULTS = { openingHour: 17, openingMinute: 0, closingHour: 22, closingMinute: 0, pizzasPerSlot: 3, slotIntervalMinutes: 15 }
+const DEFAULTS = { openingHour: 17, openingMinute: 0, closingHour: 22, closingMinute: 0, pizzasPerSlot: 3, slotIntervalMinutes: 15, ovensMode: 'concept' }
 
 export default async (req) => {
   try {

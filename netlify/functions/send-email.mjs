@@ -216,6 +216,76 @@ function thresholdHtml({ count, threshold }) {
   `)
 }
 
+// ── Aanvraag catering / workshop / box / oven ──────────────────────────────
+const INQUIRY_LABELS = {
+  box:      { label: 'Pizza box',  title: 'Aanvraag Pizza box' },
+  catering: { label: 'Catering',   title: 'Cateringaanvraag' },
+  workshop: { label: 'Workshop',   title: 'Workshopaanvraag' },
+  oven:     { label: 'Ovens',      title: 'Interesse in een oven' },
+}
+
+const INQUIRY_REPLY = {
+  box:      'We bevestigen uw box en een ophaalmoment zodra we uw aanvraag bekeken hebben.',
+  catering: 'We nemen uw datum door en sturen u een voorstel op maat, meestal binnen twee werkdagen.',
+  workshop: 'We kijken na welke data vrij zijn en komen bij u terug met een voorstel.',
+  oven:     'Ons ovenaanbod is nog in voorbereiding. U hoort van ons zodra we kunnen leveren — zonder verplichting.',
+}
+
+function inquiryRows({ option, date, guests, location, phone }) {
+  const rows = []
+  if (option)   rows.push(['Formule', escapeHtml(option)])
+  if (date)     rows.push(['Datum', escapeHtml(new Date(date + 'T12:00:00').toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))])
+  if (guests)   rows.push(['Personen', escapeHtml(String(guests))])
+  if (location) rows.push(['Locatie', escapeHtml(location)])
+  if (phone)    rows.push(['Telefoon', escapeHtml(phone)])
+  if (!rows.length) return ''
+  return `
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px;">
+      ${rows.map(([l, v], i) => dataRow(l, v, i === rows.length - 1)).join('')}
+    </table>`
+}
+
+function inquiryCustomerHtml(data) {
+  const meta = INQUIRY_LABELS[data.type] || { label: 'Aanvraag', title: 'Aanvraag ontvangen' }
+  return emailWrapper(`
+    ${cardHeader(meta.label, 'Aanvraag ontvangen')}
+
+    <tr><td style="padding:24px 32px 28px;">
+      <p style="margin:0 0 12px;font-family:Georgia,serif;font-size:15px;color:${C.ink};">Ciao <strong>${escapeHtml(data.name)}</strong>,</p>
+      <p style="margin:0 0 18px;font-family:Georgia,serif;font-size:13px;color:${C.warmGray};line-height:1.7;">
+        Bedankt voor uw aanvraag. Hieronder ziet u wat we noteerden.
+      </p>
+      ${inquiryRows(data)}
+      ${data.message ? `
+      <p style="margin:0 0 18px;padding:12px 14px;background:${C.cream};font-family:Georgia,serif;font-size:13px;font-style:italic;color:${C.warmGray};line-height:1.7;">
+        &ldquo;${escapeHtml(data.message)}&rdquo;
+      </p>` : ''}
+      <p style="margin:0;font-family:Georgia,serif;font-size:13px;color:${C.warmGray};line-height:1.7;">
+        ${INQUIRY_REPLY[data.type] || 'We nemen zo snel mogelijk contact met u op.'}
+      </p>
+    </td></tr>
+  `)
+}
+
+function inquiryOwnerHtml(data) {
+  const meta = INQUIRY_LABELS[data.type] || { label: 'Aanvraag', title: 'Nieuwe aanvraag' }
+  return emailWrapper(`
+    ${cardHeader('Nieuwe aanvraag', meta.title)}
+
+    <tr><td style="padding:24px 32px 28px;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px;">
+        ${dataRow('Naam', escapeHtml(data.name))}
+        ${dataRow('E-mail', `<a href="mailto:${escapeHtml(data.email)}" style="color:${C.wine};">${escapeHtml(data.email)}</a>`, true)}
+      </table>
+      ${inquiryRows(data)}
+      ${data.message ? `
+      <p style="margin:0;padding:12px 14px;background:${C.cream};font-family:Georgia,serif;font-size:13px;color:${C.ink};line-height:1.7;">
+        ${escapeHtml(data.message)}
+      </p>` : ''}
+    </td></tr>
+  `)
+}
+
 export default async (req) => {
   if (req.method !== "POST") return Response.json({ error: "Method not allowed" }, { status: 405 })
 
@@ -250,6 +320,34 @@ export default async (req) => {
         to: email,
         subject: `Inschrijving ontvangen — Jeanke's Pizza`,
         html: registrationHtml({ name, pizzas, registrationDate }),
+      })
+    }
+
+    if (type === 'inquiry') {
+      const data = {
+        type:     body.inquiryType,
+        name,
+        email,
+        phone:    body.phone,
+        option:   body.option,
+        date:     body.date,
+        guests:   body.guests,
+        location: body.location,
+        message:  body.message,
+      }
+      const meta = INQUIRY_LABELS[data.type] || { label: 'Aanvraag', title: 'Nieuwe aanvraag' }
+      await transport.sendMail({
+        from: `"Jeanke's Pizza" <${GMAIL_USER}>`,
+        to: email,
+        subject: `Aanvraag ontvangen — ${meta.label}`,
+        html: inquiryCustomerHtml(data),
+      })
+      await transport.sendMail({
+        from: `"Jeanke's Pizza" <${GMAIL_USER}>`,
+        replyTo: email,
+        to: OWNER_EMAIL,
+        subject: `${meta.title}: ${name}`,
+        html: inquiryOwnerHtml(data),
       })
     }
 

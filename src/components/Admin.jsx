@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Clock, ClipboardList, ShoppingBasket, ChefHat, TrendingUp, Settings, Menu, Wine, LayoutDashboard, LogOut, Search, X, Mail } from 'lucide-react'
+import { Clock, ClipboardList, ShoppingBasket, ChefHat, TrendingUp, Settings, Menu, Wine, LayoutDashboard, LogOut, Search, X, Mail, Inbox, Trash2 } from 'lucide-react'
 import config from '../data/config.json'
 import staticPizzas from '../data/pizzas.json'
 import PaperTexture from './PaperTexture'
@@ -109,6 +109,7 @@ export default function Admin() {
     { key: 'dag',          label: 'Dag',           Icon: Clock,           group: 'daily' },
     { key: 'orders',       label: 'Bestellingen',  Icon: ClipboardList,   group: 'daily' },
     { key: 'boodschappen', label: 'Boodschappen',  Icon: ShoppingBasket,  group: 'daily' },
+    { key: 'aanvragen',    label: 'Aanvragen',     Icon: Inbox,           group: 'daily' },
     { key: 'pizzas',       label: "Pizza's",       Icon: ChefHat,         group: 'config' },
     { key: 'wijnen',       label: 'Wijnen',        Icon: Wine,            group: 'config' },
     { key: 'winst',        label: 'Winst',         Icon: TrendingUp,      group: 'config' },
@@ -240,6 +241,7 @@ export default function Admin() {
           {tab === 'dag'          && <DagTab          password={pw} />}
           {tab === 'orders'       && <OrdersTab       password={pw} />}
           {tab === 'boodschappen' && <BoodschappenTab password={pw} />}
+          {tab === 'aanvragen'    && <AanvragenTab    password={pw} />}
           {tab === 'pizzas'       && <PizzasTab       password={pw} />}
           {tab === 'wijnen'       && <WijnenTab       password={pw} />}
           {tab === 'opening'      && <OpeningTab      password={pw} />}
@@ -1479,7 +1481,7 @@ function OpeningTab({ password }) {
   const [newLabel, setNewLabel] = useState('')
   const [regDate, setRegDate] = useState('')
   const [savingCfg, setSavingCfg] = useState(false)
-  const [siteSettings, setSiteSettings] = useState({ openingHour: 17, openingMinute: 0, closingHour: 22, closingMinute: 0, pizzasPerSlot: 3, slotIntervalMinutes: 15, wijnEnabled: false })
+  const [siteSettings, setSiteSettings] = useState({ openingHour: 17, openingMinute: 0, closingHour: 22, closingMinute: 0, pizzasPerSlot: 3, slotIntervalMinutes: 15, wijnEnabled: false, ovensMode: 'concept' })
   const [savingSettings, setSavingSettings] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -1655,6 +1657,21 @@ function OpeningTab({ password }) {
             <button type="button" onClick={() => setSiteSettings(s => ({ ...s, wijnEnabled: !s.wijnEnabled }))}
               className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${siteSettings.wijnEnabled ? 'bg-wine' : 'bg-parchment'}`}>
               <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${siteSettings.wijnEnabled ? 'left-7' : 'left-1'}`} />
+            </button>
+          </label>
+          <label className="flex items-center justify-between gap-4 pt-2 border-t border-dotted border-parchment">
+            <div>
+              <p className="font-sans text-sm text-ink">Ovenaanbod live</p>
+              <p className="font-sans text-xs text-warm-gray mt-0.5">
+                {siteSettings.ovensMode === 'live'
+                  ? 'Richtprijzen zichtbaar, bezoekers vragen een offerte aan'
+                  : 'In voorbereiding — geen prijzen, bezoekers laten enkel interesse na'}
+              </p>
+            </div>
+            <button type="button"
+              onClick={() => setSiteSettings(s => ({ ...s, ovensMode: s.ovensMode === 'live' ? 'concept' : 'live' }))}
+              className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${siteSettings.ovensMode === 'live' ? 'bg-wine' : 'bg-parchment'}`}>
+              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${siteSettings.ovensMode === 'live' ? 'left-7' : 'left-1'}`} />
             </button>
           </label>
           <button type="submit" disabled={savingSettings} className="btn-primary w-full">
@@ -2160,6 +2177,185 @@ function WinstTab({ password }) {
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
+
+// ─── Aanvragen (box, catering, workshops, ovens) ───────────────────────────
+
+const INQUIRY_TYPES = {
+  box:      { label: 'Pizza box', short: 'Box' },
+  catering: { label: 'Catering',  short: 'Catering' },
+  workshop: { label: 'Workshop',  short: 'Workshop' },
+  oven:     { label: 'Oven',      short: 'Oven' },
+}
+
+const INQUIRY_STATUSES = [
+  { key: 'nieuw',     label: 'Nieuw',     cls: 'bg-wine text-cream border-wine' },
+  { key: 'opgevolgd', label: 'Opgevolgd', cls: 'bg-gold/20 text-ink border-gold/40' },
+  { key: 'afgerond',  label: 'Afgerond',  cls: 'bg-parchment text-warm-gray border-parchment' },
+]
+
+function AanvragenTab({ password }) {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState('alle')
+  const [query, setQuery] = useState('')
+
+  function load() {
+    fetch('/api/inquiries', { headers: { 'x-admin-password': password } })
+      .then(r => r.json())
+      .then(d => setItems(Array.isArray(d) ? d : []))
+      .catch(() => setItems([]))
+      .finally(() => setLoading(false))
+  }
+  useEffect(() => { load() }, [])
+
+  async function setStatus(id, status) {
+    setItems(list => list.map(i => i.id === id ? { ...i, status } : i))
+    try {
+      const r = await fetch('/api/inquiries', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+        body: JSON.stringify({ id, status }),
+      })
+      if (!r.ok) { toast('Bijwerken mislukt', 'error'); load() }
+    } catch { toast('Verbindingsfout', 'error'); load() }
+  }
+
+  async function remove(id, name) {
+    if (!confirm(`Aanvraag van ${name} verwijderen?`)) return
+    try {
+      const r = await fetch('/api/inquiries', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+        body: JSON.stringify({ id }),
+      })
+      if (r.ok) { toast('Aanvraag verwijderd'); load() }
+      else toast('Verwijderen mislukt', 'error')
+    } catch { toast('Verbindingsfout', 'error') }
+  }
+
+  const q = query.trim().toLowerCase()
+  const visible = items.filter(i => {
+    if (filter !== 'alle' && i.type !== filter) return false
+    if (!q) return true
+    return [i.name, i.email, i.location, i.message, i.option].some(v => v && v.toLowerCase().includes(q))
+  })
+
+  const newCount = items.filter(i => i.status === 'nieuw').length
+
+  if (loading) return <LoadingCards />
+
+  return (
+    <div className="space-y-5">
+
+      {/* Overzicht per soort */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {Object.entries(INQUIRY_TYPES).map(([key, meta]) => {
+          const all = items.filter(i => i.type === key)
+          const nieuw = all.filter(i => i.status === 'nieuw').length
+          return (
+            <div key={key} className="bg-white border border-parchment px-4 py-3">
+              <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray">{meta.label}</p>
+              <p className="font-serif text-2xl text-ink tabular-nums leading-none mt-2">{all.length}</p>
+              <p className="font-sans text-[11px] text-warm-gray mt-1">
+                {nieuw > 0 ? <span className="text-wine">{nieuw} nieuw</span> : 'niets nieuw'}
+              </p>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white border border-parchment px-4 py-3 flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {['alle', ...Object.keys(INQUIRY_TYPES)].map(key => (
+            <button key={key} onClick={() => setFilter(key)}
+              className={`font-sans text-[10px] tracking-[0.2em] uppercase px-2.5 py-1.5 border transition-colors ${
+                filter === key ? 'bg-ink text-cream border-ink' : 'border-parchment text-ink hover:border-ink'
+              }`}>
+              {key === 'alle' ? 'Alle' : INQUIRY_TYPES[key].short}
+            </button>
+          ))}
+        </div>
+        <div className="relative flex-1 min-w-[180px]">
+          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-warm-gray-light" />
+          <input value={query} onChange={e => setQuery(e.target.value)}
+            placeholder="Zoek op naam, e-mail of tekst"
+            className="w-full border border-parchment bg-cream pl-9 pr-3 py-2 text-sm text-ink focus:outline-none focus:border-olive transition-colors" />
+        </div>
+        {newCount > 0 && (
+          <span className="font-sans text-[11px] tracking-[0.2em] uppercase text-wine tabular-nums">{newCount} nieuw</span>
+        )}
+      </div>
+
+      {visible.length === 0 ? (
+        <Empty text={items.length === 0 ? 'Nog geen aanvragen binnengekomen.' : 'Geen aanvragen voor deze filter.'} />
+      ) : (
+        <div className="space-y-3">
+          {visible.map(item => {
+            const meta = INQUIRY_TYPES[item.type] || { label: item.type }
+            return (
+              <div key={item.id} className={`bg-white border ${item.status === 'nieuw' ? 'border-wine/40' : 'border-parchment'}`}>
+                <div className="px-5 py-3 border-b border-dashed border-parchment flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold shrink-0">{meta.label}</span>
+                    <span className="h-px w-4 bg-gold/40 shrink-0" />
+                    <span className="font-serif text-lg text-ink truncate">{item.name}</span>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="font-sans text-[11px] text-warm-gray-light tabular-nums">
+                      {new Date(item.createdAt).toLocaleDateString('nl-BE', { day: 'numeric', month: 'short' })}
+                    </span>
+                    <button onClick={() => remove(item.id, item.name)} aria-label="Aanvraag verwijderen"
+                      className="text-warm-gray-light hover:text-wine transition-colors">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="px-5 py-4 space-y-3">
+                  <div className="flex flex-wrap gap-x-6 gap-y-1.5 font-sans text-xs">
+                    <a href={`mailto:${item.email}`} className="text-wine hover:underline">{item.email}</a>
+                    {item.phone && <a href={`tel:${item.phone}`} className="text-ink hover:text-wine transition-colors">{item.phone}</a>}
+                  </div>
+
+                  <dl className="flex flex-wrap gap-x-6 gap-y-1.5 font-sans text-xs text-warm-gray">
+                    {item.option && <div><dt className="inline uppercase tracking-[0.2em] text-[10px]">Keuze </dt><dd className="inline text-ink">{item.option}</dd></div>}
+                    {item.date && (
+                      <div>
+                        <dt className="inline uppercase tracking-[0.2em] text-[10px]">Datum </dt>
+                        <dd className="inline text-ink">{new Date(item.date + 'T12:00:00').toLocaleDateString('nl-BE', { weekday: 'short', day: 'numeric', month: 'long' })}</dd>
+                      </div>
+                    )}
+                    {item.guests && <div><dt className="inline uppercase tracking-[0.2em] text-[10px]">Personen </dt><dd className="inline text-ink tabular-nums">{item.guests}</dd></div>}
+                    {item.location && <div><dt className="inline uppercase tracking-[0.2em] text-[10px]">Locatie </dt><dd className="inline text-ink">{item.location}</dd></div>}
+                  </dl>
+
+                  {item.message && (
+                    <p className="font-serif italic text-sm text-warm-gray leading-relaxed bg-cream px-4 py-3 whitespace-pre-wrap break-words">
+                      {item.message}
+                    </p>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    {INQUIRY_STATUSES.map(s => (
+                      <button key={s.key} onClick={() => setStatus(item.id, s.key)}
+                        aria-pressed={item.status === s.key}
+                        className={`font-sans text-[10px] tracking-[0.2em] uppercase px-2.5 py-1.5 border transition-colors ${
+                          item.status === s.key ? s.cls : 'border-parchment text-warm-gray hover:border-ink hover:text-ink'
+                        }`}>
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function LoadingCards() {
   return <div className="space-y-3">{[1,2,3].map(i=><div key={i} className="bg-white border border-parchment h-20 animate-pulse motion-reduce:animate-none"/>)}</div>

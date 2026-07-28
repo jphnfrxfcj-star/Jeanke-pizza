@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { Trash2, Wine, Clock } from 'lucide-react'
+import { Trash2, Wine, Clock, Package, Utensils, GraduationCap, Flame } from 'lucide-react'
 import PizzaCard from './components/PizzaCard'
 import Cart from './components/Cart'
 import CheckoutModal from './components/CheckoutModal'
@@ -8,8 +8,15 @@ import Cancel from './components/Cancel'
 import Unsubscribe from './components/Unsubscribe'
 import PaperTexture from './components/PaperTexture'
 import SectionLabel from './components/SectionLabel'
+import SiteNav from './components/SiteNav'
+import SiteFooter from './components/SiteFooter'
+import PizzaBox from './components/PizzaBox'
+import Catering from './components/Catering'
+import Workshops from './components/Workshops'
+import Ovens from './components/Ovens'
 import config from './data/config.json'
 import staticPizzas from './data/pizzas.json'
+import services from './data/services.json'
 
 function fmtTime(h, m) {
   return `${h}:${String(m ?? 0).padStart(2, '0')}`
@@ -40,10 +47,15 @@ function generateSlotsForDates(openingDates, config, settings) {
 }
 
 export default function App() {
-  const path = window.location.pathname
+  // Trailing slash weghalen zodat /catering en /catering/ dezelfde pagina tonen
+  const path = window.location.pathname.replace(/\/+$/, '') || '/'
   if (path === '/beheer') return <Admin />
   if (path === '/annuleer') return <Cancel />
   if (path === '/uitschrijven') return <Unsubscribe />
+  if (path === '/box') return <PizzaBox />
+  if (path === '/catering') return <Catering />
+  if (path === '/workshops') return <Workshops />
+  if (path === '/ovens') return <Ovens />
   return <Shop />
 }
 
@@ -74,8 +86,6 @@ function Shop() {
   const [regEmail, setRegEmail] = useState('')
   const [regPizzas, setRegPizzas] = useState(1)
   const [regStatus, setRegStatus] = useState('') // '' | 'loading' | 'success' | 'duplicate' | 'error'
-  const [nlEmail, setNlEmail] = useState('')
-  const [nlStatus, setNlStatus] = useState('') // '' | 'loading' | 'success' | 'duplicate' | 'error'
 
   useEffect(() => {
     fetch('/api/pizzas')
@@ -140,22 +150,6 @@ function Shop() {
     localStorage.removeItem('jeanke_cart'); localStorage.removeItem('jeanke_wine_cart')
   }
 
-  async function handleNewsletterSignup(e) {
-    e.preventDefault()
-    setNlStatus('loading')
-    try {
-      const res = await fetch('/api/newsletter-subscribers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: nlEmail }),
-      })
-      if (res.status === 409) { setNlStatus('duplicate'); return }
-      if (!res.ok) { setNlStatus('error'); return }
-      setNlStatus('success')
-      setNlEmail('')
-    } catch { setNlStatus('error') }
-  }
-
   function addWine(wine) {
     setWineCart(prev => {
       const ex = prev.find(i => i.wine.id === wine.id)
@@ -209,28 +203,7 @@ function Shop() {
     <div className="min-h-screen bg-cream text-ink relative overflow-x-clip">
 
       {/* ═══════ TopNav ═══════ */}
-      <nav className="sticky top-0 z-30 bg-cream/80 backdrop-blur-md border-b border-parchment">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 h-14 flex items-center justify-between">
-          <a href="#top" className="flex items-baseline gap-2 group">
-            <span className="font-serif italic text-xl text-ink group-hover:text-wine transition-colors">Jeanke's</span>
-            <span className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray hidden sm:inline">Secret Pizza</span>
-          </a>
-          <div className="flex items-center gap-6">
-            <a href="#menu" className="hidden sm:inline font-sans text-xs tracking-[0.24em] uppercase text-ink hover:text-wine transition-colors">Menù</a>
-            <a href="#wijn" className="hidden sm:inline font-sans text-xs tracking-[0.24em] uppercase text-ink hover:text-wine transition-colors">Wijn</a>
-            <a href="#racconto" className="hidden md:inline font-sans text-xs tracking-[0.24em] uppercase text-ink hover:text-wine transition-colors">Verhaal</a>
-            <div className="flex items-center gap-2">
-              <span className={`relative flex h-2 w-2 ${slots.length > 0 ? '' : 'opacity-40'}`}>
-                {slots.length > 0 && <span className="absolute inline-flex h-full w-full rounded-full bg-olive opacity-60 animate-ping motion-reduce:animate-none" />}
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${slots.length > 0 ? 'bg-olive' : 'bg-warm-gray-light'}`} />
-              </span>
-              <span className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray hidden sm:inline">
-                {slots.length > 0 ? 'Open' : 'Gesloten'}
-              </span>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <SiteNav open={slots.length > 0} current="/" />
 
       {/* ═══════ AnnouncementBar (ticker) ═══════ */}
       {!showRegistration && openingDays && openingDays.length > 0 && (
@@ -436,6 +409,9 @@ function Shop() {
         )}
       </main>
 
+      {/* ═══════ Oltre la pizza (teasers) ═══════ */}
+      <ServiceTeasers />
+
       {/* ═══════ Story (Il Racconto) ═══════ */}
       <section id="racconto" className="relative bg-ink text-cream overflow-hidden scroll-mt-24">
         <svg aria-hidden="true" className="absolute inset-0 w-full h-full opacity-[0.08]" xmlns="http://www.w3.org/2000/svg">
@@ -449,7 +425,7 @@ function Shop() {
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-10 py-20 sm:py-28 text-center">
           <div className="flex items-center justify-center gap-3 font-sans text-[10px] tracking-[0.32em] uppercase text-gold mb-6">
             <span className="h-px w-6 bg-gold/40" />
-            <span className="font-serif italic text-gold-light tracking-normal text-sm">N° IV</span>
+            <span className="font-serif italic text-gold-light tracking-normal text-sm">N° V</span>
             <span>·</span>
             <span>Il Racconto</span>
             <span className="h-px w-6 bg-gold/40" />
@@ -476,75 +452,7 @@ function Shop() {
       </section>
 
       {/* ═══════ Footer ═══════ */}
-      <footer className="relative bg-cream border-t border-parchment">
-        <PaperTexture />
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-14 lg:pb-14 pb-28">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
-            <div>
-              <p className="font-serif italic text-2xl text-ink">Jeanke's</p>
-              <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-warm-gray mt-1">Secret Pizza · Pizzeria artigianale</p>
-              <p className="font-serif italic text-warm-gray text-sm mt-4 leading-relaxed max-w-xs">
-                Vers deeg, houtoven, en een portie Italiaanse <em>allegria</em>.
-              </p>
-            </div>
-
-            <div>
-              <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold mb-3">Navigatie</p>
-              <ul className="space-y-2 font-sans text-xs text-warm-gray">
-                <li><a href="#menu" className="hover:text-wine transition-colors">Il Menù</a></li>
-                <li><a href="#wijn" className="hover:text-wine transition-colors">La Cantina</a></li>
-                <li><a href="#racconto" className="hover:text-wine transition-colors">Il Racconto</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold mb-3">Nieuwsbrief</p>
-              <p className="font-serif italic text-warm-gray text-xs leading-relaxed mb-4">
-                Blijf op de hoogte van onze volgende pizza-avonden.
-              </p>
-              {nlStatus === 'success' ? (
-                <div className="border border-dashed border-parchment px-4 py-3">
-                  <p className="font-serif italic text-sm text-ink">Ingeschreven!</p>
-                  <p className="font-sans text-[11px] text-warm-gray mt-1">We houden u op de hoogte.</p>
-                </div>
-              ) : (
-                <form onSubmit={handleNewsletterSignup} className="flex flex-col gap-2">
-                  <input
-                    type="email"
-                    required
-                    value={nlEmail}
-                    onChange={e => { setNlEmail(e.target.value); if (nlStatus) setNlStatus('') }}
-                    placeholder="uw@email.be"
-                    className="w-full border border-parchment bg-cream px-3 py-2.5 text-xs text-ink focus:outline-none focus:border-olive transition-colors"
-                  />
-                  {nlStatus === 'duplicate' && (
-                    <p className="font-sans text-[11px] text-wine italic">Al ingeschreven.</p>
-                  )}
-                  {nlStatus === 'error' && (
-                    <p className="font-sans text-[11px] text-wine italic">Er ging iets mis. Probeer opnieuw.</p>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={nlStatus === 'loading'}
-                    className="btn-primary text-xs py-2.5"
-                  >
-                    {nlStatus === 'loading' ? 'Even geduld...' : 'Inschrijven'}
-                  </button>
-                </form>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-12 pt-6 border-t border-dashed border-parchment flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="font-sans text-[10px] tracking-[0.24em] uppercase text-warm-gray-light">
-              © {new Date().getFullYear()} Jeanke's Pizza · Secret Pizza
-            </p>
-            <p className="font-serif italic text-xs text-warm-gray-light">
-              Con amore, uit de houtoven.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter extraBottomPadding />
 
       {/* ═══════ MobileCartBar ═══════ */}
       {!showRegistration && !successOrder && slots.length > 0 && (
@@ -609,6 +517,48 @@ function Shop() {
 }
 
 /* ───────────────────────── Sub-views ───────────────────────── */
+
+const TEASERS = [
+  { key: 'box',       Icon: Package,        blurb: 'Deeg, saus en toppings mee naar huis. Acht minuten in uw eigen oven.' },
+  { key: 'catering',  Icon: Utensils,       blurb: 'Wij rijden de houtoven voor en bakken ter plaatse, van 20 tot 150 gasten.' },
+  { key: 'workshops', Icon: GraduationCap,  blurb: 'Zelf leren draaien en bakken, in kleine groep aan de deegtafel.' },
+  { key: 'ovens',     Icon: Flame,          blurb: 'Gozney en Ooni — de ovens waar we zelf mee werken. Aanbod in voorbereiding.' },
+]
+
+/** Vier compacte teasers naar de dienstenpagina's. */
+function ServiceTeasers() {
+  return (
+    <section id="oltre" className="relative bg-parchment/50 border-y border-parchment overflow-hidden scroll-mt-24">
+      <PaperTexture />
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-16">
+        <SectionLabel n="IV" title="Oltre la pizza" caption="Meer dan de vrijdagavond — thuis, op locatie, of aan uw eigen oven." />
+
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-parchment border border-parchment">
+          {TEASERS.map(({ key, Icon, blurb }) => {
+            const service = services[key]
+            return (
+              <a
+                key={key}
+                href={service.route}
+                className="group bg-cream p-6 flex flex-col hover:bg-white transition-colors"
+              >
+                <Icon size={20} className="text-wine shrink-0" />
+                <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold mt-4">{service.eyebrow}</p>
+                <h3 className="font-serif text-xl text-ink leading-tight mt-1 group-hover:text-wine transition-colors">
+                  {service.title}
+                </h3>
+                <p className="font-sans text-sm text-warm-gray leading-relaxed mt-3 flex-1">{blurb}</p>
+                <span className="font-sans text-[10px] tracking-[0.24em] uppercase text-ink group-hover:text-wine transition-colors mt-5">
+                  Ontdek →
+                </span>
+              </a>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
 
 function RegistrationView({ registration, pizzas, regName, setRegName, regEmail, setRegEmail, regPizzas, setRegPizzas, regStatus, onRegister, currency }) {
   return (
