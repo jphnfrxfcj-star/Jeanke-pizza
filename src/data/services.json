@@ -223,6 +223,7 @@
         "priceFrom": 499,
         "description": "Draagbaar, met siliconen buitenmantel. De klassieker om mee te beginnen.",
         "bestFor": "Terras en meenemen",
+        "imageUrl": "",
         "status": ""
       },
       {
@@ -235,6 +236,7 @@
         "priceFrom": 899,
         "description": "Brede bakvloer en een grote vlamboog, zodat de rand gelijkmatig kleurt.",
         "bestFor": "Wie vaak voor gasten bakt",
+        "imageUrl": "",
         "status": ""
       },
       {
@@ -247,6 +249,7 @@
         "priceFrom": 1899,
         "description": "Onze eigen werkpaardoven. Bakt pizza, maar evengoed brood, vis en groenten.",
         "bestFor": "Buitenkeuken",
+        "imageUrl": "",
         "status": ""
       },
       {
@@ -259,6 +262,7 @@
         "priceFrom": 399,
         "description": "Glazen deur en drie brandstoffen. Instapmodel dat toch echt houtvuur geeft.",
         "bestFor": "Beginners",
+        "imageUrl": "",
         "status": ""
       },
       {
@@ -271,6 +275,7 @@
         "priceFrom": 649,
         "description": "Aan en klaar in twintig minuten, zonder as. De makkelijkste van allemaal.",
         "bestFor": "Doordeweekse avonden",
+        "imageUrl": "",
         "status": ""
       },
       {
@@ -283,6 +288,7 @@
         "priceFrom": 899,
         "description": "Werkt op een gewoon stopcontact, binnen én buiten. Geen vlam, wel hitte.",
         "bestFor": "Appartement of binnenkeuken",
+        "imageUrl": "",
         "status": ""
       }
     ],

@@ -109,6 +109,23 @@ met Gozney of Ooni — controleer de `priceFrom`-waarden vóór u op live zet.
 Elke box, formule, workshop en oven heeft `status`: leeg, `nieuw`, `op-aanvraag` of
 `volzet`. Bij `volzet` heet de knop "Op de wachtlijst" — de aanvraag blijft dus mogelijk.
 
+### Foto's bij de ovens
+Elk ovenmodel heeft `imageUrl`, in te vullen via `/beheer` → Diensten → Ovens.
+Een pad naar `public/` (bv. `/ovens/roccbox.jpg`) of een volledige URL.
+
+`ModelImage` in `Ovens.jsx` regelt drie gevallen:
+- geen enkel model in beeld heeft een foto → het fotoblok valt volledig weg
+- sommige wel, sommige niet → de kaarten zonder foto houden hun plek vrij met de
+  merknaam erin, anders wordt het raster rafelig
+- gebroken pad → dezelfde gereserveerde plek in plaats van een gebroken-beeldicoon
+
+`object-contain` in een 4:3-kader, zodat een oven op witte achtergrond niet wordt
+afgesneden. Het veldtype `image` in `SERVICE_FIELDS` is generiek — één regel volstaat
+om ook boxen, formules of workshops een foto te geven.
+
+**Rechten:** zet er geen persfoto's van Gozney of Ooni in zonder toestemming. Zolang
+er geen partnership is, is er geen gebruiksrecht op hun beeldmateriaal.
+
 ### Aanvragen
 Gaan naar `/api/inquiries` (Netlify Blobs, store `inquiries`) en daarna vrijblijvend
 naar `/api/send-email` met `type: 'inquiry'`. Als de mail faalt is de aanvraag toch

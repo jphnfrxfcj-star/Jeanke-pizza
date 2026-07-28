@@ -5,6 +5,44 @@ import InquiryForm from './InquiryForm'
 import { useServices } from '../lib/useServices'
 import config from '../data/config.json'
 
+/**
+ * Productfoto boven een ovenkaart. Loopt door tot de rand van de kaart heen
+ * (die heeft p-6) en gebruikt object-contain, zodat een oven op een witte
+ * achtergrond niet wordt afgesneden.
+ *
+ * reserveSpace houdt de plek vrij wanneer er in dezelfde weergave al andere
+ * modellen mét foto staan. Zonder die reservering zou een kaart zonder foto
+ * naast een kaart mét foto een rafelig raster geven. Staan er nergens foto's,
+ * dan valt het blok volledig weg en zien de kaarten eruit zoals voorheen.
+ *
+ * Een gebroken pad valt terug op dezelfde gereserveerde plek in plaats van op
+ * een gebroken-afbeeldingicoon.
+ */
+function ModelImage({ src, alt, brand, reserveSpace }) {
+  const [failed, setFailed] = useState(false)
+  const showImage = src && !failed
+
+  if (!showImage && !reserveSpace) return null
+
+  return (
+    <div className="-mx-6 -mt-6 mb-5 bg-parchment/40 border-b border-parchment">
+      {showImage ? (
+        <img
+          src={src}
+          alt={alt}
+          loading="lazy"
+          className="w-full aspect-[4/3] object-contain"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <div className="w-full aspect-[4/3] flex items-center justify-center" aria-hidden="true">
+          <span className="font-serif italic text-xl text-warm-gray-light/70">{brand}</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Ovens() {
   const data = useServices().ovens
   const [brand, setBrand] = useState('Alle')
@@ -18,6 +56,9 @@ export default function Ovens() {
 
   const brandFilters = ['Alle', ...brands.map(b => b.name)]
   const models = brand === 'Alle' ? allModels : allModels.filter(m => m.brand === brand)
+
+  // Zodra één model in beeld een foto heeft, houden de andere hun plek vrij.
+  const anyImages = models.some(m => m.imageUrl)
 
   const options = allModels.map(m => ({
     value: m.id,
@@ -69,6 +110,13 @@ export default function Ovens() {
         <div className="grid sm:grid-cols-2 gap-px bg-parchment border border-parchment">
           {models.map(model => (
             <div key={model.id} className="bg-cream p-6 flex flex-col">
+              <ModelImage
+                src={model.imageUrl}
+                alt={`${model.brand} ${model.name}`}
+                brand={model.brand}
+                reserveSpace={anyImages}
+              />
+
               <div className="flex items-baseline justify-between gap-3">
                 <div>
                   <p className="font-sans text-[10px] tracking-[0.28em] uppercase text-gold">{model.brand}</p>

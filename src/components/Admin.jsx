@@ -2173,10 +2173,10 @@ function WinstTab({ password }) {
 // ─── Diensten (box, catering, workshops, ovens) ────────────────────────────
 
 const SERVICE_TABS = [
-  { key: 'box',       label: 'Box',       listKey: 'packages', noun: 'box' },
-  { key: 'catering',  label: 'Catering',  listKey: 'formulas', noun: 'formule' },
-  { key: 'workshops', label: 'Workshops', listKey: 'types',    noun: 'workshop' },
-  { key: 'ovens',     label: 'Ovens',     listKey: 'models',   noun: 'model' },
+  { key: 'box',       label: 'Box',       listKey: 'packages', noun: 'box',      plural: 'boxen' },
+  { key: 'catering',  label: 'Catering',  listKey: 'formulas', noun: 'formule',  plural: 'formules' },
+  { key: 'workshops', label: 'Workshops', listKey: 'types',    noun: 'workshop', plural: 'workshops' },
+  { key: 'ovens',     label: 'Ovens',     listKey: 'models',   noun: 'model',    plural: 'modellen' },
 ]
 
 const SERVICE_MODES = [
@@ -2229,6 +2229,8 @@ const SERVICE_FIELDS = {
     { key: 'priceFrom',   label: 'Vanafprijs (€)',    type: 'number',   step: '1', min: 0 },
     { key: 'description', label: 'Omschrijving',      type: 'textarea' },
     { key: 'bestFor',     label: 'Geschikt voor',     type: 'text',     placeholder: 'Terras en meenemen' },
+    { key: 'imageUrl',    label: 'Foto',              type: 'image',
+      hint: 'Zet uw eigen foto in de map public/ en vul het pad in, bv. /ovens/roccbox.jpg. Een volledige URL werkt ook. Gebruik enkel beeld waarvoor u de rechten hebt.' },
   ],
 }
 
@@ -2278,6 +2280,7 @@ function DienstenTab({ password }) {
   const service = services[active] || {}
   const items = service[tab.listKey] || []
   const fields = SERVICE_FIELDS[active]
+  const hasImageField = fields.some(f => f.type === 'image')
 
   async function persist(next) {
     setServices(next)
@@ -2401,7 +2404,7 @@ function DienstenTab({ password }) {
             <span className="font-serif italic text-wine text-sm leading-none">N° ·</span>
             <span className="h-px w-5 bg-gold/40" />
             <p className="font-sans text-[10px] tracking-[0.32em] uppercase text-warm-gray truncate">
-              {tab.label} — {items.length} {items.length === 1 ? tab.noun : tab.noun + 's'}
+              {tab.label} — {items.length} {items.length === 1 ? tab.noun : tab.plural}
             </p>
           </div>
           {editing === null && (
@@ -2438,6 +2441,14 @@ function DienstenTab({ password }) {
                         <ChevronDown size={14} />
                       </button>
                     </div>
+
+                    {hasImageField && (
+                      <div className="w-12 h-9 shrink-0 bg-cream border border-parchment overflow-hidden flex items-center justify-center">
+                        {item.imageUrl
+                          ? <img src={item.imageUrl} alt="" className="w-full h-full object-contain" />
+                          : <span className="font-sans text-[8px] tracking-[0.14em] uppercase text-warm-gray-light">Geen</span>}
+                      </div>
+                    )}
 
                     <button onClick={() => startEdit(item)} className="flex-1 min-w-0 text-left group">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -2485,7 +2496,7 @@ function ServiceItemForm({ fields, form, setForm, onSubmit, onCancel, title }) {
 
       <div className="grid sm:grid-cols-2 gap-4">
         {fields.map(f => {
-          if (f.type === 'textarea' || f.type === 'list') return null
+          if (f.type === 'textarea' || f.type === 'list' || f.type === 'image') return null
           const id = `svc-${f.key}`
           if (f.type === 'checkbox') {
             return (
@@ -2543,11 +2554,61 @@ function ServiceItemForm({ fields, form, setForm, onSubmit, onCancel, title }) {
         <ListField key={f.key} label={f.label} values={form[f.key] || []} onChange={v => set(f.key, v)} />
       ))}
 
+      {fields.filter(f => f.type === 'image').map(f => (
+        <ImageField key={f.key} field={f} value={form[f.key] || ''} onChange={v => set(f.key, v)} />
+      ))}
+
       <div className="flex gap-2 pt-1">
         <button type="submit" className="btn-primary flex-1">Opslaan</button>
         <button type="button" onClick={onCancel} className="btn-secondary">Annuleren</button>
       </div>
     </form>
+  )
+}
+
+/**
+ * Fotoveld met live voorbeeld. Een gebroken pad valt hier meteen door de mand,
+ * in plaats van pas op de site.
+ */
+function ImageField({ field, value, onChange }) {
+  const [failed, setFailed] = useState(false)
+
+  function update(v) { setFailed(false); onChange(v) }
+
+  return (
+    <div>
+      <label htmlFor={`svc-${field.key}`} className="block font-sans text-[11px] tracking-[0.24em] uppercase text-warm-gray mb-2">
+        {field.label}
+      </label>
+      <div className="flex items-start gap-3">
+        <div className="w-24 h-[72px] shrink-0 bg-cream border border-parchment flex items-center justify-center overflow-hidden">
+          {value && !failed ? (
+            <img src={value} alt="" className="w-full h-full object-contain" onError={() => setFailed(true)} />
+          ) : (
+            <span className="font-sans text-[9px] tracking-[0.16em] uppercase text-warm-gray-light text-center px-1">
+              {failed ? 'Niet gevonden' : 'Geen foto'}
+            </span>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <input
+            id={`svc-${field.key}`}
+            type="text"
+            className={INPUT}
+            placeholder="/ovens/roccbox.jpg"
+            value={value}
+            onChange={e => update(e.target.value)}
+          />
+          {value && (
+            <button type="button" onClick={() => update('')}
+              className="font-sans text-[10px] tracking-[0.2em] uppercase text-warm-gray hover:text-wine transition-colors mt-2">
+              Foto verwijderen
+            </button>
+          )}
+        </div>
+      </div>
+      {field.hint && <p className="font-sans text-xs text-warm-gray italic mt-2 leading-relaxed">{field.hint}</p>}
+    </div>
   )
 }
 
