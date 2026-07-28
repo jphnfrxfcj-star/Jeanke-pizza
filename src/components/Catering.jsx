@@ -30,8 +30,10 @@ export default function Catering() {
       {/* ── Formules ── */}
       <ServiceSection title="De formules" caption="Van receptie tot volledig avondmaal.">
         <div className="space-y-px bg-parchment border border-parchment">
+          {/* Kaarten zijn wit, niet cream: op mobiel staan ze volle breedte
+              op een cream pagina en gingen ze op in de achtergrond. */}
           {formulas.map(formula => (
-            <div key={formula.id} className="bg-cream p-6 sm:p-7">
+            <div key={formula.id} className="bg-white p-6 sm:p-7">
               {/* Zelfde opzet als de workshopkaarten: naam links, prijs rechts
                   op dezelfde regel, ook op mobiel. Vandaar geen flex-wrap. */}
               <div className="flex items-baseline justify-between gap-3">
